@@ -1,5 +1,5 @@
 #Make arguments
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -finput-charset=UTF-8
 CC = gcc
 NAME = game
 BUILD = build
