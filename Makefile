@@ -27,4 +27,4 @@ dir:
 
 .PHONY: clean
 clean:
-	rm -rf $(obj) $(dep) $(BUILD) game 
+	rm -rf $(obj) $(dep) $(BUILD) $(NAME) 
