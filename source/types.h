@@ -19,6 +19,11 @@ typedef struct {
 } Tile;
 
 typedef struct {
+	Point pos;
+	Point dim;
+} Room;
+
+typedef struct {
 	Tile** tiles;
 	Point dim;
 } Dungeon;
