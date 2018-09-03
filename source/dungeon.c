@@ -34,6 +34,20 @@ const wchar_t* SYM_ROCK_SOFT = L"\x2591";
 const wchar_t* SYM_ROCK_MED  = L"\x2592";
 const wchar_t* SYM_ROCK_HARD = L"\x2593";
 
+//Hall
+const wchar_t* SYM_HALL = L"\x2588";
+const wchar_t* SYM_HALL_NESW = L"\x256C";
+const wchar_t* SYM_HALL_NES = L"\x2560";
+const wchar_t* SYM_HALL_ESW = L"\x2566";
+const wchar_t* SYM_HALL_SWN = L"\x2563";
+const wchar_t* SYM_HALL_WNE = L"\x2569";
+const wchar_t* SYM_HALL_NE = L"\x255A";
+const wchar_t* SYM_HALL_ES = L"\x2554";
+const wchar_t* SYM_HALL_SW = L"\x2557";
+const wchar_t* SYM_HALL_WN = L"\x255D";
+const wchar_t* SYM_HALL_NS = L"\x2551";
+const wchar_t* SYM_HALL_EW = L"\x2550";
+
 //Rooms are air
 const wchar_t* SYM_ROOM = L" ";
 
@@ -75,8 +89,9 @@ int roomPlaceAttempt(Dungeon dungeon, Room room) {
 void roomPlace(Dungeon dungeon, Room room) {
 	for (int row = room.pos.y; row < room.pos.y + room.dim.y; row++) {
 		for (int col = room.pos.x; col < room.pos.x + room.dim.x; col++) {
-			dungeon.tiles[row][col].type = ROOM;
-			dungeon.tiles[row][col].symbol = SYM_ROOM;
+			Tile* tile = &dungeon.tiles[row][col];
+			tile->type = ROOM;
+			tile->symbol = SYM_ROOM;
 		}
 	}
 }
@@ -103,6 +118,40 @@ Room roomGenerate(Dungeon dungeon) {
 	return room;
 }
 
+void roomConnect(Dungeon dungeon, Room first, Room second) {
+	Point pos = {
+		first.pos.x,
+		first.pos.y
+	};
+	
+	Point dir = {
+		first.pos.x < second.pos.x ? 1 : -1,
+		first.pos.y < second.pos.y ? 1 : -1
+	};
+
+	//Horizontal connection
+	while (pos.x != second.pos.x) {
+		Tile* tile = &dungeon.tiles[pos.y][pos.x];
+		if (tile->type == ROCK) {
+			tile->type = HALL;
+			tile->symbol = SYM_HALL;
+		}
+		
+		pos.x += dir.x;
+	}
+	
+	//Vertical connection
+	while (pos.y != second.pos.y) {
+		Tile* tile = &dungeon.tiles[pos.y][pos.x];
+		if (tile->type == ROCK) {
+			tile->type = HALL;
+			tile->symbol = SYM_HALL;
+		}
+		
+		pos.y += dir.y;
+	}
+}
+
 int dungeonIsFull(Dungeon dungeon) {
 	float total = dungeon.dim.x * dungeon.dim.y;
 	float room = 0.0;
@@ -114,6 +163,102 @@ int dungeonIsFull(Dungeon dungeon) {
 	
 	return room/total > ROOM_MAX_FULLNESS;
 }
+
+void dungeonPaths(Dungeon dungeon, Room rooms[], int count) {
+	for(int first = 0; first < count; first++) {
+		for(int second = first + 1; second < count; second++) {
+			roomConnect(dungeon, rooms[first], rooms[second]);
+		}
+	}
+}
+
+void dungeonPostProcess(Dungeon dungeon) {
+	for(int row = 1; row < dungeon.dim.y - 1; row++) {
+		for(int col = 1; col < dungeon.dim.x - 1; col++) {
+			Tile* tile = &dungeon.tiles[row][col];
+			Tile* tileN = &dungeon.tiles[row - 1][col];
+			Tile* tileE = &dungeon.tiles[row][col + 1];
+			Tile* tileS = &dungeon.tiles[row + 1][col];
+			Tile* tileW = &dungeon.tiles[row][col - 1];
+			if (tile->type == HALL) {
+				
+				//NESW
+				if ((tileN->type == HALL || tileN->type == ROOM)
+					&& (tileE->type == HALL || tileE->type == ROOM)
+					&& (tileS->type == HALL || tileS->type == ROOM)
+					&& (tileW->type == HALL || tileW->type == ROOM)) {
+					tile->symbol = SYM_HALL_NESW;
+				}
+				
+				//NES
+				else if ((tileN->type == HALL || tileN->type == ROOM)
+					&& (tileE->type == HALL || tileE->type == ROOM) 
+					&& (tileS->type == HALL || tileS->type == ROOM)) {
+					tile->symbol = SYM_HALL_NES;
+				}
+					
+				//ESW
+				else if ((tileE->type == HALL || tileE->type == ROOM)
+					&& (tileS->type == HALL || tileS->type == ROOM)
+					&& (tileW->type == HALL || tileW->type == ROOM)) {
+					tile->symbol = SYM_HALL_ESW;
+				}	
+				
+				//SWN
+				else if ((tileS->type == HALL || tileS->type == ROOM)
+					&& (tileW->type == HALL || tileW->type == ROOM)
+					&& (tileN->type == HALL || tileN->type == ROOM)) {
+					tile->symbol = SYM_HALL_SWN;
+				}
+				
+				//WNE
+				else if ((tileW->type == HALL || tileW->type == ROOM)
+					&& (tileN->type == HALL || tileN->type == ROOM)
+					&& (tileE->type == HALL || tileE->type == ROOM)) {
+					tile->symbol = SYM_HALL_WNE;
+				}
+				
+				//NE
+				else if ((tileN->type == HALL || tileN->type == ROOM)
+					&& (tileE->type == HALL || tileE->type == ROOM)) {
+					tile->symbol = SYM_HALL_NE;
+				}
+				
+				//ES
+				else if ((tileE->type == HALL || tileE->type == ROOM) 
+					&& (tileS->type == HALL || tileS->type == ROOM)) {
+					tile->symbol = SYM_HALL_ES;
+				}
+				
+				//SW
+				else if ((tileS->type == HALL || tileS->type == ROOM)
+					&& (tileW->type == HALL || tileW->type == ROOM)) {
+					tile->symbol = SYM_HALL_SW;
+				}
+				
+				//WN
+				else if ((tileW->type == HALL || tileW->type == ROOM)
+					&& (tileN->type == HALL || tileN->type == ROOM)) {
+					tile->symbol = SYM_HALL_WN;
+				}
+				
+				//NS
+				else if ((tileN->type == HALL || tileN->type == ROOM)
+					&& (tileS->type == HALL || tileS->type == ROOM)) {
+					tile->symbol = SYM_HALL_NS;
+				}
+				
+				//EW
+				else if ((tileE->type == HALL || tileE->type == ROOM)
+					&& (tileW->type == HALL || tileW->type == ROOM)) {
+					tile->symbol = SYM_HALL_EW;
+				}
+			}
+		}
+	}
+}
+
+//"Public" functions
 
 Dungeon dungeonGenerate(Point dim) {
 	Dungeon dungeon = {0};
@@ -154,6 +299,12 @@ Dungeon dungeonGenerate(Point dim) {
 		rooms[room] = roomGenerate(dungeon);
 		roomPlace(dungeon, rooms[room]);
 	}
+	
+	//Create the paths.
+	dungeonPaths(dungeon, rooms, room);
+	
+	//Prettify the dungeon.
+	dungeonPostProcess(dungeon);
 	
 	return dungeon;
 }
