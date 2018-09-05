@@ -1,0 +1,26 @@
+# Adventure Commander
+A text base adventure game written in C
+
+# Author
+Aaron Walter
+ajwalter
+792829065
+
+# Build
+Run `make` then `./game`
+
+# Requirements
+Your terminal must support utf8. PuTTY supports this just fine, as well as
+Cmder. Many modern linux terminals also support utf8. Characters will look
+broken if your terminal is in ASCII mode!
+
+# Notable features
+- Random dungeons.
+- Dungeon halls connect with some amount of randomness.
+- Dungeon halls connect in a circular form, allowing movement to all other rooms.
+
+# Changes from specifications
+- Immutable dungeon walls are LOWER HALF BLOCK, UPPER HALF BLOCK and FULL BLOCK
+- Halls are BOX DRAWING DOUBLE * (I used most of the double lined characters)
+- Rooms are SPACE
+- Rock is LIGHT SHADE
