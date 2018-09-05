@@ -17,6 +17,10 @@ const int ROOM_X_MAX = 16;
 const int ROOM_Y_MIN = 3;
 const int ROOM_Y_MAX = 8;
 
+//Randomness of midpoint, radius
+const int ROOM_CON_RAD = 3;
+const int ROOM_CON_RAD_MIN = 1;
+
 //In case I ever want different syms for each corner
 const wchar_t* SYM_EDGE_NW = L" ";
 const wchar_t* SYM_EDGE_NE = L" ";
@@ -35,7 +39,7 @@ const wchar_t* SYM_ROCK_MED  = L"\x2592";
 const wchar_t* SYM_ROCK_HARD = L"\x2593";
 
 //Hall
-const wchar_t* SYM_HALL = L"\x2588";
+const wchar_t* SYM_HALL = L"\x2022";
 const wchar_t* SYM_HALL_NESW = L"\x256C";
 const wchar_t* SYM_HALL_NES = L"\x2560";
 const wchar_t* SYM_HALL_ESW = L"\x2566";
@@ -58,21 +62,71 @@ int skewedBetweenRange(int min, int max) {
 	return value;
 }
 
-void drawNorthSouth(Dungeon dungeon, const wchar_t* sym, int row) {
-	for(int col = 0; col < dungeon.dim.x; col++) {
-		dungeon.tiles[row][col] = (Tile){
-			sym,
-			EDGE
-		};
-	}
+int prodDot(Point one, Point two) {
+	two = (Point){
+		two.x - one.x,
+		two.y - one.y
+	};
+	
+	return (one.x * two.x) + (one.y * two.y); 
 }
 
-void drawEastWest(Dungeon dungeon, const wchar_t* sym, int col) {
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		dungeon.tiles[row][col] = (Tile){
-			sym,
-			EDGE
-		};
+int prodCross(Point one, Point two) {
+	two = (Point){
+		two.x - one.x,
+		two.y - one.y
+	};
+	
+	return (one.x * two.y) - (two.x * one.y); 
+}
+
+int compDist(Point one, Point two) {
+	int dot = prodDot(one, two);
+	if(dot == 0) return 0;
+	if(dot > 0) return -1;
+	return 1;
+}
+
+int compAngle(Point one, Point two) {
+	int cross = prodCross(one, two);
+	if(cross == 0) return 0;
+	if(cross > 0) return -1;
+	return 1;
+}
+
+int rad(const void* pOne, const void* pTwo) {
+	Room rOne = *(const Room*) pOne;
+	Room rTwo = *(const Room*) pTwo;
+	
+	Point one = {
+		rOne.pos.x + rOne.dim.x/2,
+		rOne.pos.y + rOne.dim.y/2,
+	};
+	
+	Point two = {
+		rTwo.pos.x + rTwo.dim.x/2,
+		rTwo.pos.y + rTwo.dim.y/2,
+	};
+	
+	if(one.x == two.x && one.y == two.y) return 0;
+	if(one.x == 0 && one.y == 0) return -1;
+	if(two.x == 0 && two.y == 0) return 1;
+	if(compAngle(one, two) > 0) return 1;
+	if(compAngle(one, two) < 0) return -1;
+	if(compDist(one, two) < 0) return -1;
+	return 1;
+}
+
+void hallPlace(Dungeon dungeon, Point point) {
+	if (point.x >= 0 
+		&& point.y >= 0
+		&& point.x < dungeon.dim.x
+		&& point.y < dungeon.dim.y) {
+		Tile* tile = &dungeon.tiles[point.y][point.x];
+		if (tile->type == ROCK) {
+			tile->type = HALL;
+			tile->symbol = SYM_HALL;
+		}
 	}
 }
 
@@ -94,6 +148,71 @@ void roomPlace(Dungeon dungeon, Room room) {
 			tile->symbol = SYM_ROOM;
 		}
 	}
+}
+
+void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
+	Point current = from;
+	
+	Point dist = {
+		abs(to.x - from.x),
+		-abs(to.y - from.y)
+	};
+	
+	Point step = {
+		(from.x < to.x ? 1 : -1),
+		(from.y < to.y ? 1 : -1)
+	};
+	
+	int error = dist.x + dist.y;
+	
+	hallPlace(dungeon, current);
+	
+	while (current.x != to.x || current.y != to.y) {
+		if (2 * error - dist.y > dist.x - 2 * error) {
+			// horizontal step
+			error += dist.y;
+			current.x += step.x;
+		} else {
+			// vertical step
+			error += dist.x;
+			current.y += step.y;
+		}
+		
+		hallPlace(dungeon, current);
+	}
+}
+
+void roomConnect(Dungeon dungeon, Room first, Room second) {
+	Point start = {
+		rand() % first.dim.x + first.pos.x,
+		rand() % first.dim.y + first.pos.y,
+	};
+	
+	Point end = {
+		rand() % second.dim.x + second.pos.x,
+		rand() % second.dim.y + second.pos.y,
+	};
+	
+	Point offset = {
+		(rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN),
+		(rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN),
+	};
+	
+	offset.x *= rand() % 2 ? 1 : -1;
+	offset.y *= rand() % 2 ? 1 : -1;
+	
+	Point mid = {
+		(((float)(start.x) + (float)(end.x)) / 2.0f + (float)offset.x),
+		(((float)(start.y) + (float)(end.y)) / 2.0f + (float)offset.y)
+	};
+	
+	if(mid.x < 1) mid.x = 1;
+	if(mid.y < 1) mid.y = 1;
+	if(mid.x > dungeon.dim.x - 2) mid.x = dungeon.dim.x - 2;
+	if(mid.y > dungeon.dim.y - 2) mid.y = dungeon.dim.y - 2;
+	
+	roomConnectRasterize(dungeon, start, mid);
+	roomConnectRasterize(dungeon, mid, end);
 }
 
 Room roomGenerate(Dungeon dungeon) {
@@ -118,37 +237,21 @@ Room roomGenerate(Dungeon dungeon) {
 	return room;
 }
 
-void roomConnect(Dungeon dungeon, Room first, Room second) {
-	Point pos = {
-		first.pos.x,
-		first.pos.y
-	};
-	
-	Point dir = {
-		first.pos.x < second.pos.x ? 1 : -1,
-		first.pos.y < second.pos.y ? 1 : -1
-	};
-
-	//Horizontal connection
-	while (pos.x != second.pos.x) {
-		Tile* tile = &dungeon.tiles[pos.y][pos.x];
-		if (tile->type == ROCK) {
-			tile->type = HALL;
-			tile->symbol = SYM_HALL;
-		}
-		
-		pos.x += dir.x;
+void dungeonDrawNorthSouth(Dungeon dungeon, const wchar_t* sym, int row) {
+	for(int col = 0; col < dungeon.dim.x; col++) {
+		dungeon.tiles[row][col] = (Tile){
+			sym,
+			EDGE
+		};
 	}
-	
-	//Vertical connection
-	while (pos.y != second.pos.y) {
-		Tile* tile = &dungeon.tiles[pos.y][pos.x];
-		if (tile->type == ROCK) {
-			tile->type = HALL;
-			tile->symbol = SYM_HALL;
-		}
-		
-		pos.y += dir.y;
+}
+
+void dungeonDrawEastWest(Dungeon dungeon, const wchar_t* sym, int col) {
+	for(int row = 0; row < dungeon.dim.y; row++) {
+		dungeon.tiles[row][col] = (Tile){
+			sym,
+			EDGE
+		};
 	}
 }
 
@@ -162,14 +265,6 @@ int dungeonIsFull(Dungeon dungeon) {
 	}
 	
 	return room/total > ROOM_MAX_FULLNESS;
-}
-
-void dungeonPaths(Dungeon dungeon, Room rooms[], int count) {
-	for(int first = 0; first < count; first++) {
-		for(int second = first + 1; second < count; second++) {
-			roomConnect(dungeon, rooms[first], rooms[second]);
-		}
-	}
 }
 
 void dungeonPostProcess(Dungeon dungeon) {
@@ -266,7 +361,7 @@ Dungeon dungeonGenerate(Point dim) {
 	
 	if (dim.x < 1 || dim.y < 1) return dungeon;
 	
-	//Init dungeon
+	//Initialize dungeon
 	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dim.y);
 	for(int row = 0; row < dim.y; row++) {
 		dungeon.tiles[row] = malloc(sizeof(Tile) * dim.x);
@@ -279,10 +374,10 @@ Dungeon dungeonGenerate(Point dim) {
 	}
 	
 	//Draw walls wall
-	drawNorthSouth(dungeon, SYM_EDGE_N, 0);
-	drawEastWest(dungeon, SYM_EDGE_E, dim.x - 1);
-	drawNorthSouth(dungeon, SYM_EDGE_S, dim.y - 1);
-	drawEastWest(dungeon, SYM_EDGE_W, 0);
+	dungeonDrawNorthSouth(dungeon, SYM_EDGE_N, 0);
+	dungeonDrawEastWest(dungeon, SYM_EDGE_E, dim.x - 1);
+	dungeonDrawNorthSouth(dungeon, SYM_EDGE_S, dim.y - 1);
+	dungeonDrawEastWest(dungeon, SYM_EDGE_W, 0);
 
 	//Draw corners
 	dungeon.tiles[0][0].symbol = SYM_EDGE_NW;
@@ -291,17 +386,34 @@ Dungeon dungeonGenerate(Point dim) {
 	dungeon.tiles[dim.y - 1][0].symbol = SYM_EDGE_SW;
 	
 	Room rooms[ROOMS_MAX];
-	int room = 0;
+	int count = 0;
 	
 	//Create rooms
-	for(room = 0; room < ROOMS_MAX; room++) {
-		if (room >= ROOMS_MIN && dungeonIsFull(dungeon)) break;
-		rooms[room] = roomGenerate(dungeon);
-		roomPlace(dungeon, rooms[room]);
+	for(count = 0; count < ROOMS_MAX; count++) {
+		if (count >= ROOMS_MIN && dungeonIsFull(dungeon)) break;
+		rooms[count] = roomGenerate(dungeon);
+		roomPlace(dungeon, rooms[count]);
+	}
+	
+	//Normalize
+	for(int i = 0; i < count; i++) {
+		rooms[i].pos.x -= (dungeon.dim.x)/2;
+		rooms[i].pos.y -= (dungeon.dim.y)/2;
+	}
+	
+	//Sort (for consistency)
+	qsort(rooms, count, sizeof(Room), rad);
+	
+	//Revert
+	for(int i = 0; i < count; i++) {
+		rooms[i].pos.x += (dungeon.dim.x)/2;
+		rooms[i].pos.y += (dungeon.dim.y)/2;
 	}
 	
 	//Create the paths.
-	dungeonPaths(dungeon, rooms, room);
+	for(int first = 0; first < count; first++) {
+		roomConnect(dungeon, rooms[first], rooms[first + 1 == count ? 0 : first + 1]);
+	}
 	
 	//Prettify the dungeon.
 	dungeonPostProcess(dungeon);
