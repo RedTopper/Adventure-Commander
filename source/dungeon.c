@@ -465,8 +465,8 @@ Dungeon dungeonLoad(FILE* file) {
 		//Verify the rooms are in bounds. If they are not, throw them out.
 		room.pos.x = posX >= dungeon.dim.x ? dungeon.dim.x - 1 : posX;
 		room.pos.y = posY >= dungeon.dim.x ? dungeon.dim.x - 1 : posY;
-		room.dim.x = dimX + room.pos.x >= dungeon.dim.x - 1 ? 1 : dimX;
-		room.dim.y = dimY + room.pos.y >= dungeon.dim.x - 1 ? 1 : dimY;
+		room.dim.x = dimX + room.pos.x >= dungeon.dim.x ? 1 : dimX;
+		room.dim.y = dimY + room.pos.y >= dungeon.dim.x ? 1 : dimY;
 		
 		roomPlace(dungeon, room);
 		dungeon.rooms[i++] = room;
