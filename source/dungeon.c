@@ -77,10 +77,10 @@ void hallPlace(Dungeon dungeon, Point point) {
 int roomPlaceAttempt(Dungeon dungeon, Room room) {
 	for (int row = room.pos.y - 1; row < room.pos.y + room.dim.y + 1; row++) {
 		for (int col = room.pos.x - 1; col < room.pos.x + room.dim.x + 1; col++) {
-			if (row < 0) continue;
-			if (col < 0) continue;
-			if (row >= dungeon.dim.y) continue;
-			if (col >= dungeon.dim.x) continue;
+			if (row < 0) return 0;
+			if (col < 0) return 0;
+			if (row >= dungeon.dim.y) return 0;
+			if (col >= dungeon.dim.x) return 0;
 			if (dungeon.tiles[row][col].type == ROOM) return 0;
 		}
 	}
@@ -129,29 +129,30 @@ void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
 }
 
 void roomConnect(Dungeon dungeon, Room first, Room second) {
-	Point start = {
-		rand() % first.dim.x + first.pos.x,
-		rand() % first.dim.y + first.pos.y,
-	};
+	Point start = {0};
+	Point end = {0};
+	Point offset = {0};
+	Point mid = {0};
 	
-	Point end = {
-		rand() % second.dim.x + second.pos.x,
-		rand() % second.dim.y + second.pos.y,
-	};
+	//Start anywhere in the first room
+	start.x = rand() % first.dim.x + first.pos.x;
+	start.y = rand() % first.dim.y + first.pos.y;
 	
-	Point offset = {
-		(rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN),
-		(rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN),
-	};
+	//End anywhere in the second room
+	end.x = rand() % second.dim.x + second.pos.x;
+	end.y = rand() % second.dim.y + second.pos.y;
 	
+	//Find some value to offset the midpoint.
+	offset.x = (rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN);
+	offset.y = (rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN);
 	offset.x *= rand() % 2 ? 1 : -1;
 	offset.y *= rand() % 2 ? 1 : -1;
 	
-	Point mid = {
-		(((float)(start.x) + (float)(end.x)) / 2.0f + (float)offset.x),
-		(((float)(start.y) + (float)(end.y)) / 2.0f + (float)offset.y)
-	};
+	//Get the actual midpoint.
+	mid.x = (((float)(start.x) + (float)(end.x)) / 2.0f + (float)offset.x);
+	mid.y = (((float)(start.y) + (float)(end.y)) / 2.0f + (float)offset.y);
 	
+	//Check bounds of midpoint.
 	if(mid.x < 1) mid.x = 1;
 	if(mid.y < 1) mid.y = 1;
 	if(mid.x > dungeon.dim.x - 2) mid.x = dungeon.dim.x - 2;
@@ -169,10 +170,8 @@ Room roomGenerate(Dungeon dungeon) {
 	do {
 		dim.x = utilSkewedBetweenRange(ROOM_X_MIN, ROOM_X_MAX);
 		dim.y = utilSkewedBetweenRange(ROOM_Y_MIN, ROOM_Y_MAX);
-		
 		pos.x = (rand() % (dungeon.dim.x - 1 - dim.x)) + 1;
 		pos.y = (rand() % (dungeon.dim.y - 1 - dim.y)) + 1;
-		
 		room = (Room){pos, dim};
 	} while (!roomPlaceAttempt(dungeon, room));
 
@@ -182,11 +181,14 @@ Room roomGenerate(Dungeon dungeon) {
 Tile tileGenerate(Point dim, Point pos, uint8_t hardness, float* seed) {
 	Tile tile = {0};
 	
+	//Defaults
 	tile.symbol = SYM_VOID;
 	tile.type = VOID;
 	tile.hardness = 0x00;
 	
 	if (hardness == 0xFF || seed != NULL) {
+		//Edge if hardness is 255. There is a case when we want
+		//to generate rocks, which is when the seed is not null.
 		tile.type = EDGE;
 		tile.hardness = 0xFF;
 		tile.symbol = SYM_EDGE;
@@ -200,19 +202,26 @@ Tile tileGenerate(Point dim, Point pos, uint8_t hardness, float* seed) {
 		} else if (pos.x == dim.x - 1) {
 			tile.symbol = SYM_EDGE_E;
 		} else if (seed != NULL) {
+			//In this case, we are generating the rooms from scratch, since
+			//the seed value isn't passed when loading from a file.
+			//Populate the rest of the tiles with rock.
 			tile.type = ROCK;
 			tile.hardness = (noise2D(dim, pos, seed, 4, 0.2f) * 255.0f);
 		}
 	} else if (hardness == 0x00) {
+		//Hallway if hardness is 0. Will convert rooms to rooms
+		//when the last bit of file is loaded.
 		tile.symbol = SYM_HALL;
 		tile.type = HALL;
 		tile.hardness = 0x00;
 	} else {
+		//If not max hardness or not min hardness, then it's a rock.
 		tile.type = ROCK;
 		tile.hardness = hardness;
 	}
 	
 	if (tile.type == ROCK) {
+		//If a tile is a rock, change it's look depending on hardness.
 		if (tile.hardness < 0x55) {
 			tile.symbol = SYM_ROCK_SOFT;
 		} else if (tile.hardness < 0xAA) {
@@ -436,6 +445,7 @@ Dungeon dungeonLoad(FILE* file) {
 	dungeon.rooms = malloc(sizeof(Room) * rooms);
 	dungeon.numRooms = rooms;
 	
+	//Get rooms
 	while (ftell(file) < size) {
 		Room room;
 		uint8_t posX;
