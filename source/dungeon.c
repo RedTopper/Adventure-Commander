@@ -96,16 +96,13 @@ void roomPlace(Dungeon dungeon, Room room) {
 
 void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
 	Point current = from;
+	Point dist = {0};
+	Point step = {0};
 	
-	Point dist = {
-		abs(to.x - from.x),
-		-abs(to.y - from.y)
-	};
-	
-	Point step = {
-		(from.x < to.x ? 1 : -1),
-		(from.y < to.y ? 1 : -1)
-	};
+	dist.x = abs(to.x - from.x);
+	dist.y = -abs(to.y - from.y);
+	step.x = (from.x < to.x ? 1 : -1);
+	step.y = (from.y < to.y ? 1 : -1);
 	
 	int error = dist.x + dist.y;
 	
@@ -350,11 +347,6 @@ Dungeon dungeonGenerate(Point dim) {
 	roomConnect(dungeon, rooms[0], rooms[count - 1]);
 	//roomConnect(dungeon, rooms[0], rooms[(count - 1)/2]);
 	
-	//Copy rooms into dungeon structure.
-	dungeon.roomNum = count;
-	dungeon.rooms = malloc(sizeof(Room) * count);
-	memcpy(dungeon.rooms, rooms, sizeof(Room) * count);
-	
 	//Prettify the dungeon.
 	dungeonPostProcess(dungeon);
 	
@@ -418,6 +410,30 @@ Dungeon dungeonLoad(FILE* file) {
 		}
 	}
 	
+	while (ftell(file) < size) {
+		Room room;
+		uint8_t xRoom;
+		uint8_t yRoom;
+		uint8_t xRoomDim;
+		uint8_t yRoomDim;
+		read = fread(&xRoom, sizeof(uint8_t), 1, file);
+		read += fread(&yRoom, sizeof(uint8_t), 1, file);
+		read += fread(&xRoomDim, sizeof(uint8_t), 1, file);
+		read += fread(&yRoomDim, sizeof(uint8_t), 1, file);
+		
+		if (read != 4) {
+			wprintf(L"Missing rooms information (EOF)!");
+			exit(FILE_READ_EOF_ROOMS);
+		}
+		
+		room.pos.x = xRoom;
+		room.pos.y = yRoom;
+		room.dim.x = xRoomDim;
+		room.dim.y = yRoomDim;
+		
+		roomPlace(dungeon, room);
+	}
+	
 	return dungeon;
 }
 
@@ -427,9 +443,6 @@ void dungeonDestroy(Dungeon dungeon) {
 	}
 	
 	free(dungeon.tiles);
-	free(dungeon.rooms);
-	
-	dungeon.roomNum = 0;
 	dungeon.dim = (Point){0};
 }
 
@@ -437,6 +450,31 @@ void dungeonPrint(Dungeon dungeon) {
 	for(int row = 0; row < dungeon.dim.y; row++) {
 		for(int col = 0; col < dungeon.dim.x; col++) {
 			wprintf(L"%ls", dungeon.tiles[row][col].symbol);
+		}
+		wprintf(L"\n");
+	}
+}
+
+void dungeonPrintDebug(Dungeon dungeon) {
+	for(int row = 0; row < dungeon.dim.y; row++) {
+		for(int col = 0; col < dungeon.dim.x; col++) {
+			switch (dungeon.tiles[row][col].type) {
+				case VOID:
+					wprintf(L"x");
+					break;
+				case EDGE:
+					wprintf(L"e");
+					break;
+				case ROCK:
+					wprintf(L"o");
+					break;
+				case ROOM:
+					wprintf(L"r");
+					break;
+				case HALL:
+					wprintf(L"h");
+					break;
+			}
 		}
 		wprintf(L"\n");
 	}
