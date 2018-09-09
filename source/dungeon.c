@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <byteswap.h>
 
 #include "types.h"
 #include "dungeon.h"
@@ -354,29 +355,33 @@ Dungeon dungeonGenerate(Point dim) {
 }
 
 Dungeon dungeonLoad(FILE* file) {
-	char head[sizeof(HEADER)];
+	size_t length = strlen(HEADER);
+	char head[length + 1];
+	head[length] = '\0';
 	size_t read = 0;
 	
 	//Read magic header
-	read = fread(head, sizeof(char), sizeof(HEADER), file);
-	if (read != sizeof(HEADER) || strcmp(head, HEADER) != 0) {
-		wprintf(L"Bad file header!");
+	read = fread(head, sizeof(char), length, file);
+	if (read != length || strcmp(head, HEADER) != 0) {
+		wprintf(L"Bad file header '%s'!\n", head);
 		exit(FILE_READ_BAD_HEAD);
 	}
 	
 	//Check file version
 	uint32_t version;
 	read = fread(&version, sizeof(uint32_t), 1, file);
+	version = __bswap_32 (version); //Big to little
 	if (read != 1 || version != VERSION) {
-		wprintf(L"Bad file version!");
+		wprintf(L"Bad file version!\n");
 		exit(FILE_READ_BAD_VERSION);
 	}
 	
 	//Get file size
 	uint32_t size;
 	read = fread(&size, sizeof(uint32_t), 1, file);
+	size = __bswap_32 (size); //Big to little
 	if (read != 1) {
-		wprintf(L"Bad file size (EOF)!");
+		wprintf(L"Bad file size (EOF)!\n");
 		exit(FILE_READ_EOF_SIZE);
 	}
 	
@@ -386,7 +391,7 @@ Dungeon dungeonLoad(FILE* file) {
 	read = fread(&xPlayer, sizeof(uint8_t), 1, file);
 	read += fread(&yPlayer, sizeof(uint8_t), 1, file);
 	if (read != 2) {
-		wprintf(L"Bad file player co-ordinates (EOF)!");
+		wprintf(L"Bad file player co-ordinates (EOF)!\n");
 		exit(FILE_READ_EOF_PLAYER);
 	}
 	
@@ -402,7 +407,7 @@ Dungeon dungeonLoad(FILE* file) {
 			read = fread(&hardness, sizeof(uint8_t), 1, file);
 			
 			if (read != 1) {
-				wprintf(L"Missing tile harness information (EOF)!");
+				wprintf(L"Missing tile harness information (EOF)!\n");
 				exit(FILE_READ_EOF_HARDNESS);
 			}
 			
@@ -422,7 +427,7 @@ Dungeon dungeonLoad(FILE* file) {
 		read += fread(&yRoomDim, sizeof(uint8_t), 1, file);
 		
 		if (read != 4) {
-			wprintf(L"Missing rooms information (EOF)!");
+			wprintf(L"Missing rooms information (EOF)!\n");
 			exit(FILE_READ_EOF_ROOMS);
 		}
 		
@@ -433,6 +438,9 @@ Dungeon dungeonLoad(FILE* file) {
 		
 		roomPlace(dungeon, room);
 	}
+	
+	//Prettify the dungeon.
+	dungeonPostProcess(dungeon);
 	
 	return dungeon;
 }
