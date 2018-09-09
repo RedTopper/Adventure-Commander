@@ -8,6 +8,16 @@ typedef enum {
 	HALL,
 } TileType;
 
+typedef enum {
+	FILE_READ_BAD = 0x10,
+	FILE_READ_BAD_HEAD,
+	FILE_READ_BAD_VERSION,
+	FILE_READ_EOF = 0x20,
+	FILE_READ_EOF_SIZE,
+	FILE_READ_EOF_PLAYER,
+	FILE_READ_EOF_HARDNESS,
+} Error;
+
 typedef struct {
 	int x;
 	int y;
@@ -16,6 +26,7 @@ typedef struct {
 typedef struct {
 	const wchar_t* symbol;
 	TileType type;
+	uint8_t hardness;
 } Tile;
 
 typedef struct {
@@ -24,8 +35,10 @@ typedef struct {
 } Room;
 
 typedef struct {
-	Tile** tiles;
+	int roomNum;
 	Point dim;
+	Room* rooms;
+	Tile** tiles;
 } Dungeon;
 
 extern const Point DUNGEON_DIM;

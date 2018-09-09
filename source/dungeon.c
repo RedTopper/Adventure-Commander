@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 
 #include "types.h"
 #include "dungeon.h"
+#include "perlin.h"
+#include "util.h"
 
 //Number of rooms
 const int ROOMS_MIN = 5;
@@ -21,13 +25,8 @@ const int ROOM_Y_MAX = 8;
 const int ROOM_CON_RAD = 3;
 const int ROOM_CON_RAD_MIN = 1;
 
-//In case I ever want different syms for each corner
-const wchar_t* SYM_EDGE_NW = L" ";
-const wchar_t* SYM_EDGE_NE = L" ";
-const wchar_t* SYM_EDGE_SE = L" ";
-const wchar_t* SYM_EDGE_SW = L" ";
-
 //Edges across board
+const wchar_t* SYM_EDGE = L"\x2588";
 const wchar_t* SYM_EDGE_N = L"\x2584";
 const wchar_t* SYM_EDGE_E = L"\x2588";
 const wchar_t* SYM_EDGE_S = L"\x2580";
@@ -54,68 +53,11 @@ const wchar_t* SYM_HALL_EW = L"\x2550";
 
 //Rooms are air
 const wchar_t* SYM_ROOM = L" ";
+const wchar_t* SYM_VOID = L"x";
 
-int skewedBetweenRange(int min, int max) {
-	//75% chance of "upgrading" size.
-	int value = min;
-	while (rand() % 4 && value < max) value++;
-	return value;
-}
-
-int prodDot(Point one, Point two) {
-	two = (Point){
-		two.x - one.x,
-		two.y - one.y
-	};
-	
-	return (one.x * two.x) + (one.y * two.y); 
-}
-
-int prodCross(Point one, Point two) {
-	two = (Point){
-		two.x - one.x,
-		two.y - one.y
-	};
-	
-	return (one.x * two.y) - (two.x * one.y); 
-}
-
-int compDist(Point one, Point two) {
-	int dot = prodDot(one, two);
-	if(dot == 0) return 0;
-	if(dot > 0) return -1;
-	return 1;
-}
-
-int compAngle(Point one, Point two) {
-	int cross = prodCross(one, two);
-	if(cross == 0) return 0;
-	if(cross > 0) return -1;
-	return 1;
-}
-
-int rad(const void* pOne, const void* pTwo) {
-	Room rOne = *(const Room*) pOne;
-	Room rTwo = *(const Room*) pTwo;
-	
-	Point one = {
-		rOne.pos.x + rOne.dim.x/2,
-		rOne.pos.y + rOne.dim.y/2,
-	};
-	
-	Point two = {
-		rTwo.pos.x + rTwo.dim.x/2,
-		rTwo.pos.y + rTwo.dim.y/2,
-	};
-	
-	if(one.x == two.x && one.y == two.y) return 0;
-	if(one.x == 0 && one.y == 0) return -1;
-	if(two.x == 0 && two.y == 0) return 1;
-	if(compAngle(one, two) > 0) return 1;
-	if(compAngle(one, two) < 0) return -1;
-	if(compDist(one, two) < 0) return -1;
-	return 1;
-}
+//Magic header
+const char* HEADER = "RLG327-F2018";
+const uint32_t VERSION = 0;
 
 void hallPlace(Dungeon dungeon, Point point) {
 	if (point.x >= 0 
@@ -126,6 +68,7 @@ void hallPlace(Dungeon dungeon, Point point) {
 		if (tile->type == ROCK) {
 			tile->type = HALL;
 			tile->symbol = SYM_HALL;
+			tile->hardness = 0;
 		}
 	}
 }
@@ -146,6 +89,7 @@ void roomPlace(Dungeon dungeon, Room room) {
 			Tile* tile = &dungeon.tiles[row][col];
 			tile->type = ROOM;
 			tile->symbol = SYM_ROOM;
+			tile->hardness = 0;
 		}
 	}
 }
@@ -221,15 +165,11 @@ Room roomGenerate(Dungeon dungeon) {
 	Room room = {0};
 	
 	do {
-		dim = (Point){
-			skewedBetweenRange(ROOM_X_MIN, ROOM_X_MAX),
-			skewedBetweenRange(ROOM_Y_MIN, ROOM_Y_MAX)
-		};
+		dim.x = utilSkewedBetweenRange(ROOM_X_MIN, ROOM_X_MAX);
+		dim.y = utilSkewedBetweenRange(ROOM_Y_MIN, ROOM_Y_MAX);
 		
-		pos = (Point){
-			(rand() % (dungeon.dim.x - 1 - dim.x)) + 1,
-			(rand() % (dungeon.dim.y - 1 - dim.y)) + 1
-		};
+		pos.x = (rand() % (dungeon.dim.x - 1 - dim.x)) + 1;
+		pos.y = (rand() % (dungeon.dim.y - 1 - dim.y)) + 1;
 		
 		room = (Room){pos, dim};
 	} while (!roomPlaceAttempt(dungeon, room));
@@ -237,22 +177,50 @@ Room roomGenerate(Dungeon dungeon) {
 	return room;
 }
 
-void dungeonDrawNorthSouth(Dungeon dungeon, const wchar_t* sym, int row) {
-	for(int col = 0; col < dungeon.dim.x; col++) {
-		dungeon.tiles[row][col] = (Tile){
-			sym,
-			EDGE
-		};
+Tile tileGenerate(Point dim, Point pos, uint8_t hardness, float* seed) {
+	Tile tile = {0};
+	
+	tile.symbol = SYM_VOID;
+	tile.type = VOID;
+	tile.hardness = 0x00;
+	
+	if (hardness == 0xFF || seed != NULL) {
+		tile.type = EDGE;
+		tile.hardness = 0xFF;
+		tile.symbol = SYM_EDGE;
+		
+		if (pos.y == 0) {
+			tile.symbol = SYM_EDGE_N;
+		} else if (pos.y == dim.y - 1) {
+			tile.symbol = SYM_EDGE_S;
+		} else if (pos.x == 0) {
+			tile.symbol = SYM_EDGE_W;
+		} else if (pos.x == dim.x - 1) {
+			tile.symbol = SYM_EDGE_E;
+		} else if (seed != NULL) {
+			tile.type = ROCK;
+			tile.hardness = (noise2D(dim, pos, seed, 4, 0.2f) * 255.0f);
+		}
+	} else if (hardness == 0x00) {
+		tile.symbol = SYM_HALL;
+		tile.type = HALL;
+		tile.hardness = 0x00;
+	} else {
+		tile.type = ROCK;
+		tile.hardness = hardness;
 	}
-}
-
-void dungeonDrawEastWest(Dungeon dungeon, const wchar_t* sym, int col) {
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		dungeon.tiles[row][col] = (Tile){
-			sym,
-			EDGE
-		};
+	
+	if (tile.type == ROCK) {
+		if (tile.hardness < 0x55) {
+			tile.symbol = SYM_ROCK_SOFT;
+		} else if (tile.hardness < 0xAA) {
+			tile.symbol = SYM_ROCK_MED;
+		} else {
+			tile.symbol = SYM_ROCK_HARD;
+		}
 	}
+	
+	return tile;
 }
 
 int dungeonIsFull(Dungeon dungeon) {
@@ -275,79 +243,51 @@ void dungeonPostProcess(Dungeon dungeon) {
 			Tile* tileE = &dungeon.tiles[row][col + 1];
 			Tile* tileS = &dungeon.tiles[row + 1][col];
 			Tile* tileW = &dungeon.tiles[row][col - 1];
-			if (tile->type == HALL) {
+			
+			int NESW = 0x000F
+				& (((tileN->type == HALL || tileN->type == ROOM) << 3) 
+				| ((tileE->type == HALL || tileE->type == ROOM) << 2)
+				| ((tileS->type == HALL || tileS->type == ROOM) << 1)
+				| (tileW->type == HALL || tileW->type == ROOM));
 				
-				//NESW
-				if ((tileN->type == HALL || tileN->type == ROOM)
-					&& (tileE->type == HALL || tileE->type == ROOM)
-					&& (tileS->type == HALL || tileS->type == ROOM)
-					&& (tileW->type == HALL || tileW->type == ROOM)) {
+			if (tile->type != HALL) continue;
+			
+			switch (NESW) {
+				case 0x0F: //1111
 					tile->symbol = SYM_HALL_NESW;
-				}
-				
-				//NES
-				else if ((tileN->type == HALL || tileN->type == ROOM)
-					&& (tileE->type == HALL || tileE->type == ROOM) 
-					&& (tileS->type == HALL || tileS->type == ROOM)) {
+					break;
+				case 0x0E: //1110
 					tile->symbol = SYM_HALL_NES;
-				}
-					
-				//ESW
-				else if ((tileE->type == HALL || tileE->type == ROOM)
-					&& (tileS->type == HALL || tileS->type == ROOM)
-					&& (tileW->type == HALL || tileW->type == ROOM)) {
+					break;
+				case 0x07: //0111
 					tile->symbol = SYM_HALL_ESW;
-				}	
-				
-				//SWN
-				else if ((tileS->type == HALL || tileS->type == ROOM)
-					&& (tileW->type == HALL || tileW->type == ROOM)
-					&& (tileN->type == HALL || tileN->type == ROOM)) {
+					break;
+				case 0x0B: //1011
 					tile->symbol = SYM_HALL_SWN;
-				}
-				
-				//WNE
-				else if ((tileW->type == HALL || tileW->type == ROOM)
-					&& (tileN->type == HALL || tileN->type == ROOM)
-					&& (tileE->type == HALL || tileE->type == ROOM)) {
+					break;
+				case 0x0D: //1101
 					tile->symbol = SYM_HALL_WNE;
-				}
-				
-				//NE
-				else if ((tileN->type == HALL || tileN->type == ROOM)
-					&& (tileE->type == HALL || tileE->type == ROOM)) {
+					break;
+				case 0x0C: //1100
 					tile->symbol = SYM_HALL_NE;
-				}
-				
-				//ES
-				else if ((tileE->type == HALL || tileE->type == ROOM) 
-					&& (tileS->type == HALL || tileS->type == ROOM)) {
+					break;
+				case 0x06: //0110
 					tile->symbol = SYM_HALL_ES;
-				}
-				
-				//SW
-				else if ((tileS->type == HALL || tileS->type == ROOM)
-					&& (tileW->type == HALL || tileW->type == ROOM)) {
+					break;
+				case 0x03: //0011
 					tile->symbol = SYM_HALL_SW;
-				}
-				
-				//WN
-				else if ((tileW->type == HALL || tileW->type == ROOM)
-					&& (tileN->type == HALL || tileN->type == ROOM)) {
+					break;
+				case 0x09: //1001
 					tile->symbol = SYM_HALL_WN;
-				}
-				
-				//NS
-				else if ((tileN->type == HALL || tileN->type == ROOM)
-					&& (tileS->type == HALL || tileS->type == ROOM)) {
+					break;
+				case 0x0A: //1010
 					tile->symbol = SYM_HALL_NS;
-				}
-				
-				//EW
-				else if ((tileE->type == HALL || tileE->type == ROOM)
-					&& (tileW->type == HALL || tileW->type == ROOM)) {
+					break;
+				case 0x05: //0101
 					tile->symbol = SYM_HALL_EW;
-				}
+					break;
+				default:  //No chars for stubs.
+					tile->symbol = SYM_HALL;
 			}
 		}
 	}
@@ -361,29 +301,20 @@ Dungeon dungeonGenerate(Point dim) {
 	
 	if (dim.x < 1 || dim.y < 1) return dungeon;
 	
+	//Get seed for perlin noise
+	float seed[dim.y * dim.x];
+	for (int i = 0; i < dim.y * dim.x; i++) {
+		seed[i] = (float)rand() / (float)RAND_MAX;
+	}
+	
 	//Initialize dungeon
 	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dim.y);
 	for(int row = 0; row < dim.y; row++) {
 		dungeon.tiles[row] = malloc(sizeof(Tile) * dim.x);
 		for(int col = 0; col < dim.x; col++) {
-			dungeon.tiles[row][col] = (Tile){
-				SYM_ROCK_SOFT,
-				ROCK
-			};
+			dungeon.tiles[row][col] = tileGenerate(dim, (Point){col, row}, 0x01, seed);
 		}
 	}
-	
-	//Draw walls wall
-	dungeonDrawNorthSouth(dungeon, SYM_EDGE_N, 0);
-	dungeonDrawEastWest(dungeon, SYM_EDGE_E, dim.x - 1);
-	dungeonDrawNorthSouth(dungeon, SYM_EDGE_S, dim.y - 1);
-	dungeonDrawEastWest(dungeon, SYM_EDGE_W, 0);
-
-	//Draw corners
-	dungeon.tiles[0][0].symbol = SYM_EDGE_NW;
-	dungeon.tiles[0][dim.x - 1].symbol = SYM_EDGE_NE;
-	dungeon.tiles[dim.y - 1][dim.x - 1].symbol = SYM_EDGE_SE;
-	dungeon.tiles[dim.y - 1][0].symbol = SYM_EDGE_SW;
 	
 	Room rooms[ROOMS_MAX];
 	int count = 0;
@@ -402,7 +333,7 @@ Dungeon dungeonGenerate(Point dim) {
 	}
 	
 	//Sort (for consistency)
-	qsort(rooms, count, sizeof(Room), rad);
+	qsort(rooms, count, sizeof(Room), utilSortRad);
 	
 	//Revert
 	for(int i = 0; i < count; i++) {
@@ -411,12 +342,81 @@ Dungeon dungeonGenerate(Point dim) {
 	}
 	
 	//Create the paths.
-	for(int first = 0; first < count; first++) {
-		roomConnect(dungeon, rooms[first], rooms[first + 1 == count ? 0 : first + 1]);
+	for(int first = 0; first < count - 1; first++) {
+		roomConnect(dungeon, rooms[first], rooms[first + 1]);
 	}
+	
+	//Additional connections so the player can move easier. 
+	roomConnect(dungeon, rooms[0], rooms[count - 1]);
+	//roomConnect(dungeon, rooms[0], rooms[(count - 1)/2]);
+	
+	//Copy rooms into dungeon structure.
+	dungeon.roomNum = count;
+	dungeon.rooms = malloc(sizeof(Room) * count);
+	memcpy(dungeon.rooms, rooms, sizeof(Room) * count);
 	
 	//Prettify the dungeon.
 	dungeonPostProcess(dungeon);
+	
+	return dungeon;
+}
+
+Dungeon dungeonLoad(FILE* file) {
+	char head[sizeof(HEADER)];
+	size_t read = 0;
+	
+	//Read magic header
+	read = fread(head, sizeof(char), sizeof(HEADER), file);
+	if (read != sizeof(HEADER) || strcmp(head, HEADER) != 0) {
+		wprintf(L"Bad file header!");
+		exit(FILE_READ_BAD_HEAD);
+	}
+	
+	//Check file version
+	uint32_t version;
+	read = fread(&version, sizeof(uint32_t), 1, file);
+	if (read != 1 || version != VERSION) {
+		wprintf(L"Bad file version!");
+		exit(FILE_READ_BAD_VERSION);
+	}
+	
+	//Get file size
+	uint32_t size;
+	read = fread(&size, sizeof(uint32_t), 1, file);
+	if (read != 1) {
+		wprintf(L"Bad file size (EOF)!");
+		exit(FILE_READ_EOF_SIZE);
+	}
+	
+	//Get position
+	uint8_t xPlayer;
+	uint8_t yPlayer;
+	read = fread(&xPlayer, sizeof(uint8_t), 1, file);
+	read += fread(&yPlayer, sizeof(uint8_t), 1, file);
+	if (read != 2) {
+		wprintf(L"Bad file player co-ordinates (EOF)!");
+		exit(FILE_READ_EOF_PLAYER);
+	}
+	
+	Dungeon dungeon = {0};
+	dungeon.dim = DUNGEON_DIM;
+	
+	//Initialize dungeon
+	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dungeon.dim.y);
+	for(int row = 0; row < dungeon.dim.y; row++) {
+		dungeon.tiles[row] = malloc(sizeof(Tile) * dungeon.dim.x);
+		for(int col = 0; col < dungeon.dim.x; col++) {
+			uint8_t hardness;
+			read = fread(&hardness, sizeof(uint8_t), 1, file);
+			
+			if (read != 1) {
+				wprintf(L"Missing tile harness information (EOF)!");
+				exit(FILE_READ_EOF_HARDNESS);
+			}
+			
+			dungeon.tiles[row][col] = tileGenerate(dungeon.dim, (Point){col, row}, hardness, NULL);
+		}
+	}
 	
 	return dungeon;
 }
@@ -427,6 +427,10 @@ void dungeonDestroy(Dungeon dungeon) {
 	}
 	
 	free(dungeon.tiles);
+	free(dungeon.rooms);
+	
+	dungeon.roomNum = 0;
+	dungeon.dim = (Point){0};
 }
 
 void dungeonPrint(Dungeon dungeon) {

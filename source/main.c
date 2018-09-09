@@ -2,6 +2,7 @@
 #include <locale.h>
 #include <time.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "types.h"
 #include "dungeon.h"

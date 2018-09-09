@@ -1,4 +1,5 @@
 #include <wchar.h>
+#include <stdint.h>
 
 #include "types.h"
 
