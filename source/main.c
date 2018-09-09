@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
 	snprintf(path, 255, "%s/.rlg327/dungeon", home);
 	Dungeon dungeon;
 	
+	//Load dungeon from file
 	if (load) {
 		FILE* file = fopen(path, "rb");
 		
@@ -67,14 +68,24 @@ int main(int argc, char** argv) {
 		}
 		
 		dungeon = dungeonLoad(file);
+		fclose(file);
 	} else {
 		dungeon = dungeonGenerate(DUNGEON_DIM);
 	}
 	
 	dungeonPrint(dungeon);
 	
+	//Save dungeon to file.
 	if (save) {
-		//dungeonSave(dungeon);
+		FILE* file = fopen(path, "wb");
+		
+		if (file == NULL) {
+			wprintf(L"Failed to write file '%s'\n", path);
+			exit(FILE_READ_GONE);
+		}
+		
+		dungeonSave(dungeon, file);
+		fclose(file);
 	}
 	
 	dungeonDestroy(dungeon);

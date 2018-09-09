@@ -77,6 +77,10 @@ void hallPlace(Dungeon dungeon, Point point) {
 int roomPlaceAttempt(Dungeon dungeon, Room room) {
 	for (int row = room.pos.y - 1; row < room.pos.y + room.dim.y + 1; row++) {
 		for (int col = room.pos.x - 1; col < room.pos.x + room.dim.x + 1; col++) {
+			if (row < 0) continue;
+			if (col < 0) continue;
+			if (row >= dungeon.dim.y) continue;
+			if (col >= dungeon.dim.x) continue;
 			if (dungeon.tiles[row][col].type == ROOM) return 0;
 		}
 	}
@@ -324,6 +328,10 @@ Dungeon dungeonGenerate(Point dim) {
 		roomPlace(dungeon, rooms[count]);
 	}
 	
+	//Place player 
+	dungeon.player.x = rooms[0].pos.x + (rooms[0].dim.x)/2;
+	dungeon.player.y = rooms[0].pos.y + (rooms[0].dim.y)/2;
+	
 	//Normalize
 	for(int i = 0; i < count; i++) {
 		rooms[i].pos.x -= (dungeon.dim.x)/2;
@@ -348,6 +356,11 @@ Dungeon dungeonGenerate(Point dim) {
 	roomConnect(dungeon, rooms[0], rooms[count - 1]);
 	//roomConnect(dungeon, rooms[0], rooms[(count - 1)/2]);
 	
+	//Copy rooms into structure
+	dungeon.numRooms = count;
+	dungeon.rooms = malloc(sizeof(Room) * count);
+	memcpy(dungeon.rooms, rooms, sizeof(Room) * count);
+	
 	//Prettify the dungeon.
 	dungeonPostProcess(dungeon);
 	
@@ -357,10 +370,12 @@ Dungeon dungeonGenerate(Point dim) {
 Dungeon dungeonLoad(FILE* file) {
 	size_t length = strlen(HEADER);
 	char head[length + 1];
-	head[length] = '\0';
 	size_t read = 0;
+	Dungeon dungeon = {0};
+	dungeon.dim = DUNGEON_DIM;
 	
 	//Read magic header
+	head[length] = '\0';
 	read = fread(head, sizeof(char), length, file);
 	if (read != length || strcmp(head, HEADER) != 0) {
 		wprintf(L"Bad file header '%s'!\n", head);
@@ -390,13 +405,13 @@ Dungeon dungeonLoad(FILE* file) {
 	uint8_t yPlayer;
 	read = fread(&xPlayer, sizeof(uint8_t), 1, file);
 	read += fread(&yPlayer, sizeof(uint8_t), 1, file);
-	if (read != 2) {
+	if (read != 2 || xPlayer >= dungeon.dim.x || yPlayer >= dungeon.dim.y) {
 		wprintf(L"Bad file player co-ordinates (EOF)!\n");
 		exit(FILE_READ_EOF_PLAYER);
 	}
 	
-	Dungeon dungeon = {0};
-	dungeon.dim = DUNGEON_DIM;
+	dungeon.player.x = xPlayer;
+	dungeon.player.y = yPlayer;
 	
 	//Initialize dungeon
 	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dungeon.dim.y);
@@ -415,28 +430,36 @@ Dungeon dungeonLoad(FILE* file) {
 		}
 	}
 	
+	int i = 0;
+	int rooms = (size - ftell(file))/4;
+	rooms = rooms > 0 ? rooms : 0;
+	dungeon.rooms = malloc(sizeof(Room) * rooms);
+	dungeon.numRooms = rooms;
+	
 	while (ftell(file) < size) {
 		Room room;
-		uint8_t xRoom;
-		uint8_t yRoom;
-		uint8_t xRoomDim;
-		uint8_t yRoomDim;
-		read = fread(&xRoom, sizeof(uint8_t), 1, file);
-		read += fread(&yRoom, sizeof(uint8_t), 1, file);
-		read += fread(&xRoomDim, sizeof(uint8_t), 1, file);
-		read += fread(&yRoomDim, sizeof(uint8_t), 1, file);
+		uint8_t posX;
+		uint8_t posY;
+		uint8_t dimX;
+		uint8_t dimY;
+		read = fread(&posX, sizeof(uint8_t), 1, file);
+		read += fread(&posY, sizeof(uint8_t), 1, file);
+		read += fread(&dimX, sizeof(uint8_t), 1, file);
+		read += fread(&dimY, sizeof(uint8_t), 1, file);
 		
 		if (read != 4) {
 			wprintf(L"Missing rooms information (EOF)!\n");
 			exit(FILE_READ_EOF_ROOMS);
 		}
 		
-		room.pos.x = xRoom;
-		room.pos.y = yRoom;
-		room.dim.x = xRoomDim;
-		room.dim.y = yRoomDim;
+		//Verify the rooms are in bounds. If they are not, throw them out.
+		room.pos.x = posX >= dungeon.dim.x ? dungeon.dim.x - 1 : posX;
+		room.pos.y = posY >= dungeon.dim.x ? dungeon.dim.x - 1 : posY;
+		room.dim.x = dimX + room.pos.x >= dungeon.dim.x - 1 ? 1 : dimX;
+		room.dim.y = dimY + room.pos.y >= dungeon.dim.x - 1 ? 1 : dimY;
 		
 		roomPlace(dungeon, room);
+		dungeon.rooms[i++] = room;
 	}
 	
 	//Prettify the dungeon.
@@ -445,13 +468,55 @@ Dungeon dungeonLoad(FILE* file) {
 	return dungeon;
 }
 
+void dungeonSave(Dungeon dungeon, FILE* file) {
+	//Header
+	fwrite(HEADER, sizeof(char), strlen(HEADER), file);
+	
+	//Version
+	uint32_t ver = __bswap_32(VERSION);
+	fwrite(&ver, sizeof(uint32_t), 1, file);
+	
+	//Size of file, 22 for the header, width and height of dungeon, and extra rooms
+	uint32_t size = __bswap_32(22 + dungeon.dim.x * dungeon.dim.y + dungeon.numRooms * 4);
+	fwrite(&size, sizeof(uint32_t), 1, file);
+	
+	//Player position
+	uint8_t playerX = dungeon.player.x;
+	uint8_t playerY = dungeon.player.y;
+	fwrite(&playerX, sizeof(uint8_t), 1, file);
+	fwrite(&playerY, sizeof(uint8_t), 1, file);
+	
+	//Tiles
+	for(int row = 0; row < dungeon.dim.y; row++) {
+		for(int col = 0; col < dungeon.dim.x; col++) {
+			uint8_t hardness = dungeon.tiles[row][col].hardness;
+			fwrite(&hardness, sizeof(uint8_t), 1, file);
+		}
+	}
+	
+	//Rooms
+	for(int i = 0; i < dungeon.numRooms; i++) {
+		Room room = dungeon.rooms[i];
+		uint8_t posX = (uint8_t)(room.pos.x);
+		uint8_t posY = (uint8_t)(room.pos.y);
+		uint8_t dimX = (uint8_t)(room.dim.x);
+		uint8_t dimY = (uint8_t)(room.dim.y);
+		fwrite(&posX, sizeof(uint8_t), 1, file);
+		fwrite(&posY, sizeof(uint8_t), 1, file);
+		fwrite(&dimX, sizeof(uint8_t), 1, file);
+		fwrite(&dimY, sizeof(uint8_t), 1, file);
+	}
+}
+
 void dungeonDestroy(Dungeon dungeon) {
 	for(int row = 0; row < dungeon.dim.y; row++) {
 		free(dungeon.tiles[row]);
 	}
 	
 	free(dungeon.tiles);
+	free(dungeon.rooms);
 	dungeon.dim = (Point){0};
+	dungeon.numRooms = 0;
 }
 
 void dungeonPrint(Dungeon dungeon) {

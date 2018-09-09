@@ -40,8 +40,11 @@ typedef struct {
 } Room;
 
 typedef struct {
+	Point player;
 	Point dim;
+	int numRooms;
 	Tile** tiles;
+	Room* rooms;
 } Dungeon;
 
 extern const Point DUNGEON_DIM;
