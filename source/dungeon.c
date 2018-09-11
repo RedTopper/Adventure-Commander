@@ -239,7 +239,7 @@ int dungeonIsFull(Dungeon dungeon) {
 	float room = 0.0;
 	for(int row = 0; row < dungeon.dim.y; row++) {
 		for(int col = 0; col < dungeon.dim.x; col++) {
-			if (dungeon.tiles[row][col].type == ROOM) room = room + 1.0;
+			if (dungeon.tiles[row][col].type == ROOM) room = room + 1.0f;
 		}
 	}
 	
@@ -440,7 +440,7 @@ Dungeon dungeonLoad(FILE* file) {
 	}
 	
 	int i = 0;
-	int rooms = (size - ftell(file))/4;
+	int rooms = (size - ftell(file))/4l;
 	rooms = rooms > 0 ? rooms : 0;
 	dungeon.rooms = malloc(sizeof(Room) * rooms);
 	dungeon.numRooms = rooms;

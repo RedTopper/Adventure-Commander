@@ -1,3 +1,6 @@
 build/
 game
 CHANGELOG
+/.idea
+/cmake-build-debug
+/CMakeLists.txt
