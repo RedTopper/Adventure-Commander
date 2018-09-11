@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <byteswap.h>
+#include <endian.h>
 
 #include "types.h"
 #include "dungeon.h"
@@ -394,7 +394,7 @@ Dungeon dungeonLoad(FILE* file) {
 	//Check file version
 	uint32_t version;
 	read = fread(&version, sizeof(uint32_t), 1, file);
-	version = __bswap_32 (version); //Big to little
+	version = be32toh(version);
 	if (read != 1 || version != VERSION) {
 		wprintf(L"Bad file version!\n");
 		exit(FILE_READ_BAD_VERSION);
@@ -403,7 +403,7 @@ Dungeon dungeonLoad(FILE* file) {
 	//Get file size
 	uint32_t size;
 	read = fread(&size, sizeof(uint32_t), 1, file);
-	size = __bswap_32 (size); //Big to little
+	size = be32toh(size);
 	if (read != 1) {
 		wprintf(L"Bad file size (EOF)!\n");
 		exit(FILE_READ_EOF_SIZE);
@@ -483,11 +483,11 @@ void dungeonSave(Dungeon dungeon, FILE* file) {
 	fwrite(HEADER, sizeof(char), strlen(HEADER), file);
 	
 	//Version
-	uint32_t ver = __bswap_32(VERSION);
+	uint32_t ver = htobe32(VERSION);
 	fwrite(&ver, sizeof(uint32_t), 1, file);
 	
 	//Size of file, 22 for the header, width and height of dungeon, and extra rooms
-	uint32_t size = __bswap_32(22 + dungeon.dim.x * dungeon.dim.y + dungeon.numRooms * 4);
+	uint32_t size = htobe32(22 + dungeon.dim.x * dungeon.dim.y + dungeon.numRooms * 4);
 	fwrite(&size, sizeof(uint32_t), 1, file);
 	
 	//Player position

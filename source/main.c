@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	char* path = calloc(256, sizeof(char));
+	char path[256];
 	char* home = getenv("HOME");
 	snprintf(path, 255, "%s/.rlg327/dungeon", home);
 	Dungeon dungeon;
