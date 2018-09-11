@@ -6,21 +6,31 @@ Aaron Walter
 ajwalter
 792829065
 
+# Important console setup!!
+This game uses UTF-8 to make it look nice! Please read this if your terminal 
+looks messed up (ex: question marks or blank output):
+- If you are using `gnome-terminal` (called Terminal), UTF-8 works. 
+- If you are using `xterm`, press CTRL + RIGHT CLICK and enable TrueType fonts.
+(Tested on CS327FedoraLinux)
+
+# Other information
+In any case, your locale should be set to "en_US.UTF-8". You can check with the
+command `locale`. SSH environments can sometimes break this, so you might need
+to put these in your `~/.profile` if you are using SSH and see question marks:
+- `export LC_ALL=en_US.UTF-8`
+- `export LANG=en_US.UTF-8`
+
 # Build
 Run `make` then `./game`
 
-# Requirements
-Your terminal must support utf8. PuTTY supports this just fine, as well as
-Cmder. Many modern linux terminals also support utf8. Characters will look
-broken if your terminal is in ASCII mode!
-
-# Notable features
-- Random dungeons.
-- Dungeon halls connect with some amount of randomness.
-- Dungeon halls connect in a circular form, allowing movement to all other rooms.
+# Notable features for this version
+- Save a file by typing `./game --save`.
+- Load a file by typing `./game --load`.
+- Note: to save or load a file, create a directory called `~/.rlg327` first!
 
 # Changes from specifications
 - Immutable dungeon walls are LOWER HALF BLOCK, UPPER HALF BLOCK and FULL BLOCK
 - Halls are BOX DRAWING DOUBLE * (I used most of the double lined characters)
+- Rock is LIGHT SHADE, MEDIUM SHADE, and DARK SHADE to represent hardness
 - Rooms are SPACE
-- Rock is LIGHT SHADE
+

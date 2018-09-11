@@ -11,6 +11,7 @@ obj = $(src:$(SOURCE)/%.c=$(BUILD)/%.o)
 dep = $(src:$(SOURCE)/%.c=$(BUILD)/%.d)
 
 $(NAME): $(obj)
+	$(info *** Please read README if your console appears blank ***)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 -include $(dep)
