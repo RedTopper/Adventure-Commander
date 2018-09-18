@@ -1,5 +1,7 @@
 #pragma once
 
+#include "types.h"
+
 int utilSkewedBetweenRange(int min, int max);
 int utilProdDot(Point one, Point two);
 int utilProdCross(Point one, Point two);

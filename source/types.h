@@ -1,5 +1,8 @@
 #pragma once
 
+#include "wchar.h"
+#include "stdint.h"
+
 typedef enum {
 	VOID,
 	EDGE,
@@ -45,6 +48,7 @@ typedef struct {
 	int numRooms;
 	Tile** tiles;
 	Room* rooms;
+	int** path;
 } Dungeon;
 
 extern const Point DUNGEON_DIM;

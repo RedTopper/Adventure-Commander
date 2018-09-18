@@ -10,6 +10,8 @@
 #include "dungeon.h"
 #include "perlin.h"
 #include "util.h"
+#include "path.h"
+
 
 //Number of rooms
 const int ROOMS_MIN = 5;
@@ -518,13 +520,18 @@ void dungeonSave(Dungeon dungeon, FILE* file) {
 	}
 }
 
-void dungeonDestroy(Dungeon dungeon) {
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		free(dungeon.tiles[row]);
+void dungeonDestroy(Dungeon* dungeon) {
+	for(int row = 0; row < dungeon->dim.y; row++) {
+		free(dungeon->tiles[row]);
 	}
 	
-	free(dungeon.tiles);
-	free(dungeon.rooms);
+	free(dungeon->tiles);
+	free(dungeon->rooms);
+
+	pathDestroy(dungeon);
+
+	dungeon->dim = (Point){0};
+	dungeon->numRooms = 0;
 }
 
 void dungeonPrint(Dungeon dungeon) {
@@ -534,31 +541,6 @@ void dungeonPrint(Dungeon dungeon) {
 				wprintf(L"@");
 			} else {
 				wprintf(L"%ls", dungeon.tiles[row][col].symbol);
-			}
-		}
-		wprintf(L"\n");
-	}
-}
-
-void dungeonPrintDebug(Dungeon dungeon) {
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		for(int col = 0; col < dungeon.dim.x; col++) {
-			switch (dungeon.tiles[row][col].type) {
-				case VOID:
-					wprintf(L"x");
-					break;
-				case EDGE:
-					wprintf(L"e");
-					break;
-				case ROCK:
-					wprintf(L"o");
-					break;
-				case ROOM:
-					wprintf(L"r");
-					break;
-				case HALL:
-					wprintf(L"h");
-					break;
 			}
 		}
 		wprintf(L"\n");

@@ -1,20 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "types.h"
 #include "queue.h"
 
 // Function to Create A New Node
 // Also used to create new queues externally.
-Node* queueCreate(void* data, int priority) {
+Node* queueCreate(Point pos, int priority) {
 	Node* temp = (Node*) malloc(sizeof(Node));
-	temp->data = data;
+	temp->pos = pos;
 	temp->priority = priority;
 	temp->next = NULL;
 	return temp;
 }
 
-void* queuePeek(Node** head) {
-	return (*head)->data;
+Point queuePeek(Node** head) {
+	return (*head)->pos;
 }
 
 void queuePop(Node** head) {
@@ -23,19 +24,19 @@ void queuePop(Node** head) {
 	free(temp);
 }
 
-void queuePush(Node** head, void* data, int priority) {
+void queuePush(Node** head, Point pos, int priority) {
 	Node* start = (*head);
-	Node* temp = queueCreate(data, priority);
+	Node* temp = queueCreate(pos, priority);
 
 
-	if (priority > (*head)->priority) {
+	if (priority < (*head)->priority) {
 		//If the priority is higher than the head,
 		//replace the head node.
 		temp->next = *head;
 		(*head) = temp;
 	} else {
 		//Otherwise, traverse until we can insert a node.
-		while (start->next != NULL && priority < start->next->priority) {
+		while (start->next != NULL && priority > start->next->priority) {
 			start = start->next;
 		}
 
