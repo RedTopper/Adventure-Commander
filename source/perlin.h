@@ -10,4 +10,4 @@
  * Author: Javidx9
  * License: GNU GPLv3 https://github.com/OneLoneCoder/videos/blob/master/LICENSE
  */
-float noise2D(Point dim, Point pos, float* seed, int octaves, float bias);
+float noise2D(Point dim, Point pos, const float* seed, int octaves, float bias);

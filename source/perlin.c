@@ -6,7 +6,7 @@
 
 //"Public" functions
 
-float noise2D(Point dim, Point pos, float* seed, int octaves, float bias) {
+float noise2D(Point dim, Point pos, const float* seed, int octaves, float bias) {
 	float noise = 0.0f;
 	float scaleAcc = 0.0f;
 	float scale = 1.0f;

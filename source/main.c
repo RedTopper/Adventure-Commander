@@ -9,15 +9,30 @@
 #include "types.h"
 #include "dungeon.h"
 
-
 const char* SAVE = "--save";
 const char* LOAD = "--load";
 
 void help() {
 	wprintf(
-		L"TODO: Help\n"
-		L"Second line\n"
+		L"Adventure Commander Help: \n"
+		L"[--load] Load a file from ~/.rlg327/dungeon\n"
+		L"[--save] Write a dungeon to ~/.rlg327/dungeon\n"
 	);
+}
+
+FILE* get(char* mode) {
+	char path[256];
+	char* home = getenv("HOME");
+	snprintf(path, 255, "%s/.rlg327/dungeon", home);
+
+	//Load dungeon from file
+	FILE* file = fopen(path, mode);
+	if (file == NULL) {
+		wprintf(L"Failed to open file '%s'\n", path);
+		exit(FILE_READ_GONE);
+	}
+
+	return file;
 }
 
 int main(int argc, char** argv) {
@@ -29,12 +44,12 @@ int main(int argc, char** argv) {
 	
 	//Parse arguments
 	for (int arg = 1; arg < argc; arg++) {
-		if (strlen(argv[arg]) < 3) {
+		if (strlen(argv[arg]) < 3 || argv[arg][0] != '-' || argv[arg][1] != '-') {
 			//Check length
-			wprintf(L"Unknown argument '%s'\n");
+			wprintf(L"Bad argument '%s'\n", argv[arg]);
 			help();
-			exit(ARGUMENT_BAD);
-		} else if (argv[arg][0] == '-' && argv[arg][1] == '-') {
+			exit(ARGUMENT_NO_DASH);
+		} else {
 			//Check if correct argument
 			if (strcmp(SAVE, argv[arg]) == 0) {
 				save = 1;
@@ -45,28 +60,14 @@ int main(int argc, char** argv) {
 				help();
 				exit(ARGUMENT_NO_UNKNOWN);
 			}
-		} else {
-			//Broken prefix
-			wprintf(L"Arguments must start with --\n");
-			help();
-			exit(ARGUMENT_NO_DASH);
 		}
 	}
-	
-	char path[256];
-	char* home = getenv("HOME");
-	snprintf(path, 255, "%s/.rlg327/dungeon", home);
+
 	Dungeon dungeon;
-	
+
 	//Load dungeon from file
 	if (load) {
-		FILE* file = fopen(path, "rb");
-		
-		if (file == NULL) {
-			wprintf(L"Failed to open file '%s'\n", path);
-			exit(FILE_READ_GONE);
-		}
-		
+		FILE* file = get("rb");
 		dungeon = dungeonLoad(file);
 		fclose(file);
 	} else {
@@ -77,13 +78,7 @@ int main(int argc, char** argv) {
 	
 	//Save dungeon to file.
 	if (save) {
-		FILE* file = fopen(path, "wb");
-		
-		if (file == NULL) {
-			wprintf(L"Failed to write file '%s'\n", path);
-			exit(FILE_READ_GONE);
-		}
-		
+		FILE* file = get("wb");
 		dungeonSave(dungeon, file);
 		fclose(file);
 	}

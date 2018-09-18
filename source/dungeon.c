@@ -149,8 +149,8 @@ void roomConnect(Dungeon dungeon, Room first, Room second) {
 	offset.y *= rand() % 2 ? 1 : -1;
 	
 	//Get the actual midpoint.
-	mid.x = (((float)(start.x) + (float)(end.x)) / 2.0f + (float)offset.x);
-	mid.y = (((float)(start.y) + (float)(end.y)) / 2.0f + (float)offset.y);
+	mid.x = (int)(((float)(start.x) + (float)(end.x)) / 2.0f + (float)offset.x);
+	mid.y = (int)(((float)(start.y) + (float)(end.y)) / 2.0f + (float)offset.y);
 	
 	//Check bounds of midpoint.
 	if(mid.x < 1) mid.x = 1;
@@ -165,7 +165,7 @@ void roomConnect(Dungeon dungeon, Room first, Room second) {
 Room roomGenerate(Dungeon dungeon) {
 	Point dim = {0};
 	Point pos = {0};
-	Room room = {0};
+	Room room;
 	
 	do {
 		dim.x = utilSkewedBetweenRange(ROOM_X_MIN, ROOM_X_MAX);
@@ -178,7 +178,7 @@ Room roomGenerate(Dungeon dungeon) {
 	return room;
 }
 
-Tile tileGenerate(Point dim, Point pos, uint8_t hardness, float* seed) {
+Tile tileGenerate(Point dim, Point pos, uint8_t hardness, const float* seed) {
 	Tile tile = {0};
 	
 	//Defaults
@@ -206,7 +206,7 @@ Tile tileGenerate(Point dim, Point pos, uint8_t hardness, float* seed) {
 			//the seed value isn't passed when loading from a file.
 			//Populate the rest of the tiles with rock.
 			tile.type = ROCK;
-			tile.hardness = (noise2D(dim, pos, seed, 4, 0.2f) * 255.0f);
+			tile.hardness = (uint8_t)(noise2D(dim, pos, seed, 4, 0.2f) * 255.0f);
 		}
 	} else if (hardness == 0x00) {
 		//Hallway if hardness is 0. Will convert rooms to rooms
@@ -348,7 +348,7 @@ Dungeon dungeonGenerate(Point dim) {
 	}
 	
 	//Sort (for consistency)
-	qsort(rooms, count, sizeof(Room), utilSortRad);
+	qsort(rooms, (size_t)count, sizeof(Room), utilSortRad);
 	
 	//Revert
 	for(int i = 0; i < count; i++) {
@@ -487,7 +487,7 @@ void dungeonSave(Dungeon dungeon, FILE* file) {
 	fwrite(&ver, sizeof(uint32_t), 1, file);
 	
 	//Size of file, 22 for the header, width and height of dungeon, and extra rooms
-	uint32_t size = htobe32(22 + dungeon.dim.x * dungeon.dim.y + dungeon.numRooms * 4);
+	uint32_t size = htobe32((uint32_t)(22 + dungeon.dim.x * dungeon.dim.y + dungeon.numRooms * 4));
 	fwrite(&size, sizeof(uint32_t), 1, file);
 	
 	//Player position
@@ -525,14 +525,16 @@ void dungeonDestroy(Dungeon dungeon) {
 	
 	free(dungeon.tiles);
 	free(dungeon.rooms);
-	dungeon.dim = (Point){0};
-	dungeon.numRooms = 0;
 }
 
 void dungeonPrint(Dungeon dungeon) {
 	for(int row = 0; row < dungeon.dim.y; row++) {
 		for(int col = 0; col < dungeon.dim.x; col++) {
-			wprintf(L"%ls", dungeon.tiles[row][col].symbol);
+			if (row == dungeon.player.y && col == dungeon.player.x) {
+				wprintf(L"@");
+			} else {
+				wprintf(L"%ls", dungeon.tiles[row][col].symbol);
+			}
 		}
 		wprintf(L"\n");
 	}
