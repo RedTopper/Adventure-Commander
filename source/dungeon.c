@@ -159,7 +159,7 @@ void roomConnect(Dungeon dungeon, Room first, Room second) {
 	if(mid.y < 1) mid.y = 1;
 	if(mid.x > dungeon.dim.x - 2) mid.x = dungeon.dim.x - 2;
 	if(mid.y > dungeon.dim.y - 2) mid.y = dungeon.dim.y - 2;
-	
+
 	roomConnectRasterize(dungeon, start, mid);
 	roomConnectRasterize(dungeon, mid, end);
 }
@@ -527,11 +527,11 @@ void dungeonDestroy(Dungeon* dungeon) {
 	
 	free(dungeon->tiles);
 	free(dungeon->rooms);
-
-	pathDestroy(dungeon);
-
+	dungeon->tiles = NULL;
+	dungeon->rooms = NULL;
 	dungeon->dim = (Point){0};
 	dungeon->numRooms = 0;
+	pathDestroy(dungeon);
 }
 
 void dungeonPrint(Dungeon dungeon) {

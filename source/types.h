@@ -26,6 +26,11 @@ typedef enum {
 	ARGUMENT_NO_UNKNOWN,
 } Error;
 
+typedef enum {
+	PATH_VIA_WALLS,
+	PATH_VIA_FLOOR
+} PathFinderStyle;
+
 typedef struct {
 	int x;
 	int y;
@@ -48,7 +53,8 @@ typedef struct {
 	int numRooms;
 	Tile** tiles;
 	Room* rooms;
-	int** path;
+	int** pathFloor;
+	int** pathDig;
 } Dungeon;
 
 extern const Point DUNGEON_DIM;
