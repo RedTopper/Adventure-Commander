@@ -8,6 +8,7 @@
 
 #include "types.h"
 #include "dungeon.h"
+#include "path.h"
 
 const char* SAVE = "--save";
 const char* LOAD = "--load";
@@ -73,8 +74,11 @@ int main(int argc, char** argv) {
 	} else {
 		dungeon = dungeonGenerate(DUNGEON_DIM);
 	}
-	
+
+	pathCreate(&dungeon);
 	dungeonPrint(dungeon);
+	pathPrint(dungeon, dungeon.pathFloor);
+	pathPrint(dungeon, dungeon.pathDig);
 	
 	//Save dungeon to file.
 	if (save) {

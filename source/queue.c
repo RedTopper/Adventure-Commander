@@ -28,8 +28,7 @@ void queuePush(Node** head, Point pos, int priority) {
 	Node* start = (*head);
 	Node* temp = queueCreate(pos, priority);
 
-
-	if (priority < (*head)->priority) {
+	if ((*head) == NULL || priority < (*head)->priority) {
 		//If the priority is higher than the head,
 		//replace the head node.
 		temp->next = *head;

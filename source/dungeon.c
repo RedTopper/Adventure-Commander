@@ -339,10 +339,6 @@ Dungeon dungeonGenerate(Point dim) {
 		roomPlace(dungeon, rooms[count]);
 	}
 	
-	//Place player 
-	dungeon.player.x = rooms[0].pos.x + (rooms[0].dim.x)/2;
-	dungeon.player.y = rooms[0].pos.y + (rooms[0].dim.y)/2;
-	
 	//Normalize
 	for(int i = 0; i < count; i++) {
 		rooms[i].pos.x -= (dungeon.dim.x)/2;
@@ -357,6 +353,10 @@ Dungeon dungeonGenerate(Point dim) {
 		rooms[i].pos.x += (dungeon.dim.x)/2;
 		rooms[i].pos.y += (dungeon.dim.y)/2;
 	}
+
+	//Place player
+	dungeon.player.x = rooms[0].pos.x + (rooms[0].dim.x)/2;
+	dungeon.player.y = rooms[0].pos.y + (rooms[0].dim.y)/2;
 	
 	//Create the paths.
 	for(int first = 0; first < count - 1; first++) {
@@ -521,6 +521,8 @@ void dungeonSave(Dungeon dungeon, FILE* file) {
 }
 
 void dungeonDestroy(Dungeon* dungeon) {
+	pathDestroy(dungeon);
+
 	for(int row = 0; row < dungeon->dim.y; row++) {
 		free(dungeon->tiles[row]);
 	}
@@ -531,14 +533,13 @@ void dungeonDestroy(Dungeon* dungeon) {
 	dungeon->rooms = NULL;
 	dungeon->dim = (Point){0};
 	dungeon->numRooms = 0;
-	pathDestroy(dungeon);
 }
 
 void dungeonPrint(Dungeon dungeon) {
 	for(int row = 0; row < dungeon.dim.y; row++) {
 		for(int col = 0; col < dungeon.dim.x; col++) {
 			if (row == dungeon.player.y && col == dungeon.player.x) {
-				wprintf(L"@");
+				wprintf(SYM_PLAY);
 			} else {
 				wprintf(L"%ls", dungeon.tiles[row][col].symbol);
 			}

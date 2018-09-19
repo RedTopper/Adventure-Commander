@@ -27,7 +27,7 @@ typedef enum {
 } Error;
 
 typedef enum {
-	PATH_VIA_WALLS,
+	PATH_VIA_DIG,
 	PATH_VIA_FLOOR
 } PathFinderStyle;
 
@@ -58,3 +58,4 @@ typedef struct {
 } Dungeon;
 
 extern const Point DUNGEON_DIM;
+extern const wchar_t* SYM_PLAY;
