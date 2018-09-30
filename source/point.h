@@ -1,6 +1,9 @@
 #pragma once
 
-#include "types.h"
+typedef struct {
+	int x;
+	int y;
+} Point;
 
 int utilSkewedBetweenRange(int min, int max);
 int utilProdDot(Point one, Point two);

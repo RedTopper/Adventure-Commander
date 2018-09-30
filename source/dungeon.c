@@ -1,17 +1,16 @@
 #include <wchar.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <endian.h>
 
-#include "types.h"
+#include "mob.h"
 #include "dungeon.h"
 #include "perlin.h"
-#include "util.h"
+#include "point.h"
 #include "path.h"
-
+#include "main.h"
 
 //Number of rooms
 const int ROOMS_MIN = 5;
@@ -61,6 +60,9 @@ const wchar_t* SYM_VOID = L"x";
 //Magic header
 const char* HEADER = "RLG327-F2018";
 const uint32_t VERSION = 0;
+
+//Default Size
+const Point DUNGEON_DIM = {80,21};
 
 void hallPlace(Dungeon dungeon, Point point) {
 	if (point.x >= 0 

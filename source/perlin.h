@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "point.h"
 
 /**
  * A Perlin noise generator in 2D

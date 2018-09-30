@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "types.h"
+#include "mob.h"
 #include "queue.h"
 #include "path.h"
 

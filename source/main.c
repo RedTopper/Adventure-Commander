@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "types.h"
+#include "main.h"
 #include "dungeon.h"
 #include "path.h"
 

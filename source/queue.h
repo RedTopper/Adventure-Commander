@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "point.h"
 
 /**
  * A priority queue for C, altered to use points instead of ints (though it really

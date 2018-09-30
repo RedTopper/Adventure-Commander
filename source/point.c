@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "types.h"
-#include "util.h"
+#include "point.h"
+#include "dungeon.h"
 
 //"Public" functions
 

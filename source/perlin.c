@@ -1,7 +1,7 @@
 #include <wchar.h>
 #include <stdint.h>
 
-#include "types.h"
+#include "point.h"
 #include "perlin.h"
 
 //"Public" functions
