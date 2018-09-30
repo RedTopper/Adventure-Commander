@@ -12,13 +12,28 @@
 
 const char* SAVE = "--save";
 const char* LOAD = "--load";
+const char* MOBS = "--nummon";
 
-void help() {
+void help(char* message, char* command, Error error ) {
+	wprintf(L"%s: ", command);
+	wprintf(L"%s\n", message);
 	wprintf(
 		L"Adventure Commander Help: \n"
 		L"[--load] Load a file from ~/.rlg327/dungeon\n"
 		L"[--save] Write a dungeon to ~/.rlg327/dungeon\n"
+		L"[--nummon] <count> Number of monsters to generate\n"
 	);
+	exit(error);
+}
+
+int require(int* on, int count, char* command) {
+	if ((*on) < count - 1) {
+		(*on)++;
+	} else {
+		help("This param requires another argument", command, ARGUMENT_REQ_PARAM);
+	}
+
+	return 1;
 }
 
 FILE* get(char* mode) {
@@ -29,8 +44,7 @@ FILE* get(char* mode) {
 	//Load dungeon from file
 	FILE* file = fopen(path, mode);
 	if (file == NULL) {
-		wprintf(L"Failed to open file '%s'\n", path);
-		exit(FILE_READ_GONE);
+		help("Failed to open file", path, FILE_READ_GONE);
 	}
 
 	return file;
@@ -42,24 +56,24 @@ int main(int argc, char** argv) {
 	
 	int save = 0;
 	int load = 0;
+	int mobs = 10;
 	
 	//Parse arguments
 	for (int arg = 1; arg < argc; arg++) {
 		if (strlen(argv[arg]) < 3 || argv[arg][0] != '-' || argv[arg][1] != '-') {
 			//Check length
-			wprintf(L"Bad argument '%s'\n", argv[arg]);
-			help();
-			exit(ARGUMENT_NO_DASH);
+			help("Bad argument", argv[arg], ARGUMENT_NO_DASH);
 		} else {
 			//Check if correct argument
 			if (strcmp(SAVE, argv[arg]) == 0) {
 				save = 1;
 			} else if (strcmp(LOAD, argv[arg]) == 0) {
 				load = 1;
+			} else if (strcmp(MOBS, argv[arg]) == 0 && require(&arg, argc, argv[arg])) {
+				mobs = atoi(argv[arg]); // NOLINT(cert-err34-c)
+				if (mobs < 1) mobs = 10;
 			} else {
-				wprintf(L"Unknown argument '%s'\n", argv[arg]);
-				help();
-				exit(ARGUMENT_NO_UNKNOWN);
+				help("Unknown argument", argv[arg], ARGUMENT_UNKNOWN);
 			}
 		}
 	}
@@ -77,8 +91,6 @@ int main(int argc, char** argv) {
 
 	pathCreate(&dungeon);
 	dungeonPrint(dungeon);
-	pathPrint(dungeon, dungeon.pathFloor);
-	pathPrint(dungeon, dungeon.pathDig);
 	
 	//Save dungeon to file.
 	if (save) {

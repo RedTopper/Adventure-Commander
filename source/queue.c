@@ -6,16 +6,16 @@
 
 // Function to Create A New Node
 // Also used to create new queues externally.
-Node* queueCreate(Point pos, int priority) {
+Node* queueCreate(NodeData data, int priority) {
 	Node* temp = (Node*) malloc(sizeof(Node));
-	temp->pos = pos;
+	temp->data = data;
 	temp->priority = priority;
 	temp->next = NULL;
 	return temp;
 }
 
-Point queuePeek(Node** head) {
-	return (*head)->pos;
+NodeData queuePeek(Node** head) {
+	return (*head)->data;
 }
 
 void queuePop(Node** head) {
@@ -24,9 +24,9 @@ void queuePop(Node** head) {
 	free(temp);
 }
 
-void queuePush(Node** head, Point pos, int priority) {
+void queuePush(Node** head, NodeData data, int priority) {
 	Node* start = (*head);
-	Node* temp = queueCreate(pos, priority);
+	Node* temp = queueCreate(data, priority);
 
 	if ((*head) == NULL || priority < (*head)->priority) {
 		//If the priority is higher than the head,

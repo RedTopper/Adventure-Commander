@@ -1,23 +1,29 @@
 #pragma once
 
 #include "point.h"
+#include "mob.h"
 
 /**
- * A priority queue for C, altered to use points instead of ints (though it really
- * should use void* but that would be too easy, maybe some day).
+ * A priority queue for C, altered to use unions instead of ints.
+ *
+ * higher values indicate higher priority
  *
  * Author: https://www.geeksforgeeks.org/priority-queue-using-linked-list/
  */
 
-// higher values indicate higher priority
-typedef struct node {
+typedef union {
 	Point pos;
+	Mob mob;
+} NodeData;
+
+typedef struct node {
+	NodeData data;
 	int priority;
 	struct node* next;
 } Node;
 
-Node* queueCreate(Point pos, int priority);
-void queuePush(Node** head, Point pos, int priority);
-Point queuePeek(Node** head);
+Node* queueCreate(NodeData data, int priority);
+void queuePush(Node** head, NodeData data, int priority);
+NodeData queuePeek(Node** head);
 void queuePop(Node** head);
 int queueEmpty(Node** head);
