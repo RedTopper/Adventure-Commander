@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PERLIN_H
+#define PERLIN_H
 
 #include "point.h"
 
@@ -13,3 +14,5 @@
  * License: GNU GPLv3 https://github.com/OneLoneCoder/videos/blob/master/LICENSE
  */
 float noise2D(Point dim, Point pos, const float* seed, int octaves, float bias);
+
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MAIN_H
+#define MAIN_H
 
 typedef enum {
 	FILE_READ_BAD = 0x10,
@@ -15,3 +16,5 @@ typedef enum {
 	ARGUMENT_UNKNOWN,
 	ARGUMENT_REQ_PARAM,
 } Error;
+
+#endif

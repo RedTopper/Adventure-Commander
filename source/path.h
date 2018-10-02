@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PATH_H
+#define PATH_H
 
 #include "dungeon.h"
 
@@ -10,3 +11,5 @@ typedef enum {
 void pathCreate(Dungeon* dungeon);
 void pathDestroy(Dungeon* dungeon);
 void pathPrint(Dungeon dungeon, int** path);
+
+#endif

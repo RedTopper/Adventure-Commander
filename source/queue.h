@@ -1,4 +1,5 @@
-#pragma once
+#ifndef QUEUE_H
+#define QUEUE_H
 
 #include "mob.h"
 #include "point.h"
@@ -27,3 +28,5 @@ void queuePush(Node** head, NodeData data, int priority);
 NodeData queuePeek(Node** head);
 void queuePop(Node** head);
 int queueEmpty(Node** head);
+
+#endif

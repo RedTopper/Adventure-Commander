@@ -26,4 +26,3 @@ extern const wchar_t* MOB_TYPES[];
 Mob* mobGenerateAll(Dungeon dungeon);
 
 #endif
-
