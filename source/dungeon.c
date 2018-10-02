@@ -64,7 +64,7 @@ const uint32_t VERSION = 0;
 //Default Size
 const Point DUNGEON_DIM = {80,21};
 
-void hallPlace(Dungeon dungeon, Point point) {
+static void hallPlace(Dungeon dungeon, Point point) {
 	if (point.x >= 0 
 		&& point.y >= 0
 		&& point.x < dungeon.dim.x
@@ -78,7 +78,7 @@ void hallPlace(Dungeon dungeon, Point point) {
 	}
 }
 
-int roomPlaceAttempt(Dungeon dungeon, Room room) {
+static int roomPlaceAttempt(Dungeon dungeon, Room room) {
 	for (int row = room.pos.y - 1; row < room.pos.y + room.dim.y + 1; row++) {
 		for (int col = room.pos.x - 1; col < room.pos.x + room.dim.x + 1; col++) {
 			if (row < 0) return 0;
@@ -92,7 +92,7 @@ int roomPlaceAttempt(Dungeon dungeon, Room room) {
 	return 1;
 }
 
-void roomPlace(Dungeon dungeon, Room room) {
+static void roomPlace(Dungeon dungeon, Room room) {
 	for (int row = room.pos.y; row < room.pos.y + room.dim.y; row++) {
 		for (int col = room.pos.x; col < room.pos.x + room.dim.x; col++) {
 			Tile* tile = &dungeon.tiles[row][col];
@@ -103,7 +103,7 @@ void roomPlace(Dungeon dungeon, Room room) {
 	}
 }
 
-void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
+static void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
 	Point current = from;
 	Point dist = {0};
 	Point step = {0};
@@ -132,7 +132,7 @@ void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
 	}
 }
 
-void roomConnect(Dungeon dungeon, Room first, Room second) {
+static void roomConnect(Dungeon dungeon, Room first, Room second) {
 	Point start = {0};
 	Point end = {0};
 	Point offset = {0};
@@ -166,7 +166,7 @@ void roomConnect(Dungeon dungeon, Room first, Room second) {
 	roomConnectRasterize(dungeon, mid, end);
 }
 
-Room roomGenerate(Dungeon dungeon) {
+static Room roomGenerate(Dungeon dungeon) {
 	Point dim = {0};
 	Point pos = {0};
 	Room room;
@@ -182,7 +182,7 @@ Room roomGenerate(Dungeon dungeon) {
 	return room;
 }
 
-Tile tileGenerate(Point dim, Point pos, uint8_t hardness, const float* seed) {
+static Tile tileGenerate(Point dim, Point pos, uint8_t hardness, const float* seed) {
 	Tile tile = {0};
 	
 	//Defaults
@@ -238,7 +238,7 @@ Tile tileGenerate(Point dim, Point pos, uint8_t hardness, const float* seed) {
 	return tile;
 }
 
-int dungeonIsFull(Dungeon dungeon) {
+static int dungeonIsFull(Dungeon dungeon) {
 	float total = dungeon.dim.x * dungeon.dim.y;
 	float room = 0.0;
 	for(int row = 0; row < dungeon.dim.y; row++) {
@@ -250,7 +250,7 @@ int dungeonIsFull(Dungeon dungeon) {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
-void dungeonPostProcess(Dungeon dungeon) {
+static void dungeonPostProcess(Dungeon dungeon) {
 	for(int row = 1; row < dungeon.dim.y - 1; row++) {
 		for(int col = 1; col < dungeon.dim.x - 1; col++) {
 			Tile* tile = &dungeon.tiles[row][col];
@@ -308,6 +308,8 @@ void dungeonPostProcess(Dungeon dungeon) {
 	}
 }
 
+
+
 //"Public" functions
 
 Dungeon dungeonGenerate(Point dim) {
@@ -357,9 +359,15 @@ Dungeon dungeonGenerate(Point dim) {
 	}
 
 	//Place player
-	dungeon.player.x = rooms[0].pos.x + (rooms[0].dim.x)/2;
-	dungeon.player.y = rooms[0].pos.y + (rooms[0].dim.y)/2;
-	
+	dungeon.player = (Mob){0};
+	dungeon.player.pos.x = rooms[0].pos.x + (rooms[0].dim.x)/2;
+	dungeon.player.pos.y = rooms[0].pos.y + (rooms[0].dim.y)/2;
+	dungeon.player.order = 0;
+	dungeon.player.speed = 10;
+
+	//Create mobs
+	dungeon.mobs = mobGenerateAll(dungeon);
+
 	//Create the paths.
 	for(int first = 0; first < count - 1; first++) {
 		roomConnect(dungeon, rooms[first], rooms[first + 1]);
@@ -380,7 +388,7 @@ Dungeon dungeonGenerate(Point dim) {
 	return dungeon;
 }
 
-Dungeon dungeonLoad(FILE* file) {
+Dungeon dungeonLoad(FILE* file, int mobs) {
 	size_t length = strlen(HEADER);
 	char head[length + 1];
 	size_t read = 0;
@@ -423,8 +431,8 @@ Dungeon dungeonLoad(FILE* file) {
 		exit(FILE_READ_EOF_PLAYER);
 	}
 	
-	dungeon.player.x = xPlayer;
-	dungeon.player.y = yPlayer;
+	dungeon.player.pos.x = xPlayer;
+	dungeon.player.pos.y = yPlayer;
 	
 	//Initialize dungeon
 	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dungeon.dim.y);
@@ -478,6 +486,10 @@ Dungeon dungeonLoad(FILE* file) {
 	
 	//Prettify the dungeon.
 	dungeonPostProcess(dungeon);
+
+	//Generate mobs
+	dungeon.numMobs = mobs;
+	dungeon.mobs = mobGenerateAll(dungeon);
 	
 	return dungeon;
 }
@@ -495,8 +507,8 @@ void dungeonSave(Dungeon dungeon, FILE* file) {
 	fwrite(&size, sizeof(uint32_t), 1, file);
 	
 	//Player position
-	uint8_t playerX = dungeon.player.x;
-	uint8_t playerY = dungeon.player.y;
+	uint8_t playerX = dungeon.player.pos.x;
+	uint8_t playerY = dungeon.player.pos.y;
 	fwrite(&playerX, sizeof(uint8_t), 1, file);
 	fwrite(&playerY, sizeof(uint8_t), 1, file);
 	
@@ -528,23 +540,36 @@ void dungeonDestroy(Dungeon* dungeon) {
 	for(int row = 0; row < dungeon->dim.y; row++) {
 		free(dungeon->tiles[row]);
 	}
-	
+
+	free(dungeon->mobs);
 	free(dungeon->tiles);
 	free(dungeon->rooms);
 	dungeon->tiles = NULL;
 	dungeon->rooms = NULL;
 	dungeon->dim = (Point){0};
 	dungeon->numRooms = 0;
+	dungeon->numMobs = 0;
 }
 
 void dungeonPrint(Dungeon dungeon) {
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		for(int col = 0; col < dungeon.dim.x; col++) {
-			if (row == dungeon.player.y && col == dungeon.player.x) {
-				wprintf(SYM_PLAY);
-			} else {
-				wprintf(L"%ls", dungeon.tiles[row][col].symbol);
-			}
+	const wchar_t* screen[dungeon.dim.y][dungeon.dim.x];
+
+	for (int row = 0; row < dungeon.dim.y; row++) {
+		for (int col = 0; col < dungeon.dim.x; col++) {
+			screen[row][col] = dungeon.tiles[row][col].symbol;
+		}
+	}
+
+	for (int mob = 0; mob < dungeon.numMobs; mob++) {
+		Mob m = dungeon.mobs[mob];
+		screen[m.pos.y][m.pos.x] = MOB_TYPES[m.skills];
+	}
+
+	screen[dungeon.player.pos.y][dungeon.player.pos.x] = SYM_PLAY;
+
+	for (int row = 0; row < dungeon.dim.y; row++) {
+		for (int col = 0; col < dungeon.dim.x; col++) {
+			wprintf(L"%ls", screen[row][col]);
 		}
 		wprintf(L"\n");
 	}

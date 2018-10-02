@@ -14,7 +14,7 @@ const char* SAVE = "--save";
 const char* LOAD = "--load";
 const char* MOBS = "--nummon";
 
-void help(char* message, char* command, Error error ) {
+static void help(char* message, char* command, Error error ) {
 	wprintf(L"%s: ", command);
 	wprintf(L"%s\n", message);
 	wprintf(
@@ -26,7 +26,7 @@ void help(char* message, char* command, Error error ) {
 	exit(error);
 }
 
-int require(int* on, int count, char* command) {
+static int require(int* on, int count, char* command) {
 	if ((*on) < count - 1) {
 		(*on)++;
 	} else {
@@ -36,7 +36,7 @@ int require(int* on, int count, char* command) {
 	return 1;
 }
 
-FILE* get(char* mode) {
+static FILE* get(char* mode) {
 	char path[256];
 	char* home = getenv("HOME");
 	snprintf(path, 255, "%s/.rlg327/dungeon", home);
@@ -79,11 +79,12 @@ int main(int argc, char** argv) {
 	}
 
 	Dungeon dungeon;
+	dungeon.numMobs = mobs;
 
 	//Load dungeon from file
 	if (load) {
 		FILE* file = get("rb");
-		dungeon = dungeonLoad(file);
+		dungeon = dungeonLoad(file, mobs);
 		fclose(file);
 	} else {
 		dungeon = dungeonGenerate(DUNGEON_DIM);

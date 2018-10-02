@@ -28,8 +28,8 @@ int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {
 	}
 
 	//Create node for player and set distance to player to zero.
-	Node* queue = queueCreate((NodeData){.pos=dungeon.player}, 0);
-	distance[dungeon.player.y][dungeon.player.x] = 0;
+	Node* queue = queueCreate((NodeData){.pos=dungeon.player.pos}, 0);
+	distance[dungeon.player.pos.y][dungeon.player.pos.x] = 0;
 
 	while (!queueEmpty(&queue)) {
 		Point current = queuePeek(&queue).pos;
@@ -91,7 +91,7 @@ void pathDestroy(Dungeon* dungeon) {
 void pathPrint(Dungeon dungeon, int** path) {
 	for (int row = 0; row < dungeon.dim.y; row++) {
 		for (int col = 0; col < dungeon.dim.x; col++) {
-			if (row == dungeon.player.y && col == dungeon.player.x) {
+			if (row == dungeon.player.pos.y && col == dungeon.player.pos.x) {
 				wprintf(SYM_PLAY);
 			} else if (path[row][col] != INT32_MAX) {
 				wprintf(L"%d", path[row][col] % 10);

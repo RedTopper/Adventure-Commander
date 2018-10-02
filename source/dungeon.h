@@ -1,8 +1,10 @@
-#pragma once
+#ifndef DUNGEON_H
+#define DUNGEON_H
 
 #include <wchar.h>
 #include <inttypes.h>
 
+#include "mob.h"
 #include "point.h"
 
 typedef enum {
@@ -25,11 +27,13 @@ typedef struct {
 } Room;
 
 typedef struct {
-	Point player;
 	Point dim;
-	int numRooms;
+	Mob* mobs;
+	Mob player;
 	Tile** tiles;
 	Room* rooms;
+	int numRooms;
+	int numMobs;
 	int** pathFloor;
 	int** pathDig;
 } Dungeon;
@@ -37,7 +41,9 @@ typedef struct {
 extern const Point DUNGEON_DIM;
 
 Dungeon dungeonGenerate(Point dim);
-Dungeon dungeonLoad(FILE* file);
+Dungeon dungeonLoad(FILE* file, int mobs);
 void dungeonSave(Dungeon dungeon, FILE* file);
 void dungeonDestroy(Dungeon* dungeon);
 void dungeonPrint(Dungeon dungeon);
+
+#endif

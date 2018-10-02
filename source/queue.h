@@ -1,7 +1,7 @@
 #pragma once
 
-#include "point.h"
 #include "mob.h"
+#include "point.h"
 
 /**
  * A priority queue for C, altered to use unions instead of ints.
@@ -13,7 +13,7 @@
 
 typedef union {
 	Point pos;
-	Mob mob;
+	Mob* mob;
 } NodeData;
 
 typedef struct node {
