@@ -24,7 +24,7 @@ const wchar_t* MOB_TYPES[] = {
 	L"f",
 };
 
-static Point mobValidSpawnPoint(Dungeon dungeon, int i) {
+static Point mobValidSpawnPoint(Dungeon dungeon, Mob* mobs, int i) {
 	Point pos = {0};
 
 	while(1) {
@@ -41,7 +41,7 @@ static Point mobValidSpawnPoint(Dungeon dungeon, int i) {
 		//Not on mob
 		int exists = 0;
 		for (int mob = 0; !exists && mob < i; mob++) {
-			Mob m = dungeon.mobs[mob];
+			Mob m = mobs[mob];
 			if (pos.x == m.pos.x && pos.y == m.pos.y) exists = 1;
 		}
 
@@ -55,7 +55,7 @@ Mob* mobGenerateAll(Dungeon dungeon) {
 	Mob* mobs = malloc(sizeof(Mob) * dungeon.numMobs);
 	for (int i = 0; i < dungeon.numMobs; i++) {
 		Mob mob = {0};
-		mob.pos = mobValidSpawnPoint(dungeon, i);
+		mob.pos = mobValidSpawnPoint(dungeon, mobs, i);
 		mob.known = (Point){0};
 		mob.skills = rand() % 16;
 		mob.speed = (rand() % 16) + 5; //5-20
