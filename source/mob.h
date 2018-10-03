@@ -27,11 +27,14 @@ extern const wchar_t MOB_TYPES[];
 
 #endif
 
-#ifndef DUNGEON_H
-
+#if !(defined(DUNGEON_H) || defined(QUEUE_H))
 #include "dungeon.h"
+#include "queue.h"
 
+Mob mobGeneratePlayer(Point point);
 Mob* mobGenerateAll(Dungeon dungeon);
-Mob mobGeneratePlayer(Point param);
+Node* mobCreateQueue(Dungeon dungeon);
+int mobAliveCount(Dungeon dungeon);
 
 #endif
+

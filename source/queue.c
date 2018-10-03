@@ -19,6 +19,10 @@ NodeData queuePeek(Node** head) {
 	return (*head)->data;
 }
 
+int queuePeekPriority(Node** head) {
+	return (*head)->priority;
+}
+
 void queuePop(Node** head) {
 	Node* temp = *head;
 	(*head) = (*head)->next;

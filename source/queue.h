@@ -24,9 +24,10 @@ typedef struct node {
 } Node;
 
 Node* queueCreate(NodeData data, int priority);
-void queuePush(Node** head, NodeData data, int priority);
 NodeData queuePeek(Node** head);
+void queuePush(Node** head, NodeData data, int priority);
 void queuePop(Node** head);
 int queueEmpty(Node** head);
+int queuePeekPriority(Node** head);
 
 #endif

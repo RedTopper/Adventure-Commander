@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "mob.h"
 #include "main.h"
 #include "dungeon.h"
 #include "path.h"
@@ -96,7 +97,7 @@ int main(int argc, char** argv) {
 	dungeon.prompt = L"(Disabled) > ";
 	wprintf(L"\033[H\033[J");
 	pathCreate(&dungeon);
-	while (dungeon.player.hp > 0) {
+	while (dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
 		wprintf(L"\033[0;0H\n\033[0;0H");
 		dungeonPrint(dungeon);
 		usleep(500000);

@@ -555,7 +555,7 @@ void dungeonPrint(Dungeon dungeon) {
 	dim.x = dungeon.dim.x + 1;
 	dim.y = dungeon.dim.y + offset + overflow;
 	wchar_t screen[dim.y][dim.x];
-	wmemset((wchar_t*) screen, L' ', (size_t)dim.y * (size_t)dim.x);
+	memset(screen, 0, dim.y * dim.x * sizeof(wchar_t));
 
 	//Print status messages
 	if(dungeon.line1) swprintf(screen[0], (size_t)(dim.x), L"%-*ls", dim.x, dungeon.line1);

@@ -3,6 +3,7 @@
 
 #include "mob.h"
 #include "dungeon.h"
+#include "queue.h"
 
 const wchar_t SYM_PLAY = L'@';
 const wchar_t MOB_TYPES[] = {
@@ -51,6 +52,22 @@ static Point mobValidSpawnPoint(Dungeon dungeon, Mob* mobs, int i) {
 	return pos;
 }
 
+//"Public" functions
+
+int mobAliveCount(Dungeon dungeon) {
+	int count = 0;
+	for (int i = 0; i < dungeon.numMobs; i++) {
+		if (dungeon.mobs[i].hp > 0) count++;
+	}
+	return count;
+}
+
+Node* mobCreateQueue(Dungeon dungeon) {
+	Node* queue = NULL;
+
+	return queue;
+}
+
 Mob mobGeneratePlayer(Point point) {
 	Mob mob = {0};
 	mob.pos = point;
@@ -77,4 +94,3 @@ Mob* mobGenerateAll(Dungeon dungeon) {
 
 	return mobs;
 }
-
