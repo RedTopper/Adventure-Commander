@@ -65,9 +65,10 @@ int mobAliveCount(Dungeon dungeon) {
 Node* mobCreateQueue(Dungeon dungeon) {
 	Node* queue = NULL;
 	for (int i = 0; i < dungeon.numMobs; i++) {
-		Mob m = dungeon.mobs[i];
-		queuePush(&queue, (NodeData){.mob=&m}, m.speed);
+		Mob* m = &dungeon.mobs[i];
+		queuePushSub(&queue, (NodeData){.mob=m}, 1000 / m->speed, m->order);
 	}
+
 	return queue;
 }
 
@@ -80,6 +81,10 @@ Mob mobGeneratePlayer(Point point) {
 	mob.order = 1;
 	mob.hp = 1;
 	return mob;
+}
+
+void mobTick(Dungeon dungeon, Mob* mob) {
+
 }
 
 Mob* mobGenerateAll(Dungeon dungeon) {

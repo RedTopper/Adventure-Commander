@@ -31,10 +31,6 @@ NodeData queuePeek(Node** head) {
 	return (*head)->data;
 }
 
-int queuePeekPrioritySub(Node** head) {
-	return (*head)->prioritySub;
-}
-
 int queuePeekPriority(Node** head) {
 	return (*head)->priority;
 }
@@ -71,4 +67,10 @@ void queuePush(Node** head, NodeData data, int priority) {
 
 int queueEmpty(Node** head) {
 	return (*head) == NULL;
+}
+
+void queueDestroy(Node** head) {
+	while (!queueEmpty(head)) {
+		queuePop(head);
+	}
 }

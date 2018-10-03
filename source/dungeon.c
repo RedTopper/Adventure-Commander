@@ -308,8 +308,6 @@ static void dungeonPostProcess(Dungeon dungeon) {
 	}
 }
 
-
-
 //"Public" functions
 
 Dungeon dungeonGenerate(Point dim, int mobs) {
@@ -537,6 +535,9 @@ void dungeonDestroy(Dungeon* dungeon) {
 		free(dungeon->tiles[row]);
 	}
 
+	free(dungeon->line1);
+	free(dungeon->line2);
+	free(dungeon->prompt);
 	free(dungeon->mobs);
 	free(dungeon->tiles);
 	free(dungeon->rooms);
@@ -549,38 +550,38 @@ void dungeonDestroy(Dungeon* dungeon) {
 
 void dungeonPrint(Dungeon dungeon) {
 	//Set up screen buffer
-	int offset = 2;
-	int overflow = 1; //prompt
 	Point dim = {0};
 	dim.x = dungeon.dim.x + 1;
-	dim.y = dungeon.dim.y + offset + overflow;
+	dim.y = dungeon.dim.y;
 	wchar_t screen[dim.y][dim.x];
 	memset(screen, 0, dim.y * dim.x * sizeof(wchar_t));
 
 	//Print status messages
-	if(dungeon.line1) swprintf(screen[0], (size_t)(dim.x), L"%-*ls", dim.x, dungeon.line1);
-	if(dungeon.line2) swprintf(screen[1], (size_t)(dim.x), L"%-*ls", dim.x, dungeon.line2);
-	if(dungeon.prompt) swprintf(screen[dim.y - 1], (size_t)(dim.x), L"%ls", dungeon.prompt);
+	wprintf(L"%ls\n", dungeon.line1);
+	wprintf(L"%ls\n", dungeon.line2);
 
 	//Write tiles
 	for (int row = 0; row < dungeon.dim.y; row++) {
 		for (int col = 0; col < dungeon.dim.x; col++) {
-			screen[row + offset][col] = dungeon.tiles[row][col].symbol;
+			screen[row][col] = dungeon.tiles[row][col].symbol;
 		}
 	}
 
 	//Write mobs
-	screen[dungeon.player.pos.y + offset][dungeon.player.pos.x] = SYM_PLAY;
+	screen[dungeon.player.pos.y][dungeon.player.pos.x] = SYM_PLAY;
 	for (int mob = 0; mob < dungeon.numMobs; mob++) {
 		Mob m = dungeon.mobs[mob];
-		screen[m.pos.y + offset][m.pos.x] = MOB_TYPES[m.skills];
+		screen[m.pos.y][m.pos.x] = MOB_TYPES[m.skills];
 	}
 
 	//Write to screen
 	for (int row = 0; row < dim.y; row++) {
 		screen[row][dim.x - 1] = "\0"[0];
-		wprintf((row == dim.y - 1) ? L"%ls" : L"%ls\n", (wchar_t*) screen[row]);
+		wprintf(L"%ls\n", (wchar_t*) screen[row]);
 	}
+
+	//Print the console
+	wprintf(L"%ls", dungeon.prompt);
 
 	fflush(stdout);
 }

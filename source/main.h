@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <wchar.h>
+
 typedef enum {
 	FILE_READ_BAD = 0x10,
 	FILE_READ_BAD_HEAD,
@@ -17,5 +19,9 @@ typedef enum {
 	ARGUMENT_REQ_PARAM,
 	ARGUMENT_OOB,
 } Error;
+
+void resetBuffer(wchar_t **buffer, size_t length);
+void setBufferPad(wchar_t **buffer, wchar_t* text, size_t length);
+void setBuffer(wchar_t **buffer, wchar_t* text, size_t length);
 
 #endif

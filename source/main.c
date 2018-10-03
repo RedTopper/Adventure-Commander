@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "mob.h"
 #include "main.h"
@@ -14,6 +15,13 @@
 const char* SAVE = "--save";
 const char* LOAD = "--load";
 const char* MOBS = "--nummon";
+
+static volatile int running = 1;
+static void sig() {
+	wprintf(L"Caught CTRL-C: Quitting!\n");
+	fflush(stdout);
+	running = 0;
+}
 
 static void help(char* message, char* command, Error error ) {
 	wprintf(L"%s: ", command);
@@ -54,6 +62,7 @@ static FILE* get(char* mode) {
 int main(int argc, char** argv) {
 	setlocale(LC_ALL, "");
 	srand(time(NULL));
+	signal(SIGINT, sig);
 	
 	int save = 0;
 	int load = 0;
@@ -92,25 +101,47 @@ int main(int argc, char** argv) {
 	}
 
 	//Main loop
-	dungeon.line1 = L"Adventure Commander";
-	dungeon.line2 = L"Nothing has happened yet!";
-	dungeon.prompt = L"(Disabled) > ";
+	setBufferPad(&dungeon.line1, L"Adventure Commander", (size_t)dungeon.dim.x + 1);
+	setBufferPad(&dungeon.line2, L"Nothing has happened yet!", (size_t)dungeon.dim.x + 1);
+	setBuffer(&dungeon.prompt, L"(Disabled) > ", (size_t)dungeon.dim.x + 1);
 	wprintf(L"\033[H\033[J");
 	pathCreate(&dungeon);
-	while (dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
+	Node* turn = mobCreateQueue(dungeon);
+	while (running && dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
 		wprintf(L"\033[0;0H\n\033[0;0H");
+		Mob* mob = queuePeek(&turn).mob;
+		int priority = queuePeekPriority(&turn);
+		queuePop(&turn);
+		mobTick(dungeon, mob);
+		queuePushSub(&turn, (NodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
 		dungeonPrint(dungeon);
-		pathPrint(dungeon, dungeon.pathDig);
 		usleep(500000);
-		break;
 	}
-	
+
 	//Save dungeon to file.
 	if (save) {
 		FILE* file = get("wb");
 		dungeonSave(dungeon, file);
 		fclose(file);
 	}
-	
+
+	queueDestroy(&turn);
 	dungeonDestroy(&dungeon);
+}
+
+//"Public" functions
+
+void setBufferPad(wchar_t **buffer, wchar_t* text, size_t length) {
+	resetBuffer(buffer, length);
+	swprintf(*buffer, length, L"%-*ls", length, text);
+}
+
+void setBuffer(wchar_t **buffer, wchar_t* text, size_t length) {
+	resetBuffer(buffer, length);
+	swprintf(*buffer, length, L"%ls", text);
+}
+
+void resetBuffer(wchar_t **buffer, size_t length) {
+	if (*buffer) free(*buffer);
+	*buffer = calloc(length, sizeof(wchar_t));
 }
