@@ -100,7 +100,9 @@ int main(int argc, char** argv) {
 	while (dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
 		wprintf(L"\033[0;0H\n\033[0;0H");
 		dungeonPrint(dungeon);
+		pathPrint(dungeon, dungeon.pathDig);
 		usleep(500000);
+		break;
 	}
 	
 	//Save dungeon to file.

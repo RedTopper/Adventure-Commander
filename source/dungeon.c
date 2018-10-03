@@ -584,3 +584,18 @@ void dungeonPrint(Dungeon dungeon) {
 
 	fflush(stdout);
 }
+
+void pathPrint(Dungeon dungeon, int** path) {
+	for (int row = 0; row < dungeon.dim.y; row++) {
+		for (int col = 0; col < dungeon.dim.x; col++) {
+			if (row == dungeon.player.pos.y && col == dungeon.player.pos.x) {
+				wprintf(L"%lc", SYM_PLAY);
+			} else if (path[row][col] != INT32_MAX) {
+				wprintf(L"%d", path[row][col] % 10);
+			} else {
+				wprintf(L" ");
+			}
+		}
+		wprintf(L"\n");
+	}
+}
