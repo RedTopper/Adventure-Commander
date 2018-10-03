@@ -571,7 +571,7 @@ void dungeonPrint(Dungeon dungeon) {
 	screen[dungeon.player.pos.y][dungeon.player.pos.x] = SYM_PLAY;
 	for (int mob = 0; mob < dungeon.numMobs; mob++) {
 		Mob m = dungeon.mobs[mob];
-		screen[m.pos.y][m.pos.x] = MOB_TYPES[m.skills];
+		if (m.hp > 0) screen[m.pos.y][m.pos.x] = MOB_TYPES[m.skills];
 	}
 
 	//Write to screen

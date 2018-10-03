@@ -94,11 +94,10 @@ void mobTick(Dungeon* dungeon, Mob* mob) {
 	setBufferPad(&dungeon->line2, L"Nothing important happened.", textLength);
 
 	if (mob->skills & PC) {
+		//The player
 		setBufferPad(&dungeon->line2, L"It's your turn but you lack effort to move...", textLength);
-	}
-
-	//Erratic skill
-	if (mob->skills & ERRATIC && rand() % 2) {
+	} else if (mob->skills & ERRATIC && rand() % 2) {
+		//Not the player, but erratic movement
 		wchar_t* text = L"did nothing!";
 		int dir = rand() % (int)(sizeof(ADJACENT)/sizeof(ADJACENT[0]));
 		Point new = {0};
@@ -124,18 +123,19 @@ void mobTick(Dungeon* dungeon, Mob* mob) {
 		}
 
 		resetBuffer(&dungeon->line2, textLength);
-		swprintf(dungeon->line2, textLength, L"%lc at (%d, %d) is a bumbling idiot and %-*ls",
+		swprintf(dungeon->line2, textLength, L"%lc at (%d, %d) got confused and %-*ls",
 			symbol,
 			mob->pos.x,
 			mob->pos.y,
 			textLength,
 			text
 		);
-	}
-
-	//Telepathic skill
-	if (mob->skills & TELEPATHY) {
-
+	} else if (mob->skills & TELEPATHY) {
+		//Not the player, not erratic, but has telepathy skill
+	} else if (mob->skills & INTELLIGENCE) {
+		//Not the player, not erratic, not telepathic, but has intelligence
+	} else {
+		//Not the player, not erratic, not telepathic, not intelligent, but... idk, exists?
 	}
 
 	//Attack phase
