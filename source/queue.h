@@ -20,6 +20,7 @@ typedef union {
 typedef struct node {
 	NodeData data;
 	int priority;
+	int prioritySub;
 	struct node* next;
 } Node;
 
