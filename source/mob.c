@@ -64,7 +64,10 @@ int mobAliveCount(Dungeon dungeon) {
 
 Node* mobCreateQueue(Dungeon dungeon) {
 	Node* queue = NULL;
-
+	for (int i = 0; i < dungeon.numMobs; i++) {
+		Mob m = dungeon.mobs[i];
+		queuePush(&queue, (NodeData){.mob=&m}, m.speed);
+	}
 	return queue;
 }
 
