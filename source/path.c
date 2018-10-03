@@ -5,8 +5,10 @@
 #include "queue.h"
 #include "path.h"
 
+const int HARDNESS_RATE = 85;
+
 //Loop of next points
-const Point NEXT[] = {
+const Point ADJACENT[8] = {
 	{0, -1},
 	{1, -1},
 	{1,  0},
@@ -14,7 +16,7 @@ const Point NEXT[] = {
 	{0,  1},
 	{-1, 1},
 	{-1, 0},
-	{-1, -1}
+	{-1, -1},
 };
 
 int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {
@@ -36,10 +38,10 @@ int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {
 		queuePop(&queue);
 
 		int distCurrent = distance[current.y][current.x];
-		for(int i = 0; i < (int)(sizeof(NEXT)/sizeof(NEXT[0])); i++) {
+		for(int i = 0; i < (int)(sizeof(ADJACENT)/sizeof(ADJACENT[0])); i++) {
 			Point next = {0};
-			next.x = current.x + NEXT[i].x;
-			next.y = current.y + NEXT[i].y;
+			next.x = current.x + ADJACENT[i].x;
+			next.y = current.y + ADJACENT[i].y;
 
 			//Make sure nothing bad happens
 			if (next.x < 0 || next.y < 0 || next.x >= dungeon.dim.x || next.y >= dungeon.dim.y) continue;
@@ -51,7 +53,7 @@ int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {
 
 			int currentHardness = dungeon.tiles[current.y][current.x].hardness;
 			int distNextOld = distance[next.y][next.x];
-			int distNextNew = distCurrent + 1 + (currentHardness / 85);
+			int distNextNew = distCurrent + 1 + (currentHardness / HARDNESS_RATE);
 
 			if (distNextOld > distNextNew) {
 				distance[next.y][next.x] = distNextNew;

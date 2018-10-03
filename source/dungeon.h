@@ -43,6 +43,7 @@ typedef struct {
 
 extern const Point DUNGEON_DIM;
 
+void dungeonPostProcess(Dungeon dungeon);
 Dungeon dungeonGenerate(Point dim, int mobs);
 Dungeon dungeonLoad(FILE* file, int mobs);
 void dungeonSave(Dungeon dungeon, FILE* file);

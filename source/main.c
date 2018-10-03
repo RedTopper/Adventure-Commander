@@ -106,13 +106,13 @@ int main(int argc, char** argv) {
 	setBuffer(&dungeon.prompt, L"(Disabled) > ", (size_t)dungeon.dim.x + 1);
 	wprintf(L"\033[H\033[J");
 	pathCreate(&dungeon);
-	Node* turn = mobCreateQueue(dungeon);
+	Node* turn = mobCreateQueue(&dungeon);
 	while (running && dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
 		wprintf(L"\033[0;0H\n\033[0;0H");
 		Mob* mob = queuePeek(&turn).mob;
 		int priority = queuePeekPriority(&turn);
 		queuePop(&turn);
-		mobTick(dungeon, mob);
+		mobTick(&dungeon, mob);
 		queuePushSub(&turn, (NodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
 		dungeonPrint(dungeon);
 		usleep(500000);

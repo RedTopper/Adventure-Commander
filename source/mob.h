@@ -33,9 +33,9 @@ extern const wchar_t MOB_TYPES[];
 
 Mob mobGeneratePlayer(Point point);
 Mob* mobGenerateAll(Dungeon dungeon);
-Node* mobCreateQueue(Dungeon dungeon);
+Node* mobCreateQueue(Dungeon* dungeon);
 int mobAliveCount(Dungeon dungeon);
-void mobTick(Dungeon dungeon, Mob* mob);
+void mobTick(Dungeon* dungeon, Mob* mob);
 
 #endif
 

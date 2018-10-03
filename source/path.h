@@ -8,6 +8,9 @@ typedef enum {
 	PATH_VIA_FLOOR
 } PathFinderStyle;
 
+extern const int HARDNESS_RATE;
+extern const Point ADJACENT[8];
+
 void pathCreate(Dungeon* dungeon);
 void pathDestroy(Dungeon* dungeon);
 void pathPrint(Dungeon dungeon, int** path);

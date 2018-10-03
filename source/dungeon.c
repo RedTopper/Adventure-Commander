@@ -250,7 +250,9 @@ static int dungeonIsFull(Dungeon dungeon) {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
-static void dungeonPostProcess(Dungeon dungeon) {
+//"Public" functions
+
+void dungeonPostProcess(Dungeon dungeon) {
 	for(int row = 1; row < dungeon.dim.y - 1; row++) {
 		for(int col = 1; col < dungeon.dim.x - 1; col++) {
 			Tile* tile = &dungeon.tiles[row][col];
@@ -307,8 +309,6 @@ static void dungeonPostProcess(Dungeon dungeon) {
 		}
 	}
 }
-
-//"Public" functions
 
 Dungeon dungeonGenerate(Point dim, int mobs) {
 	Dungeon dungeon = {0};
