@@ -28,7 +28,6 @@ const int ROOM_CON_RAD = 3;
 const int ROOM_CON_RAD_MIN = 1;
 
 //Edges across board
-const wchar_t SYM_EDGE = L'\x2588';
 const wchar_t SYM_EDGE_N = L'\x2584';
 const wchar_t SYM_EDGE_E = L'\x2588';
 const wchar_t SYM_EDGE_S = L'\x2580';
@@ -188,51 +187,29 @@ static Tile tileGenerate(Point dim, Point pos, uint8_t hardness, const float* se
 	//Defaults
 	tile.symbol = SYM_VOID;
 	tile.type = VOID;
-	tile.hardness = 0x00;
-	
-	if (hardness == 0xFF || seed != NULL) {
-		//Edge if hardness is 255. There is a case when we want
-		//to generate rocks, which is when the seed is not null.
-		tile.type = EDGE;
-		tile.hardness = 0xFF;
-		tile.symbol = SYM_EDGE;
-		
-		if (pos.y == 0) {
-			tile.symbol = SYM_EDGE_N;
-		} else if (pos.y == dim.y - 1) {
-			tile.symbol = SYM_EDGE_S;
-		} else if (pos.x == 0) {
-			tile.symbol = SYM_EDGE_W;
-		} else if (pos.x == dim.x - 1) {
-			tile.symbol = SYM_EDGE_E;
-		} else if (seed != NULL) {
-			//In this case, we are generating the rooms from scratch, since
-			//the seed value isn't passed when loading from a file.
-			//Populate the rest of the tiles with rock.
+	tile.hardness = 0xFF;
+
+	if (seed != NULL) {
+		//We were given a seed to generate the map
+		if (pos.y == 0 || pos.y == dim.y - 1 || pos.x == 0 || pos.x == dim.x - 1) {
+			tile.type = EDGE;
+			tile.hardness = 0xFF;
+		} else {
 			tile.type = ROCK;
 			tile.hardness = (uint8_t)(noise2D(dim, pos, seed, 4, 0.2f) * 255.0f);
 		}
+	} else if (hardness == 0xFF) {
+		//Edge if hardness is 255.
+		tile.type = EDGE;
+		tile.hardness = 0xFF;
 	} else if (hardness == 0x00) {
-		//Hallway if hardness is 0. Will convert rooms to rooms
-		//when the last bit of file is loaded.
-		tile.symbol = SYM_HALL;
+		//Hallway if hardness is 0. Will convert rooms to rooms during load.
 		tile.type = HALL;
 		tile.hardness = 0x00;
 	} else {
 		//If not max hardness or not min hardness, then it's a rock.
 		tile.type = ROCK;
 		tile.hardness = hardness;
-	}
-	
-	if (tile.type == ROCK) {
-		//If a tile is a rock, change it's look depending on hardness.
-		if (tile.hardness < 0x55) {
-			tile.symbol = SYM_ROCK_SOFT;
-		} else if (tile.hardness < 0xAA) {
-			tile.symbol = SYM_ROCK_MED;
-		} else {
-			tile.symbol = SYM_ROCK_HARD;
-		}
 	}
 	
 	return tile;
@@ -250,12 +227,53 @@ static int dungeonIsFull(Dungeon dungeon) {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
+static void dungeonFinalize(Dungeon *dungeon, int mobs) {
+	//Setup buffer
+	dungeon->line1 = calloc((size_t) (dungeon->dim.x) + 1, sizeof(wchar_t));
+	dungeon->line2 = calloc((size_t) (dungeon->dim.x) + 1, sizeof(wchar_t));
+	dungeon->prompt = calloc((size_t) (dungeon->dim.x) + 1, sizeof(wchar_t));
+
+	//Create mobs
+	dungeon->numMobs = mobs;
+	dungeon->mobs = mobGenerateAll(*dungeon);
+
+	//Prettify the dungeon.
+	dungeonPostProcess(*dungeon);
+}
+
 //"Public" functions
 
 void dungeonPostProcess(Dungeon dungeon) {
-	for(int row = 1; row < dungeon.dim.y - 1; row++) {
-		for(int col = 1; col < dungeon.dim.x - 1; col++) {
+	for(int row = 0; row < dungeon.dim.y; row++) {
+		for(int col = 0; col < dungeon.dim.x; col++) {
 			Tile* tile = &dungeon.tiles[row][col];
+
+			//Render rock hardness
+			if (tile->type == ROCK) {
+				if (tile->hardness < 0x55) {
+					tile->symbol = SYM_ROCK_SOFT;
+				} else if (tile->hardness < 0xAA) {
+					tile->symbol = SYM_ROCK_MED;
+				} else {
+					tile->symbol = SYM_ROCK_HARD;
+				}
+			}
+
+			//Render the edge
+			if (tile->type == EDGE) {
+				if (row == 0) {
+					tile->symbol = SYM_EDGE_N;
+				} else if (row == dungeon.dim.y - 1) {
+					tile->symbol = SYM_EDGE_S;
+				} else if (col == 0) {
+					tile->symbol = SYM_EDGE_W;
+				} else if (col == dungeon.dim.x - 1) {
+					tile->symbol = SYM_EDGE_E;
+				}
+			}
+
+			if (tile->type != HALL) continue;
+
 			Tile* tileN = &dungeon.tiles[row - 1][col];
 			Tile* tileE = &dungeon.tiles[row][col + 1];
 			Tile* tileS = &dungeon.tiles[row + 1][col];
@@ -266,8 +284,6 @@ void dungeonPostProcess(Dungeon dungeon) {
 				| ((tileE->type == HALL || tileE->type == ROOM) << 2)
 				| ((tileS->type == HALL || tileS->type == ROOM) << 1)
 				| (tileW->type == HALL || tileW->type == ROOM));
-				
-			if (tile->type != HALL) continue;
 			
 			switch (NESW) {
 				case 0x0F: //1111
@@ -301,6 +317,14 @@ void dungeonPostProcess(Dungeon dungeon) {
 					tile->symbol = SYM_HALL_NS;
 					break;
 				case 0x05: //0101
+					tile->symbol = SYM_HALL_EW;
+					break;
+				case 0x08: //1000
+				case 0x02: //0010
+					tile->symbol = SYM_HALL_NS;
+					break;
+				case 0x04: //0100
+				case 0x01: //0001
 					tile->symbol = SYM_HALL_EW;
 					break;
 				default:  //No chars for stubs.
@@ -362,10 +386,6 @@ Dungeon dungeonGenerate(Point dim, int mobs) {
 		rooms[0].pos.y + (rooms[0].dim.y)/2
 	});
 
-	//Create mobs
-	dungeon.numMobs = mobs;
-	dungeon.mobs = mobGenerateAll(dungeon);
-
 	//Create the paths.
 	roomConnect(dungeon, rooms[0], rooms[count - 1]);
 	for(int first = 0; first < count - 1; first++) {
@@ -377,8 +397,8 @@ Dungeon dungeonGenerate(Point dim, int mobs) {
 	dungeon.rooms = malloc(sizeof(Room) * count);
 	memcpy(dungeon.rooms, rooms, sizeof(Room) * count);
 	
-	//Prettify the dungeon.
-	dungeonPostProcess(dungeon);
+	//Finalize dungeon
+	dungeonFinalize(&dungeon, mobs);
 	
 	return dungeon;
 }
@@ -446,7 +466,7 @@ Dungeon dungeonLoad(FILE* file, int mobs) {
 	}
 	
 	int i = 0;
-	int rooms = (size - ftell(file))/4l;
+	int rooms = (int) ((size - ftell(file)) / 4l);
 	rooms = rooms > 0 ? rooms : 0;
 	dungeon.rooms = malloc(sizeof(Room) * rooms);
 	dungeon.numRooms = rooms;
@@ -477,13 +497,9 @@ Dungeon dungeonLoad(FILE* file, int mobs) {
 		roomPlace(dungeon, room);
 		dungeon.rooms[i++] = room;
 	}
-	
-	//Prettify the dungeon.
-	dungeonPostProcess(dungeon);
 
-	//Generate mobs
-	dungeon.numMobs = mobs;
-	dungeon.mobs = mobGenerateAll(dungeon);
+	//Finalize dungeon
+	dungeonFinalize(&dungeon, mobs);
 	
 	return dungeon;
 }
@@ -501,8 +517,8 @@ void dungeonSave(Dungeon dungeon, FILE* file) {
 	fwrite(&size, sizeof(uint32_t), 1, file);
 	
 	//Player position
-	uint8_t playerX = dungeon.player.pos.x;
-	uint8_t playerY = dungeon.player.pos.y;
+	uint8_t playerX = (uint8_t) dungeon.player.pos.x;
+	uint8_t playerY = (uint8_t) dungeon.player.pos.y;
 	fwrite(&playerX, sizeof(uint8_t), 1, file);
 	fwrite(&playerY, sizeof(uint8_t), 1, file);
 	

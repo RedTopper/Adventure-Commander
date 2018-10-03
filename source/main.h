@@ -20,7 +20,6 @@ typedef enum {
 	ARGUMENT_OOB,
 } Error;
 
-void resetBuffer(wchar_t **buffer, size_t length);
 void setBufferPad(wchar_t **buffer, wchar_t* text, size_t length);
 void setBuffer(wchar_t **buffer, wchar_t* text, size_t length);
 

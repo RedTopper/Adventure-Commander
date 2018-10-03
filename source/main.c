@@ -61,7 +61,7 @@ static FILE* get(char* mode) {
 
 int main(int argc, char** argv) {
 	setlocale(LC_ALL, "");
-	srand(time(NULL));
+	srand((unsigned int) time(NULL));
 	signal(SIGINT, sig);
 	
 	int save = 0;
@@ -109,13 +109,14 @@ int main(int argc, char** argv) {
 	Node* turn = mobCreateQueue(&dungeon);
 	while (running && dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
 		wprintf(L"\033[0;0H\n\033[0;0H");
-		Mob* mob = queuePeek(&turn).mob;
 		int priority = queuePeekPriority(&turn);
+		Mob* mob = queuePeek(&turn).mob;
 		queuePop(&turn);
 		mobTick(&dungeon, mob);
 		queuePushSub(&turn, (NodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
+		dungeonPostProcess(dungeon);
 		dungeonPrint(dungeon);
-		usleep(500000);
+		usleep(10000);
 	}
 
 	//Save dungeon to file.
@@ -131,17 +132,10 @@ int main(int argc, char** argv) {
 
 //"Public" functions
 
-void setBufferPad(wchar_t **buffer, wchar_t* text, size_t length) {
-	resetBuffer(buffer, length);
+void setBufferPad(wchar_t** buffer, wchar_t* text, size_t length) {
 	swprintf(*buffer, length, L"%-*ls", length, text);
 }
 
-void setBuffer(wchar_t **buffer, wchar_t* text, size_t length) {
-	resetBuffer(buffer, length);
+void setBuffer(wchar_t** buffer, wchar_t* text, size_t length) {
 	swprintf(*buffer, length, L"%ls", text);
-}
-
-void resetBuffer(wchar_t **buffer, size_t length) {
-	if (*buffer) free(*buffer);
-	*buffer = calloc(length, sizeof(wchar_t));
 }

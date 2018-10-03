@@ -7,7 +7,9 @@
 #include "main.h"
 #include "path.h"
 
-const wchar_t SYM_PLAY = L'@';
+#define SYM_PLAY_MACRO  L'@'
+
+const wchar_t SYM_PLAY = SYM_PLAY_MACRO;
 const wchar_t MOB_TYPES[] = {
 	L'0',
 	L'1',
@@ -25,8 +27,14 @@ const wchar_t MOB_TYPES[] = {
 	L'd',
 	L'e',
 	L'f',
-	L'?',
+	SYM_PLAY_MACRO,
+	L'?'
 };
+
+static wchar_t mobGetSymbol(Mob *mob) {
+	int size = sizeof(MOB_TYPES)/sizeof(MOB_TYPES[0]);
+	return MOB_TYPES[mob->skills >= size ? size : mob->skills];
+}
 
 static Point mobValidSpawnPoint(Dungeon dungeon, Mob* mobs, int i) {
 	Point pos = {0};
@@ -53,6 +61,41 @@ static Point mobValidSpawnPoint(Dungeon dungeon, Mob* mobs, int i) {
 	}
 
 	return pos;
+}
+
+static void mobTickRandomly(Dungeon* dungeon, Mob* mob, const wchar_t* textFlavor) {
+	wchar_t* text = L"did nothing!";
+	int dir = rand() % (int)(sizeof(ADJACENT)/sizeof(ADJACENT[0]));
+	Point new = {0};
+	new.x = ADJACENT[dir].x + mob->pos.x;
+	new.y = ADJACENT[dir].y + mob->pos.y;
+	Tile* tile = &dungeon->tiles[new.y][new.x];
+	if (tile->type == ROCK && mob->skills & TUNNELING) {
+		if (tile->hardness <= HARDNESS_RATE) {
+			tile->type = HALL;
+			tile->hardness = 0;
+			text = L"broke down the wall!";
+			mob->pos = new;
+		} else {
+			tile->hardness -= HARDNESS_RATE;
+			text = L"chipped at the wall!";
+		}
+
+		pathCreate(dungeon);
+	} else if (tile->type == HALL || tile->type == ROOM){
+		mob->pos = new;
+		text = L"moved to a new spot!";
+	}
+
+	size_t textLength = (size_t) (dungeon->dim.x) + 1;
+	swprintf(dungeon->line2, textLength, L"%lc at (%d, %d) %ls and %-*ls",
+		mobGetSymbol(mob),
+		mob->pos.x,
+		mob->pos.y,
+		textFlavor,
+		textLength,
+		text
+	);
 }
 
 //"Public" functions
@@ -90,7 +133,6 @@ Mob mobGeneratePlayer(Point point) {
 void mobTick(Dungeon* dungeon, Mob* mob) {
 	if (mob->hp <= 0) return;
 	size_t textLength = (size_t)(dungeon->dim.x) + 1;
-	wchar_t symbol = MOB_TYPES[mob->skills >= PC ? PC : mob->skills];
 	setBufferPad(&dungeon->line2, L"Nothing important happened.", textLength);
 
 	if (mob->skills & PC) {
@@ -98,62 +140,31 @@ void mobTick(Dungeon* dungeon, Mob* mob) {
 		setBufferPad(&dungeon->line2, L"It's your turn but you lack effort to move...", textLength);
 	} else if (mob->skills & ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
-		wchar_t* text = L"did nothing!";
-		int dir = rand() % (int)(sizeof(ADJACENT)/sizeof(ADJACENT[0]));
-		Point new = {0};
-		new.x = ADJACENT[dir].x + mob->pos.x;
-		new.y = ADJACENT[dir].y + mob->pos.y;
-		Tile* tile = &dungeon->tiles[new.y][new.x];
-		if (tile->type == ROCK && mob->skills & TUNNELING) {
-			if (tile->hardness <= HARDNESS_RATE) {
-				tile->type = HALL;
-				tile->hardness = 0;
-				text = L"broke down the wall!";
-				mob->pos = new;
-			} else {
-				tile->hardness -= HARDNESS_RATE;
-				text = L"chipped at the wall!";
-			}
-
-			dungeonPostProcess(*dungeon);
-			pathCreate(dungeon);
-		} else if (tile->type == HALL || tile->type == ROOM){
-			mob->pos = new;
-			text = L"moved to a new spot!";
-		}
-
-		resetBuffer(&dungeon->line2, textLength);
-		swprintf(dungeon->line2, textLength, L"%lc at (%d, %d) got confused and %-*ls",
-			symbol,
-			mob->pos.x,
-			mob->pos.y,
-			textLength,
-			text
-		);
+		mobTickRandomly(dungeon, mob, L"got confused");
 	} else if (mob->skills & TELEPATHY) {
 		//Not the player, not erratic, but has telepathy skill
 	} else if (mob->skills & INTELLIGENCE) {
 		//Not the player, not erratic, not telepathic, but has intelligence
 	} else {
 		//Not the player, not erratic, not telepathic, not intelligent, but... idk, exists?
+		mobTickRandomly(dungeon, mob, L"is a bumbling idiot");
 	}
 
 	//Attack phase
 	for (int i = 0; i < dungeon->numMobs + 1; i++) {
+		//Make sure to include the player in the attack phase
 		Mob* other = (i < dungeon->numMobs) ? &dungeon->mobs[i] : &dungeon->player;
-		if (other != mob && mob->pos.x == other->pos.x && mob->pos.y == other->pos.y && other->hp > 0) {
-			other->hp--;
-			wchar_t* text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
-			resetBuffer(&dungeon->line2, textLength);
-			swprintf(dungeon->line2, textLength, L"%lc at (%d, %d) attacked %lc! %-*ls",
-				symbol,
-				mob->pos.x,
-				mob->pos.y,
-				MOB_TYPES[mob->skills >= PC ? PC : mob->skills],
-				textLength,
-				text
-			);
-		}
+		if (other == mob || other->hp == 0 || mob->pos.x != other->pos.x || mob->pos.y != other->pos.y) continue;
+		other->hp--;
+		wchar_t* text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
+		swprintf(dungeon->line2, textLength, L"%lc at (%d, %d) attacked %lc! %-*ls",
+			mobGetSymbol(mob),
+			mob->pos.x,
+			mob->pos.y,
+			mobGetSymbol(other),
+			textLength,
+			text
+		);
 	}
 }
 
