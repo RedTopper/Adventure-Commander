@@ -5,7 +5,7 @@
 
 #include "point.h"
 
-typedef struct mob {
+typedef struct {
 	Point pos;
 	Point known;
 	int skills;
@@ -14,8 +14,16 @@ typedef struct mob {
 	int hp;
 } Mob;
 
-extern const wchar_t* SYM_PLAY;
-extern const wchar_t* MOB_TYPES[];
+typedef enum {
+	INTELLIGENCE = 0x01,
+	TELEPATHY = 0x02,
+	TUNNELING = 0x04,
+	ERRATIC = 0x08,
+	PC = 0x10,
+} Skills;
+
+extern const wchar_t SYM_PLAY;
+extern const wchar_t MOB_TYPES[];
 
 #endif
 
@@ -24,5 +32,6 @@ extern const wchar_t* MOB_TYPES[];
 #include "dungeon.h"
 
 Mob* mobGenerateAll(Dungeon dungeon);
+Mob mobGeneratePlayer(Point param);
 
 #endif

@@ -4,24 +4,24 @@
 #include "mob.h"
 #include "dungeon.h"
 
-const wchar_t* SYM_PLAY = L"@";
-const wchar_t* MOB_TYPES[] = {
-	L"0",
-	L"1",
-	L"2",
-	L"3",
-	L"4",
-	L"5",
-	L"6",
-	L"7",
-	L"8",
-	L"9",
-	L"a",
-	L"b",
-	L"c",
-	L"d",
-	L"e",
-	L"f",
+const wchar_t SYM_PLAY = L'@';
+const wchar_t MOB_TYPES[] = {
+	L'0',
+	L'1',
+	L'2',
+	L'3',
+	L'4',
+	L'5',
+	L'6',
+	L'7',
+	L'8',
+	L'9',
+	L'a',
+	L'b',
+	L'c',
+	L'd',
+	L'e',
+	L'f',
 };
 
 static Point mobValidSpawnPoint(Dungeon dungeon, Mob* mobs, int i) {
@@ -49,6 +49,17 @@ static Point mobValidSpawnPoint(Dungeon dungeon, Mob* mobs, int i) {
 	}
 
 	return pos;
+}
+
+Mob mobGeneratePlayer(Point point) {
+	Mob mob = {0};
+	mob.pos = point;
+	mob.known = (Point){0};
+	mob.skills = PC;
+	mob.speed = 10;
+	mob.order = 1;
+	mob.hp = 1;
+	return mob;
 }
 
 Mob* mobGenerateAll(Dungeon dungeon) {

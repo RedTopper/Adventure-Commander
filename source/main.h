@@ -15,6 +15,7 @@ typedef enum {
 	ARGUMENT_NO_DASH,
 	ARGUMENT_UNKNOWN,
 	ARGUMENT_REQ_PARAM,
+	ARGUMENT_OOB,
 } Error;
 
 #endif

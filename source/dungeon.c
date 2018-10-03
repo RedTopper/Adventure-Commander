@@ -28,34 +28,34 @@ const int ROOM_CON_RAD = 3;
 const int ROOM_CON_RAD_MIN = 1;
 
 //Edges across board
-const wchar_t* SYM_EDGE = L"\x2588";
-const wchar_t* SYM_EDGE_N = L"\x2584";
-const wchar_t* SYM_EDGE_E = L"\x2588";
-const wchar_t* SYM_EDGE_S = L"\x2580";
-const wchar_t* SYM_EDGE_W = L"\x2588";
+const wchar_t SYM_EDGE = L'\x2588';
+const wchar_t SYM_EDGE_N = L'\x2584';
+const wchar_t SYM_EDGE_E = L'\x2588';
+const wchar_t SYM_EDGE_S = L'\x2580';
+const wchar_t SYM_EDGE_W = L'\x2588';
 
 //Rocks
-const wchar_t* SYM_ROCK_SOFT = L"\x2591";
-const wchar_t* SYM_ROCK_MED  = L"\x2592";
-const wchar_t* SYM_ROCK_HARD = L"\x2593";
+const wchar_t SYM_ROCK_SOFT = L'\x2591';
+const wchar_t SYM_ROCK_MED  = L'\x2592';
+const wchar_t SYM_ROCK_HARD = L'\x2593';
 
 //Hall
-const wchar_t* SYM_HALL = L"\x2022";
-const wchar_t* SYM_HALL_NESW = L"\x256C";
-const wchar_t* SYM_HALL_NES = L"\x2560";
-const wchar_t* SYM_HALL_ESW = L"\x2566";
-const wchar_t* SYM_HALL_SWN = L"\x2563";
-const wchar_t* SYM_HALL_WNE = L"\x2569";
-const wchar_t* SYM_HALL_NE = L"\x255A";
-const wchar_t* SYM_HALL_ES = L"\x2554";
-const wchar_t* SYM_HALL_SW = L"\x2557";
-const wchar_t* SYM_HALL_WN = L"\x255D";
-const wchar_t* SYM_HALL_NS = L"\x2551";
-const wchar_t* SYM_HALL_EW = L"\x2550";
+const wchar_t SYM_HALL = L'\x2022';
+const wchar_t SYM_HALL_NESW = L'\x256C';
+const wchar_t SYM_HALL_NES = L'\x2560';
+const wchar_t SYM_HALL_ESW = L'\x2566';
+const wchar_t SYM_HALL_SWN = L'\x2563';
+const wchar_t SYM_HALL_WNE = L'\x2569';
+const wchar_t SYM_HALL_NE = L'\x255A';
+const wchar_t SYM_HALL_ES = L'\x2554';
+const wchar_t SYM_HALL_SW = L'\x2557';
+const wchar_t SYM_HALL_WN = L'\x255D';
+const wchar_t SYM_HALL_NS = L'\x2551';
+const wchar_t SYM_HALL_EW = L'\x2550';
 
 //Rooms are air
-const wchar_t* SYM_ROOM = L" ";
-const wchar_t* SYM_VOID = L"x";
+const wchar_t SYM_ROOM = L' ';
+const wchar_t SYM_VOID = L'x';
 
 //Magic header
 const char* HEADER = "RLG327-F2018";
@@ -312,7 +312,7 @@ static void dungeonPostProcess(Dungeon dungeon) {
 
 //"Public" functions
 
-Dungeon dungeonGenerate(Point dim) {
+Dungeon dungeonGenerate(Point dim, int mobs) {
 	Dungeon dungeon = {0};
 	dungeon.dim = dim;
 	
@@ -359,23 +359,20 @@ Dungeon dungeonGenerate(Point dim) {
 	}
 
 	//Place player
-	dungeon.player = (Mob){0};
-	dungeon.player.pos.x = rooms[0].pos.x + (rooms[0].dim.x)/2;
-	dungeon.player.pos.y = rooms[0].pos.y + (rooms[0].dim.y)/2;
-	dungeon.player.order = 0;
-	dungeon.player.speed = 10;
+	dungeon.player = mobGeneratePlayer((Point){
+		rooms[0].pos.x + (rooms[0].dim.x)/2,
+		rooms[0].pos.y + (rooms[0].dim.y)/2
+	});
 
 	//Create mobs
+	dungeon.numMobs = mobs;
 	dungeon.mobs = mobGenerateAll(dungeon);
 
 	//Create the paths.
+	roomConnect(dungeon, rooms[0], rooms[count - 1]);
 	for(int first = 0; first < count - 1; first++) {
 		roomConnect(dungeon, rooms[first], rooms[first + 1]);
 	}
-	
-	//Additional connections so the player can move easier. 
-	roomConnect(dungeon, rooms[0], rooms[count - 1]);
-	//roomConnect(dungeon, rooms[0], rooms[(count - 1)/2]);
 	
 	//Copy rooms into structure
 	dungeon.numRooms = count;
@@ -430,9 +427,8 @@ Dungeon dungeonLoad(FILE* file, int mobs) {
 		wprintf(L"Bad file player co-ordinates (EOF)!\n");
 		exit(FILE_READ_EOF_PLAYER);
 	}
-	
-	dungeon.player.pos.x = xPlayer;
-	dungeon.player.pos.y = yPlayer;
+
+	dungeon.player = mobGeneratePlayer((Point){xPlayer, yPlayer});
 	
 	//Initialize dungeon
 	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dungeon.dim.y);
@@ -552,25 +548,39 @@ void dungeonDestroy(Dungeon* dungeon) {
 }
 
 void dungeonPrint(Dungeon dungeon) {
-	const wchar_t* screen[dungeon.dim.y][dungeon.dim.x];
+	//Set up screen buffer
+	int offset = 2;
+	int overflow = 1; //prompt
+	Point dim = {0};
+	dim.x = dungeon.dim.x + 1;
+	dim.y = dungeon.dim.y + offset + overflow;
+	wchar_t screen[dim.y][dim.x];
+	wmemset((wchar_t*) screen, L' ', (size_t)dim.y * (size_t)dim.x);
 
+	//Print status messages
+	if(dungeon.line1) swprintf(screen[0], (size_t)(dim.x), L"%-*ls", dim.x, dungeon.line1);
+	if(dungeon.line2) swprintf(screen[1], (size_t)(dim.x), L"%-*ls", dim.x, dungeon.line2);
+	if(dungeon.prompt) swprintf(screen[dim.y - 1], (size_t)(dim.x), L"%ls", dungeon.prompt);
+
+	//Write tiles
 	for (int row = 0; row < dungeon.dim.y; row++) {
 		for (int col = 0; col < dungeon.dim.x; col++) {
-			screen[row][col] = dungeon.tiles[row][col].symbol;
+			screen[row + offset][col] = dungeon.tiles[row][col].symbol;
 		}
 	}
 
+	//Write mobs
+	screen[dungeon.player.pos.y + offset][dungeon.player.pos.x] = SYM_PLAY;
 	for (int mob = 0; mob < dungeon.numMobs; mob++) {
 		Mob m = dungeon.mobs[mob];
-		screen[m.pos.y][m.pos.x] = MOB_TYPES[m.skills];
+		screen[m.pos.y + offset][m.pos.x] = MOB_TYPES[m.skills];
 	}
 
-	screen[dungeon.player.pos.y][dungeon.player.pos.x] = SYM_PLAY;
-
-	for (int row = 0; row < dungeon.dim.y; row++) {
-		for (int col = 0; col < dungeon.dim.x; col++) {
-			wprintf(L"%ls", screen[row][col]);
-		}
-		wprintf(L"\n");
+	//Write to screen
+	for (int row = 0; row < dim.y; row++) {
+		screen[row][dim.x - 1] = "\0"[0];
+		wprintf((row == dim.y - 1) ? L"%ls" : L"%ls\n", (wchar_t*) screen[row]);
 	}
+
+	fflush(stdout);
 }

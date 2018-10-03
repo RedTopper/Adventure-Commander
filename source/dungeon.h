@@ -16,7 +16,7 @@ typedef enum {
 } TileType;
 
 typedef struct {
-	const wchar_t* symbol;
+	wchar_t symbol;
 	TileType type;
 	uint8_t hardness;
 } Tile;
@@ -27,6 +27,9 @@ typedef struct {
 } Room;
 
 typedef struct {
+	wchar_t* line1;
+	wchar_t* line2;
+	wchar_t* prompt;
 	Point dim;
 	Mob* mobs;
 	Mob player;
@@ -40,7 +43,7 @@ typedef struct {
 
 extern const Point DUNGEON_DIM;
 
-Dungeon dungeonGenerate(Point dim);
+Dungeon dungeonGenerate(Point dim, int mobs);
 Dungeon dungeonLoad(FILE* file, int mobs);
 void dungeonSave(Dungeon dungeon, FILE* file);
 void dungeonDestroy(Dungeon* dungeon);

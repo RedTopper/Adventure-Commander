@@ -2,9 +2,9 @@
 #include <locale.h>
 #include <time.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "main.h"
 #include "dungeon.h"
@@ -71,7 +71,8 @@ int main(int argc, char** argv) {
 				load = 1;
 			} else if (strcmp(MOBS, argv[arg]) == 0 && require(&arg, argc, argv[arg])) {
 				mobs = atoi(argv[arg]); // NOLINT(cert-err34-c)
-				if (mobs < 1) mobs = 10;
+				if (mobs < 1) help("Must be between 1-100", (char*)MOBS, ARGUMENT_OOB);
+				if (mobs > 100) help("Must be between 1-100", (char*)MOBS, ARGUMENT_OOB);
 			} else {
 				help("Unknown argument", argv[arg], ARGUMENT_UNKNOWN);
 			}
@@ -79,7 +80,6 @@ int main(int argc, char** argv) {
 	}
 
 	Dungeon dungeon;
-	dungeon.numMobs = mobs;
 
 	//Load dungeon from file
 	if (load) {
@@ -87,11 +87,20 @@ int main(int argc, char** argv) {
 		dungeon = dungeonLoad(file, mobs);
 		fclose(file);
 	} else {
-		dungeon = dungeonGenerate(DUNGEON_DIM);
+		dungeon = dungeonGenerate(DUNGEON_DIM, mobs);
 	}
 
+	//Main loop
+	dungeon.line1 = L"Adventure Commander";
+	dungeon.line2 = L"Nothing has happened yet!";
+	dungeon.prompt = L"(Disabled) > ";
+	wprintf(L"\033[H\033[J");
 	pathCreate(&dungeon);
-	dungeonPrint(dungeon);
+	while (dungeon.player.hp > 0) {
+		wprintf(L"\033[0;0H\n\033[0;0H");
+		dungeonPrint(dungeon);
+		usleep(500000);
+	}
 	
 	//Save dungeon to file.
 	if (save) {
