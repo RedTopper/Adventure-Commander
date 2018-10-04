@@ -6,20 +6,6 @@ Aaron Walter
 ajwalter
 792829065
 
-# Important console setup!!
-This game uses UTF-8 to make it look nice! Please read this if your terminal 
-looks messed up (ex: question marks or blank output):
-- If you are using `gnome-terminal` (called Terminal), UTF-8 works. 
-- If you are using `xterm`, press CTRL + RIGHT CLICK and enable TrueType fonts.
-(Tested on CS327FedoraLinux)
-
-# Other information
-In any case, your locale should be set to "en_US.UTF-8". You can check with the
-command `locale`. SSH environments can sometimes break this, so you might need
-to put these in your `~/.profile` if you are using SSH and see question marks:
-- `export LC_ALL=en_US.UTF-8`
-- `export LANG=en_US.UTF-8`
-
 # Build
 Run `make` then `./game`
 
@@ -34,3 +20,16 @@ Run `make` then `./game`
 - Rock is LIGHT SHADE, MEDIUM SHADE, and DARK SHADE to represent hardness
 - Rooms are SPACE
 
+# Important console setup!!
+This game uses UTF-8 to make it look nice! Please read this if your terminal 
+looks messed up (ex: question marks or blank output):
+- If you are using `gnome-terminal` (called Terminal), UTF-8 works. 
+- If you are using `xterm`, press CTRL + RIGHT CLICK and enable TrueType fonts.
+(Tested on CS327FedoraLinux)
+
+# Other information
+In any case, your locale should be set to "en_US.UTF-8". You can check with the
+command `locale`. SSH environments can sometimes break this, so you might need
+to put these in your `~/.profile` if you are using SSH and see question marks:
+- `export LC_ALL=en_US.UTF-8`
+- `export LANG=en_US.UTF-8`
