@@ -476,7 +476,7 @@ Dungeon dungeonLoad(FILE* file, int mobs) {
 	dungeon.numRooms = rooms;
 	
 	//Get rooms
-	while (ftell(file) < size) {
+	while ((uint32_t)(ftell(file)) < size) {
 		Room room;
 		uint8_t posX;
 		uint8_t posY;

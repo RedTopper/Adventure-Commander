@@ -272,7 +272,7 @@ void mobTick(Dungeon* dungeon, Mob* mob) {
 		}
 	} else if (mob->skills & SKILL_INTELLIGENCE) {
 		//Not the player, not erratic, not telepathic, but has intelligence
-		if (mobCanSeePC(dungeon, mob)) mob->known = 5;
+		if (mobCanSeePC(dungeon, mob)) mob->known = MAX_KNOWN_TURNS;
 		if (mob->known > 0) {
 			mobTickPathFind(dungeon, mob, L"smart");
 			mob->known--;
