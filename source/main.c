@@ -12,9 +12,11 @@
 #include "dungeon.h"
 #include "path.h"
 
+const char* HELP = "--help";
 const char* SAVE = "--save";
 const char* LOAD = "--load";
 const char* MOBS = "--nummon";
+const char* ALL = "--all";
 
 static volatile int running = 1;
 static void sig() {
@@ -28,9 +30,11 @@ static void help(char* message, char* command, Error error ) {
 	wprintf(L"%s\n", message);
 	wprintf(
 		L"Adventure Commander Help: \n"
+		L"[--help] Show this\n"
 		L"[--load] Load a file from ~/.rlg327/dungeon\n"
 		L"[--save] Write a dungeon to ~/.rlg327/dungeon\n"
 		L"[--nummon] <count> Number of monsters to generate\n"
+		L"[--all] Show all moves instead of just PC moves\n"
 	);
 	exit(error);
 }
@@ -67,6 +71,7 @@ int main(int argc, char** argv) {
 	int save = 0;
 	int load = 0;
 	int mobs = 10;
+	int all = 0;
 	
 	//Parse arguments
 	for (int arg = 1; arg < argc; arg++) {
@@ -75,10 +80,14 @@ int main(int argc, char** argv) {
 			help("Bad argument", argv[arg], ARGUMENT_NO_DASH);
 		} else {
 			//Check if correct argument
-			if (strcmp(SAVE, argv[arg]) == 0) {
+			if (strcmp(HELP, argv[arg]) == 0) {
+				help("Listing Commands", argv[arg], 0);
+			} else if (strcmp(SAVE, argv[arg]) == 0) {
 				save = 1;
 			} else if (strcmp(LOAD, argv[arg]) == 0) {
 				load = 1;
+			} else if (strcmp(ALL, argv[arg]) == 0) {
+				all = 1;
 			} else if (strcmp(MOBS, argv[arg]) == 0 && require(&arg, argc, argv[arg])) {
 				mobs = atoi(argv[arg]); // NOLINT(cert-err34-c)
 				if (mobs < 1) help("Must be between 1-100", (char*)MOBS, ARGUMENT_OOB);
@@ -114,11 +123,16 @@ int main(int argc, char** argv) {
 		queuePop(&turn);
 		mobTick(&dungeon, mob);
 		queuePushSub(&turn, (NodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
-		dungeonPostProcess(dungeon);
-		dungeonPrint(dungeon);
-		usleep(200000);
+		if (all || mob->skills & SKILL_PC) {
+			dungeonPostProcess(dungeon);
+			dungeonPrint(dungeon);
+			usleep(200000);
+		}
 	}
 
+	wprintf(L"\033[0;0H\n\033[0;0H");
+	dungeonPostProcess(dungeon);
+	dungeonPrint(dungeon);
 	if (running) {
 		if (dungeon.player.hp == 0) {
 			wprintf(L"You died. Better luck next time!\n");
