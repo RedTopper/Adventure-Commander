@@ -272,6 +272,10 @@ void dungeonPostProcess(Dungeon dungeon) {
 				}
 			}
 
+			if (tile->type == ROOM) {
+				tile->symbol = SYM_ROOM;
+			}
+
 			if (tile->type != HALL) continue;
 
 			Tile* tileN = &dungeon.tiles[row - 1][col];

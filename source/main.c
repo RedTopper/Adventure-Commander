@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
 		queuePushSub(&turn, (NodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
 		dungeonPostProcess(dungeon);
 		dungeonPrint(dungeon);
-		usleep(10000);
+		usleep(200000);
 	}
 
 	//Save dungeon to file.

@@ -7,7 +7,7 @@
 
 typedef struct {
 	Point pos;
-	Point known;
+	int known;
 	int skills;
 	int speed;
 	int order;
@@ -15,11 +15,18 @@ typedef struct {
 } Mob;
 
 typedef enum {
-	INTELLIGENCE = 0x01,
-	TELEPATHY = 0x02,
-	TUNNELING = 0x04,
-	ERRATIC = 0x08,
-	PC = 0x10,
+	MOVE_FAILURE,
+	MOVE_SUCCESS,
+	MOVE_BROKE_WALL,
+	MOVE_DAMAGE_WALL,
+} Movement;
+
+typedef enum {
+	SKILL_INTELLIGENCE = 0x01,
+	SKILL_TELEPATHY = 0x02,
+	SKILL_TUNNELING = 0x04,
+	SKILL_ERRATIC = 0x08,
+	SKILL_PC = 0x10,
 } Skills;
 
 extern const wchar_t SYM_PLAY;
