@@ -119,6 +119,14 @@ int main(int argc, char** argv) {
 		usleep(200000);
 	}
 
+	if (running) {
+		if (dungeon.player.hp == 0) {
+			wprintf(L"You died. Better luck next time!\n");
+		} else {
+			wprintf(L"CONGLATURATION !!!\n");
+		}
+	}
+
 	//Save dungeon to file.
 	if (save) {
 		FILE* file = get("wb");
