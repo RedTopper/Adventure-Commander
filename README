@@ -10,11 +10,13 @@ ajwalter
 Run `make` then `./game`
 
 # Notable features for this version
-- Save a file by typing `./game --save`.
-- Load a file by typing `./game --load`.
-- Note: to save or load a file, create a directory called `~/.rlg327` first!
+- Need help? Try `--help`
+- Show all mob turns by using `--all`
+- Mobs have AI and can path find.
+- It looks cool I guess
 
 # Changes from specifications
+- Intelligent monsters follow the player with path finding for up to 5 turns
 - Immutable dungeon walls are LOWER HALF BLOCK, UPPER HALF BLOCK and FULL BLOCK
 - Halls are BOX DRAWING DOUBLE * (I used most of the double lined characters)
 - Rock is LIGHT SHADE, MEDIUM SHADE, and DARK SHADE to represent hardness

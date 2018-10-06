@@ -10,13 +10,13 @@ const int HARDNESS_RATE = 85;
 //Loop of next points
 const Point ADJACENT[8] = {
 	{0, -1},
-	{1, -1},
+//	{1, -1},
 	{1,  0},
-	{1,  1},
+//	{1,  1},
 	{0,  1},
-	{-1, 1},
+//	{-1, 1},
 	{-1, 0},
-	{-1, -1},
+//	{-1, -1},
 };
 
 int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {
@@ -51,9 +51,9 @@ int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {
 			if (type == VOID || type == EDGE) continue;
 			if (style == PATH_VIA_FLOOR && type == ROCK) continue;
 
-			int currentHardness = dungeon.tiles[current.y][current.x].hardness;
+			int nextHardness = dungeon.tiles[next.y][next.x].hardness;
 			int distNextOld = distance[next.y][next.x];
-			int distNextNew = distCurrent + 1 + (currentHardness / HARDNESS_RATE);
+			int distNextNew = distCurrent + 1 + (nextHardness / HARDNESS_RATE);
 
 			if (distNextOld > distNextNew) {
 				distance[next.y][next.x] = distNextNew;

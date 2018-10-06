@@ -312,7 +312,7 @@ Mob mobGeneratePlayer(Point point) {
 	mob.known = 0;
 	mob.skills = SKILL_PC;
 	mob.speed = 10;
-	mob.order = 1;
+	mob.order = 0;
 	mob.hp = 1;
 	return mob;
 }

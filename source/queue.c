@@ -43,7 +43,7 @@ void queuePop(Node** head) {
 
 void queuePushSub(Node** head, NodeData data, int priority, int prioritySub) {
 	Node* start = (*head);
-	Node* temp = queueCreate(data, priority);
+	Node* temp = queueCreateSub(data, priority, prioritySub);
 
 	if ((*head) == NULL || compare(priority, prioritySub, (**head))) {
 		//If the priority is higher than the head,
