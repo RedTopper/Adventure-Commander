@@ -9,7 +9,9 @@ ajwalter
 # Build
 Install ncurses on Fedora: `sudo yum install ncurses-devel`
 Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- IMPORTANT
-Then run `make` then `./game`
+1. Run `make` to compile everything
+2. Run `./game --help` so you know what's up
+3. Run `./game` with wanted options
 
 # Notable features for this version
 - Emoji for monsters (use --lame to disable)
@@ -25,10 +27,10 @@ Then run `make` then `./game`
 - Rock is LIGHT SHADE, MEDIUM SHADE, and DARK SHADE to represent hardness
 - Rooms are SPACE
 
-# Important console setup!!
+# Important console setup
 This game uses UTF-8 to make it look nice! Please read this if your terminal 
 looks messed up (ex: question marks or blank output):
-- If you are using `gnome-terminal` (called Terminal), UTF-8 works. 
+- If you are using `gnome-terminal` (called Terminal), UTF-8 works with emoji. 
 - If you are using `xterm`, press CTRL + RIGHT CLICK and enable TrueType fonts.
 WARNING: All monsters will be boxes if you do this without --lame (sad)!
 (Tested on CS327FedoraLinux)

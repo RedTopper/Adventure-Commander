@@ -580,6 +580,13 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	//Make the dungeon look nice
 	dungeonPostProcess(dungeon);
 
+	//Sometimes clear the screen
+	static int refresh = 0;
+	if (refresh == 32) {
+		refresh = 0;
+		wclear(win);
+	}
+
 	//Write status
 	mvwaddwstr(win, 0, 0, dungeon.status);
 
@@ -607,4 +614,5 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 
 	//Flip screen
 	wrefresh(win);
+	refresh++;
 }

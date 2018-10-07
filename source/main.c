@@ -34,7 +34,7 @@ static void help(char* message, char* command, Error error ) {
 		L"Remember, please see the readme if anything looks weird!\n"
 		L"Adventure Commander Help:\n"
 		L"[--help] Show this\n"
-		L"[--lame] Disable emoji support\n"
+		L"[--lame] Disable emoji support (needed for older terms)\n"
 		L"[--load] Load a file from ~/.rlg327/dungeon\n"
 		L"[--save] Write a dungeon to ~/.rlg327/dungeon\n"
 		L"[--all] Show all moves instead of just PC moves\n"

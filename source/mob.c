@@ -34,24 +34,24 @@ const wchar_t* MOB_TYPES[] = {
 };
 
 const wchar_t* MOB_TYPES_BORING[] = {
-		L"sk", //Skull   (    )
-		L"hu", //Empty   (I   )
-		L"gh", //Ghost   ( T  )
-		L"de", //Demon   (IT  )
-		L"bo", //Boar    (  D )
-		L"mo", //Monkey  (I D )
-		L"OG", //Ogre    ( TD )
-		L"DR", //Dragon  (ITD )
-		L"sk", //Skull   (   E)
-		L"sq", //Squid   (I  E)
-		L"sn", //Snake   ( D E)
-		L"go", //Goblin  (IT E)
-		L"MO", //Monster (  DE)
-		L"TI", //Tiger   (I DE)
-		L"AL", //Alien   ( TDE)
-		L"PU", //Pumpkin (ITDE)
-		SYM_PLAY_MACRO,
-		L"?"
+	L"sk", //Skull   (    )
+	L"hu", //Empty   (I   )
+	L"gh", //Ghost   ( T  )
+	L"de", //Demon   (IT  )
+	L"bo", //Boar    (  D )
+	L"mo", //Monkey  (I D )
+	L"OG", //Ogre    ( TD )
+	L"DR", //Dragon  (ITD )
+	L"sk", //Skull   (   E)
+	L"sq", //Squid   (I  E)
+	L"sn", //Snake   ( D E)
+	L"go", //Goblin  (IT E)
+	L"MO", //Monster (  DE)
+	L"TI", //Tiger   (I DE)
+	L"AL", //Alien   ( TDE)
+	L"PU", //Pumpkin (ITDE)
+	SYM_PLAY_MACRO,
+	L"?"
 };
 
 static void mobPrintText(Mob* mob, Dungeon* dungeon, const wchar_t* text, const wchar_t* type) {
