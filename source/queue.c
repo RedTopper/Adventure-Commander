@@ -6,16 +6,16 @@
 #include "queue.h"
 
 //returns 1 if the first two parameters have a higher priority than the comparing node.
-static int compare(int priority, int prioritySub, Node node) {
+static int compare(int priority, int prioritySub, QueueNode node) {
 	return (priority < node.priority || (priority == node.priority && prioritySub < node.prioritySub));
 }
 
 //"Public" functions
 
-// Function to Create A New Node
+// Function to Create A New QueueNode
 // Also used to create new queues externally.
-Node* queueCreateSub(NodeData data, int priority, int prioritySub) {
-	Node* temp = (Node*) malloc(sizeof(Node));
+QueueNode* queueCreateSub(QueueNodeData data, int priority, int prioritySub) {
+	QueueNode* temp = (QueueNode*) malloc(sizeof(QueueNode));
 	temp->data = data;
 	temp->priority = priority;
 	temp->prioritySub = prioritySub;
@@ -23,27 +23,27 @@ Node* queueCreateSub(NodeData data, int priority, int prioritySub) {
 	return temp;
 }
 
-Node* queueCreate(NodeData data, int priority) {
+QueueNode* queueCreate(QueueNodeData data, int priority) {
 	return queueCreateSub(data, priority, 0);
 }
 
-NodeData queuePeek(Node** head) {
+QueueNodeData queuePeek(QueueNode** head) {
 	return (*head)->data;
 }
 
-int queuePeekPriority(Node** head) {
+int queuePeekPriority(QueueNode** head) {
 	return (*head)->priority;
 }
 
-void queuePop(Node** head) {
-	Node* temp = *head;
+void queuePop(QueueNode** head) {
+	QueueNode* temp = *head;
 	(*head) = (*head)->next;
 	free(temp);
 }
 
-void queuePushSub(Node** head, NodeData data, int priority, int prioritySub) {
-	Node* start = (*head);
-	Node* temp = queueCreateSub(data, priority, prioritySub);
+void queuePushSub(QueueNode** head, QueueNodeData data, int priority, int prioritySub) {
+	QueueNode* start = (*head);
+	QueueNode* temp = queueCreateSub(data, priority, prioritySub);
 
 	if ((*head) == NULL || compare(priority, prioritySub, (**head))) {
 		//If the priority is higher than the head,
@@ -61,15 +61,15 @@ void queuePushSub(Node** head, NodeData data, int priority, int prioritySub) {
 	}
 }
 
-void queuePush(Node** head, NodeData data, int priority) {
+void queuePush(QueueNode** head, QueueNodeData data, int priority) {
 	queuePushSub(head, data, priority, 0);
 }
 
-int queueEmpty(Node** head) {
+int queueEmpty(QueueNode** head) {
 	return (*head) == NULL;
 }
 
-void queueDestroy(Node** head) {
+void queueDestroy(QueueNode** head) {
 	while (!queueEmpty(head)) {
 		queuePop(head);
 	}

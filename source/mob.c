@@ -370,12 +370,12 @@ int mobAliveCount(Dungeon dungeon) {
 	return count;
 }
 
-Node* mobCreateQueue(Dungeon* dungeon) {
+QueueNode* mobCreateQueue(Dungeon* dungeon) {
 	Mob* player = &dungeon->player;
-	Node* queue = queueCreateSub((NodeData){.mob=player}, 1000 / player->speed, player->order);
+	QueueNode* queue = queueCreateSub((QueueNodeData){.mob=player}, 1000 / player->speed, player->order);
 	for (int i = 0; i < dungeon->numMobs; i++) {
 		Mob* m = &dungeon->mobs[i];
-		queuePushSub(&queue, (NodeData){.mob=m}, 1000 / m->speed, m->order);
+		queuePushSub(&queue, (QueueNodeData){.mob=m}, 1000 / m->speed, m->order);
 	}
 
 	return queue;

@@ -7,7 +7,7 @@
 /**
  * A priority queue for C, altered to use unions instead of ints.
  *
- * higher values indicate higher priority
+ * lower values indicate higher priority
  *
  * Author: https://www.geeksforgeeks.org/priority-queue-using-linked-list/
  */
@@ -15,23 +15,23 @@
 typedef union {
 	Point pos;
 	Mob* mob;
-} NodeData;
+} QueueNodeData;
 
 typedef struct node {
-	NodeData data;
+	QueueNodeData data;
 	int priority;
 	int prioritySub;
 	struct node* next;
-} Node;
+} QueueNode;
 
-Node* queueCreate(NodeData data, int priority);
-Node* queueCreateSub(NodeData data, int priority, int prioritySub);
-NodeData queuePeek(Node** head);
-int queuePeekPriority(Node** head);
-void queuePush(Node** head, NodeData data, int priority);
-void queuePushSub(Node** head, NodeData data, int priority, int prioritySub);
-void queuePop(Node** head);
-int queueEmpty(Node** head);
-void queueDestroy(Node** head);
+QueueNode* queueCreate(QueueNodeData data, int priority);
+QueueNode* queueCreateSub(QueueNodeData data, int priority, int prioritySub);
+QueueNodeData queuePeek(QueueNode** head);
+int queuePeekPriority(QueueNode** head);
+void queuePush(QueueNode** head, QueueNodeData data, int priority);
+void queuePushSub(QueueNode** head, QueueNodeData data, int priority, int prioritySub);
+void queuePop(QueueNode** head);
+int queueEmpty(QueueNode** head);
+void queueDestroy(QueueNode** head);
 
 #endif

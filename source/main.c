@@ -129,13 +129,13 @@ int main(int argc, char** argv) {
 	setText(dungeon, &dungeon.line1, L"Something will go here one day!");
 	setText(dungeon, &dungeon.line2, L"Waiting for other players...");
 	pathCreate(&dungeon);
-	Node* turn = mobCreateQueue(&dungeon);
+	QueueNode* turn = mobCreateQueue(&dungeon);
 	while (running && dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
 		int priority = queuePeekPriority(&turn);
 		Mob* mob = queuePeek(&turn).mob;
 		queuePop(&turn);
 		mobTick(mob, &dungeon);
-		queuePushSub(&turn, (NodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
+		queuePushSub(&turn, (QueueNodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
 		if (all || mob->skills & SKILL_PC) {
 			dungeonPrint(base, dungeon);
 			usleep(200000);

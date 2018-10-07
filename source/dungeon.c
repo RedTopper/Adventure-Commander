@@ -605,6 +605,14 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	mvwaddwstr(win, dungeon.dim.y + 1, 0, dungeon.line1);
 	mvwaddwstr(win, dungeon.dim.y + 2, 0, dungeon.line2);
 
+	//Some terminals have trouble with emoji, so help them out
+	//by redrawing the whole window every few frames.
+	static int refresh = 0;
+	if (dungeon.emoji && refresh == 4) {
+		redrawwin(win);
+		refresh = 0;
+	}
+
 	//Flip screen
 	static int refresh = 0;
 	if (dungeon.emoji && refresh == 4) {

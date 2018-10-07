@@ -41,7 +41,7 @@ extern const wchar_t* MOB_TYPES_BORING[];
 const wchar_t* mobGetSymbol(Mob *mob, Dungeon dungeon);
 Mob mobGeneratePlayer(Point point);
 Mob* mobGenerateAll(Dungeon dungeon);
-Node* mobCreateQueue(Dungeon* dungeon);
+QueueNode* mobCreateQueue(Dungeon* dungeon);
 int mobAliveCount(Dungeon dungeon);
 void mobTick(Mob* mob, Dungeon* dungeon);
 
