@@ -603,8 +603,12 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 		mvwaddwstr(win, row + 1, 0, screen);
 	}
 
+	//Write players
+	if(dungeon.player->hp > 0) {
+		mvwaddwstr(win, dungeon.player->pos.y + 1, dungeon.player->pos.x, mobGetSymbol(dungeon.player, dungeon));
+	}
+
 	//Write mobs
-	mvwaddwstr(win, dungeon.player->pos.y + 1, dungeon.player->pos.x, mobGetSymbol(dungeon.player, dungeon));
 	for (int mob = 0; mob < dungeon.numMobs; mob++) {
 		Mob m = dungeon.mobs[mob];
 		if (m.hp > 0) mvwaddwstr(win, m.pos.y + 1, m.pos.x, mobGetSymbol(&m, dungeon));

@@ -145,7 +145,6 @@ int main(int argc, char** argv) {
 		if (action == ACTION_DOWN && !stackEmpty(&history)) {
 			stackPush(&future, (StackNodeData){.dungeon = dungeon});
 			dungeon = stackPeek(&history).dungeon;
-			setText(dungeon, &dungeon.status, L"You went down a level!");
 			stackPop(&history);
 		}
 
@@ -153,7 +152,6 @@ int main(int argc, char** argv) {
 			stackPush(&history, (StackNodeData){.dungeon = dungeon});
 			if (stackEmpty(&future)) {
 				dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji);
-				setText(dungeon, &dungeon.status, L"You went up a level!");
 			} else {
 				dungeon = stackPeek(&future).dungeon;
 				stackPop(&future);
@@ -162,7 +160,7 @@ int main(int argc, char** argv) {
 
 		if (all || mob->skills & SKILL_PC) {
 			dungeonPrint(base, dungeon);
-			usleep(200000);
+			if (all) usleep(500000);
 		}
 	}
 
@@ -176,6 +174,7 @@ int main(int argc, char** argv) {
 	}
 
 	//Show the dungeon once more before exiting.
+	redrawwin(base);
 	dungeonPrint(base, dungeon);
 	getch();
 

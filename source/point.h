@@ -6,6 +6,7 @@ typedef struct {
 	int y;
 } Point;
 
+Point pointAdd(Point one, Point two);
 int utilSkewedBetweenRange(int min, int max);
 int utilProdDot(Point one, Point two);
 int utilProdCross(Point one, Point two);

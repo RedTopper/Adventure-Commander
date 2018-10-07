@@ -7,6 +7,13 @@
 
 //"Public" functions
 
+Point pointAdd(Point one, Point two) {
+	return (Point) {
+		one.x + two.x,
+		one.y + two.y
+	};
+}
+
 int utilSkewedBetweenRange(int min, int max) {
 	//75% chance of "upgrading" size.
 	int value = min;

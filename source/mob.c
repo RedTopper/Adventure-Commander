@@ -290,11 +290,35 @@ Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 			switch (ch) {
 				case '7':
 				case 'y':
-					move = mobMove(mob, dungeon, (Point){mob->pos.x - 1, mob->pos.y - 1});
+					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){-1,-1}));
 					break;
 				case '8':
 				case 'k':
-					mobMove(mob, dungeon, (Point){mob->pos.x, mob->pos.y - 1});
+					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){0,-1}));
+					break;
+				case '9':
+				case 'u':
+					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){1,-1}));
+					break;
+				case '6':
+				case 'l':
+					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){1,0}));
+					break;
+				case '3':
+				case 'n':
+					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){1,1}));
+					break;
+				case '2':
+				case 'j':
+					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){0,1}));
+					break;
+				case '1':
+				case 'b':
+					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){-1,1}));
+					break;
+				case '4':
+				case 'h':
+					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){-1,0}));
 					break;
 				case '>':
 					action = ACTION_UP;
@@ -309,8 +333,12 @@ Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 					swprintf(dungeon->status, textLength, L"%d %-*ls", ch, dungeon->dim.x + 1, L"is invalid!");
 			}
 
+			//Move the player character
 			if (move == MOVE_FAILURE) setText(*dungeon, &dungeon->status, L"I can't dig through that!");
-			if (move == MOVE_SUCCESS) action = ACTION_MOVE;
+			if (move == MOVE_SUCCESS) {
+				action = ACTION_MOVE;
+				pathCreate(dungeon);
+			}
 		} while (action == ACTION_NONE);
 	} else if (mob->skills & SKILL_ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
