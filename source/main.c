@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE_EXTENDED
+
 #include <wchar.h>
 #include <locale.h>
 #include <time.h>
@@ -12,6 +14,7 @@
 #include "main.h"
 #include "dungeon.h"
 #include "path.h"
+#include "stack.h"
 
 const char* HELP = "--help";
 const char* SAVE = "--save";
@@ -107,6 +110,8 @@ int main(int argc, char** argv) {
 
 	//The base dungeon
 	Dungeon dungeon;
+	StackNode* history = NULL;
+	StackNode* future = NULL;
 
 	//Load dungeon from file
 	if (load) {
@@ -125,17 +130,31 @@ int main(int argc, char** argv) {
 	curs_set(0);
 
 	//Economics established
-	setText(dungeon, &dungeon.status, L"Nothing has happened yet!");
-	setText(dungeon, &dungeon.line1, L"Something will go here one day!");
-	setText(dungeon, &dungeon.line2, L"Waiting for other players...");
-	pathCreate(&dungeon);
-	QueueNode* turn = mobCreateQueue(&dungeon);
-	while (running && dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
-		int priority = queuePeekPriority(&turn);
-		Mob* mob = queuePeek(&turn).mob;
-		queuePop(&turn);
-		mobTick(mob, &dungeon);
-		queuePushSub(&turn, (QueueNodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
+	while (running && dungeon.player->hp > 0 && mobAliveCount(dungeon)) {
+
+		int priority = queuePeekPriority(&dungeon.turn);
+		Mob* mob = queuePeek(&dungeon.turn).mob;
+		queuePop(&dungeon.turn);
+		Action action = mobTick(mob, &dungeon, base);
+		queuePushSub(&dungeon.turn, (QueueNodeData){.mob = mob}, priority + 1000/mob->speed, mob->order);
+
+		if (action == ACTION_DOWN && !stackEmpty(&history)) {
+			stackPush(&future, (StackNodeData){.dungeon = dungeon});
+			dungeon = stackPeek(&history).dungeon;
+			stackPop(&history);
+		}
+
+		if (action == ACTION_UP) {
+			stackPush(&history, (StackNodeData){.dungeon = dungeon});
+			if (stackEmpty(&future)) {
+				dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji);
+				setText(dungeon, &dungeon.status, L"Up a level!");
+			} else {
+				dungeon = stackPeek(&future).dungeon;
+				stackPop(&future);
+			}
+		}
+
 		if (all || mob->skills & SKILL_PC) {
 			dungeonPrint(base, dungeon);
 			usleep(200000);
@@ -144,7 +163,7 @@ int main(int argc, char** argv) {
 
 	//If we didn't quit early, show something
 	if (running) {
-		if (dungeon.player.hp == 0) {
+		if (dungeon.player->hp == 0) {
 			setText(dungeon, &dungeon.status, L"You died! Better luck next time!");
 		} else {
 			setText(dungeon, &dungeon.status, L"CONGLATURATION !!!");
@@ -161,7 +180,23 @@ int main(int argc, char** argv) {
 		fclose(file);
 	}
 
-	queueDestroy(&turn);
+	//Free the stacks
+	while(!stackEmpty(&history)) {
+		Dungeon temp = stackPeek(&history).dungeon;
+		dungeonDestroy(&temp);
+		stackPop(&history);
+	}
+
+	//Free the future too
+	while(!stackEmpty(&future)) {
+		Dungeon temp = stackPeek(&future).dungeon;
+		dungeonDestroy(&temp);
+		stackPop(&future);
+	}
+
+	//And free the current dungeon
 	dungeonDestroy(&dungeon);
+
+	//That's all folks.
 	endwin();
 }

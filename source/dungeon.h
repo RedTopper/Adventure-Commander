@@ -7,6 +7,7 @@
 
 #include "mob.h"
 #include "point.h"
+#include "queue.h"
 
 typedef enum {
 	VOID,
@@ -33,9 +34,10 @@ typedef struct {
 	wchar_t* line2;
 	Point dim;
 	Mob* mobs;
-	Mob player;
+	Mob* player;
 	Tile** tiles;
 	Room* rooms;
+	QueueNode* turn;
 	int numRooms;
 	int numMobs;
 	int emoji;

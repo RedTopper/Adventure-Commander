@@ -1,5 +1,6 @@
 #include <wchar.h>
 #include <stdlib.h>
+#include <ncursesw/curses.h>
 
 #include "mob.h"
 #include "dungeon.h"
@@ -74,7 +75,7 @@ static Point mobValidSpawnPoint(Mob* mobs, Dungeon dungeon, int i) {
 		if (!(tile.type == ROOM || tile.type == HALL)) continue;
 
 		//Not on player
-		if (pos.x == dungeon.player.pos.x || pos.y == dungeon.player.pos.y) continue;
+		if (pos.x == dungeon.player->pos.x || pos.y == dungeon.player->pos.y) continue;
 
 		//Not on mob
 		int onMob = 0;
@@ -91,7 +92,7 @@ static Point mobValidSpawnPoint(Mob* mobs, Dungeon dungeon, int i) {
 
 static int mobCanSeePC(Mob* mob, Dungeon* dungeon) {
 	Point current = mob->pos;
-	Point end = dungeon->player.pos;
+	Point end = dungeon->player->pos;
 	Point sign;
 	Point diff;
 	diff.x = abs(end.x - current.x),
@@ -165,7 +166,7 @@ static int mobMove(Mob* mob, Dungeon* dungeon, Point new) {
 }
 
 static void mobTickStraightLine(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
-	Point next = mobGetNextPoint(mob->pos, dungeon->player.pos);
+	Point next = mobGetNextPoint(mob->pos, dungeon->player->pos);
 	Movement movement = mobMove(mob, dungeon, next);
 
 	wchar_t* text;
@@ -273,14 +274,41 @@ const wchar_t* mobGetSymbol(Mob* mob, Dungeon dungeon) {
 	}
 }
 
-void mobTick(Mob* mob, Dungeon* dungeon) {
-	if (mob->hp <= 0) return;
+Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
+	if (mob->hp <= 0) return ACTION_NONE;
 	size_t textLength = (size_t)(dungeon->dim.x) + 1;
 	setText(*dungeon, &dungeon->status, L"Nothing important happened.");
+	Action action = ACTION_NONE;
 
 	if (mob->skills & SKILL_PC) {
 		//The player
 		setText(*dungeon, &dungeon->status, L"It's your turn!");
+		do {
+			dungeonPrint(base, *dungeon);
+			int ch = getch();
+			Movement move = -1;
+			switch (ch) {
+				case '7':
+				case 'y':
+					move = mobMove(mob, dungeon, (Point){mob->pos.x - 1, mob->pos.y - 1});
+					break;
+				case '8':
+				case 'k':
+					mobMove(mob, dungeon, (Point){mob->pos.x, mob->pos.y - 1});
+					break;
+				case '>':
+					action = ACTION_UP;
+					break;
+				case '<':
+					action = ACTION_DOWN;
+					break;
+				default:
+					swprintf(dungeon->status, textLength, L"%d %-*ls", ch, dungeon->dim.x + 1, L"is invalid!");
+			}
+
+			if (move == MOVE_FAILURE) setText(*dungeon, &dungeon->status, L"I can't dig through that!");
+			if (move == MOVE_SUCCESS) action = ACTION_MOVE;
+		} while (action == ACTION_NONE);
 	} else if (mob->skills & SKILL_ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
 		mobTickRandomly(mob, dungeon, L"confused");
@@ -312,7 +340,7 @@ void mobTick(Mob* mob, Dungeon* dungeon) {
 	//Attack phase
 	for (int i = 0; i < dungeon->numMobs + 1; i++) {
 		//Make sure to include the player in the attack phase
-		Mob* other = (i < dungeon->numMobs) ? &dungeon->mobs[i] : &dungeon->player;
+		Mob* other = (i < dungeon->numMobs) ? &dungeon->mobs[i] : dungeon->player;
 
 		//Collision detection. Monsters are 2 wide when emoji is enabled on most systems
 		if (!(mob != other
@@ -333,16 +361,18 @@ void mobTick(Mob* mob, Dungeon* dungeon) {
 			text
 		);
 	}
+
+	return action;
 }
 
-Mob mobGeneratePlayer(Point point) {
-	Mob mob = {0};
-	mob.pos = point;
-	mob.known = 0;
-	mob.skills = SKILL_PC;
-	mob.speed = 10;
-	mob.order = 0;
-	mob.hp = 1;
+Mob* mobGeneratePlayer(Point point) {
+	Mob* mob = malloc(sizeof(Mob));
+	mob->pos = point;
+	mob->known = 0;
+	mob->skills = SKILL_PC;
+	mob->speed = 10;
+	mob->order = 0;
+	mob->hp = 1;
 	return mob;
 }
 
@@ -370,13 +400,13 @@ int mobAliveCount(Dungeon dungeon) {
 	return count;
 }
 
-QueueNode* mobCreateQueue(Dungeon* dungeon) {
-	Mob* player = &dungeon->player;
+void mobCreateQueue(Dungeon* dungeon) {
+	Mob* player = dungeon->player;
 	QueueNode* queue = queueCreateSub((QueueNodeData){.mob=player}, 1000 / player->speed, player->order);
 	for (int i = 0; i < dungeon->numMobs; i++) {
 		Mob* m = &dungeon->mobs[i];
 		queuePushSub(&queue, (QueueNodeData){.mob=m}, 1000 / m->speed, m->order);
 	}
 
-	return queue;
+	dungeon->turn = queue;
 }

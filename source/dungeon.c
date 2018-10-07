@@ -241,6 +241,13 @@ static void dungeonFinalize(Dungeon *dungeon, int mobs, int emoji) {
 	dungeon->numMobs = mobs;
 	dungeon->mobs = mobGenerateAll(*dungeon);
 	dungeon->emoji = emoji;
+	pathCreate(dungeon);
+	mobCreateQueue(dungeon);
+
+	//Some default text
+	setText(*dungeon, &dungeon->status, L"Nothing has happened yet!");
+	setText(*dungeon, &dungeon->line1, L"Adventure Commander");
+	setText(*dungeon, &dungeon->line2, L"Status Text");
 }
 
 static void dungeonPostProcess(Dungeon dungeon) {
@@ -529,8 +536,8 @@ void dungeonSave(Dungeon dungeon, FILE* file) {
 	fwrite(&size, sizeof(uint32_t), 1, file);
 	
 	//Player position
-	uint8_t playerX = (uint8_t) dungeon.player.pos.x;
-	uint8_t playerY = (uint8_t) dungeon.player.pos.y;
+	uint8_t playerX = (uint8_t) dungeon.player->pos.x;
+	uint8_t playerY = (uint8_t) dungeon.player->pos.y;
 	fwrite(&playerX, sizeof(uint8_t), 1, file);
 	fwrite(&playerY, sizeof(uint8_t), 1, file);
 	
@@ -558,11 +565,13 @@ void dungeonSave(Dungeon dungeon, FILE* file) {
 
 void dungeonDestroy(Dungeon* dungeon) {
 	pathDestroy(dungeon);
+	queueDestroy(&dungeon->turn);
 
 	for(int row = 0; row < dungeon->dim.y; row++) {
 		free(dungeon->tiles[row]);
 	}
 
+	free(dungeon->player);
 	free(dungeon->status);
 	free(dungeon->line1);
 	free(dungeon->line2);
@@ -595,7 +604,7 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	}
 
 	//Write mobs
-	mvwaddwstr(win, dungeon.player.pos.y + 1, dungeon.player.pos.x, mobGetSymbol(&dungeon.player, dungeon));
+	mvwaddwstr(win, dungeon.player->pos.y + 1, dungeon.player->pos.x, mobGetSymbol(dungeon.player, dungeon));
 	for (int mob = 0; mob < dungeon.numMobs; mob++) {
 		Mob m = dungeon.mobs[mob];
 		if (m.hp > 0) mvwaddwstr(win, m.pos.y + 1, m.pos.x, mobGetSymbol(&m, dungeon));
@@ -607,13 +616,6 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 
 	//Some terminals have trouble with emoji, so help them out
 	//by redrawing the whole window every few frames.
-	static int refresh = 0;
-	if (dungeon.emoji && refresh == 4) {
-		redrawwin(win);
-		refresh = 0;
-	}
-
-	//Flip screen
 	static int refresh = 0;
 	if (dungeon.emoji && refresh == 4) {
 		redrawwin(win);

@@ -30,8 +30,8 @@ int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {
 	}
 
 	//Create node for player and set distance to player to zero.
-	QueueNode* queue = queueCreate((QueueNodeData){.pos=dungeon.player.pos}, 0);
-	distance[dungeon.player.pos.y][dungeon.player.pos.x] = 0;
+	QueueNode* queue = queueCreate((QueueNodeData){.pos=dungeon.player->pos}, 0);
+	distance[dungeon.player->pos.y][dungeon.player->pos.x] = 0;
 
 	while (!queueEmpty(&queue)) {
 		Point current = queuePeek(&queue).pos;

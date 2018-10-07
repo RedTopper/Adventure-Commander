@@ -2,6 +2,7 @@
 #define MOB_H
 
 #include <wchar.h>
+#include <ncursesw/curses.h>
 
 #include "point.h"
 
@@ -22,6 +23,13 @@ typedef enum {
 } Movement;
 
 typedef enum {
+	ACTION_NONE,
+	ACTION_UP,
+	ACTION_DOWN,
+	ACTION_MOVE
+} Action;
+
+typedef enum {
 	SKILL_INTELLIGENCE = 0x01,
 	SKILL_TELEPATHY = 0x02,
 	SKILL_TUNNELING = 0x04,
@@ -39,11 +47,11 @@ extern const wchar_t* MOB_TYPES_BORING[];
 #include "queue.h"
 
 const wchar_t* mobGetSymbol(Mob *mob, Dungeon dungeon);
-Mob mobGeneratePlayer(Point point);
+Mob* mobGeneratePlayer(Point point);
 Mob* mobGenerateAll(Dungeon dungeon);
-QueueNode* mobCreateQueue(Dungeon* dungeon);
+void mobCreateQueue(Dungeon* dungeon);
 int mobAliveCount(Dungeon dungeon);
-void mobTick(Mob* mob, Dungeon* dungeon);
+Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base);
 
 #endif
 
