@@ -3,6 +3,7 @@
 
 #include <wchar.h>
 #include <inttypes.h>
+#include <ncursesw/curses.h>
 
 #include "mob.h"
 #include "point.h"
@@ -27,9 +28,9 @@ typedef struct {
 } Room;
 
 typedef struct {
+	wchar_t* status;
 	wchar_t* line1;
 	wchar_t* line2;
-	wchar_t* prompt;
 	Point dim;
 	Mob* mobs;
 	Mob player;
@@ -43,11 +44,11 @@ typedef struct {
 
 extern const Point DUNGEON_DIM;
 
-void dungeonPostProcess(Dungeon dungeon);
+void setText(Dungeon dungeon, wchar_t** buffer, wchar_t* text);
 Dungeon dungeonGenerate(Point dim, int mobs);
 Dungeon dungeonLoad(FILE* file, int mobs);
 void dungeonSave(Dungeon dungeon, FILE* file);
 void dungeonDestroy(Dungeon* dungeon);
-void dungeonPrint(Dungeon dungeon);
+void dungeonPrint(WINDOW* window, Dungeon dungeon);
 
 #endif

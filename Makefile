@@ -4,6 +4,7 @@ CC = gcc
 NAME = game
 BUILD = build
 SOURCE = source
+LDFLAGS = -lncursesw
 
 #Make rules
 src = $(wildcard $(SOURCE)/*.c)

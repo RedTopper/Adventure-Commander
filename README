@@ -7,13 +7,13 @@ ajwalter
 792829065
 
 # Build
-Run `make` then `./game`
+Install ncurses on Fedora: `sudo yum install ncurses-devel`
+Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- Wide character support
+Then run `make` then `./game`
 
 # Notable features for this version
-- Need help? Try `--help`
-- Show all mob turns by using `--all`
-- Mobs have AI and can path find.
-- It looks cool I guess
+- Uses ncurses
+- Emoji for monsters
 
 # Changes from specifications
 - Intelligent monsters follow the player with path finding for up to 5 turns
@@ -27,6 +27,7 @@ This game uses UTF-8 to make it look nice! Please read this if your terminal
 looks messed up (ex: question marks or blank output):
 - If you are using `gnome-terminal` (called Terminal), UTF-8 works. 
 - If you are using `xterm`, press CTRL + RIGHT CLICK and enable TrueType fonts.
+  WARNING: All monsters will be boring boxes if you do this!
 (Tested on CS327FedoraLinux)
 
 # Other information

@@ -29,8 +29,8 @@ typedef enum {
 	SKILL_PC = 0x10,
 } Skills;
 
-extern const wchar_t SYM_PLAY;
-extern const wchar_t MOB_TYPES[];
+extern const wchar_t* SYM_PLAY;
+extern const wchar_t* MOB_TYPES[];
 
 #endif
 
@@ -38,6 +38,7 @@ extern const wchar_t MOB_TYPES[];
 #include "dungeon.h"
 #include "queue.h"
 
+const wchar_t* mobGetSymbol(Mob *mob);
 Mob mobGeneratePlayer(Point point);
 Mob* mobGenerateAll(Dungeon dungeon);
 Node* mobCreateQueue(Dungeon* dungeon);

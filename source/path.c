@@ -10,13 +10,13 @@ const int HARDNESS_RATE = 85;
 //Loop of next points
 const Point ADJACENT[8] = {
 	{0, -1},
-//	{1, -1},
+	{1, -1},
 	{1,  0},
-//	{1,  1},
+	{1,  1},
 	{0,  1},
-//	{-1, 1},
+	{-1, 1},
 	{-1, 0},
-//	{-1, -1},
+	{-1, -1},
 };
 
 int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {

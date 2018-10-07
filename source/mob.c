@@ -8,39 +8,34 @@
 #include "main.h"
 #include "path.h"
 
-#define SYM_PLAY_MACRO  L'@'
+#define SYM_PLAY_MACRO  L"@"
 
 const int MAX_KNOWN_TURNS = 5;
-const wchar_t SYM_PLAY = SYM_PLAY_MACRO;
-const wchar_t MOB_TYPES[] = {
-	L'0',
-	L'1',
-	L'2',
-	L'3',
-	L'4',
-	L'5',
-	L'6',
-	L'7',
-	L'8',
-	L'9',
-	L'a',
-	L'b',
-	L'c',
-	L'd',
-	L'e',
-	L'f',
+const wchar_t* SYM_PLAY = SYM_PLAY_MACRO;
+const wchar_t* MOB_TYPES[] = {
+	L"\x01F480", //Skull   (    )
+	L"\x01F464", //Empty   (I   )
+	L"\x01F47B", //Ghost   ( T  )
+	L"\x01F47F", //Demon   (IT  )
+	L"\x01F417", //Boar    (  D )
+	L"\x01F435", //Monkey  (I D )
+	L"\x01F479", //Ogre    ( TD )
+	L"\x01F432", //Dragon  (ITD )
+	L"\x01F480", //Skull   (   E)
+	L"\x01F419", //Squid   (I  E)
+	L"\x01F40D", //Snake   ( D E)
+	L"\x01F47A", //Goblin  (IT E)
+	L"\x01F47E", //Monster (  DE)
+	L"\x01F42F", //Tiger   (I DE)
+	L"\x01F47D", //Alien   ( TDE)
+	L"\x01F383", //Pumpkin (ITDE)
 	SYM_PLAY_MACRO,
-	L'?'
+	L"?"
 };
-
-static wchar_t mobGetSymbol(Mob *mob) {
-	int size = sizeof(MOB_TYPES)/sizeof(MOB_TYPES[0]);
-	return MOB_TYPES[mob->skills >= size ? size : mob->skills];
-}
 
 static void mobPrintText(Dungeon* dungeon, Mob* mob, const wchar_t* text, const wchar_t* type) {
 	size_t textLength = (size_t) (dungeon->dim.x) + 1;
-	swprintf(dungeon->line2, textLength, L"%lc at (%d, %d) is %ls and %-*ls",
+	swprintf(dungeon->status, textLength, L"%ls at (%d, %d) is %ls and %-*ls",
 		mobGetSymbol(mob),
 		mob->pos.x,
 		mob->pos.y,
@@ -252,14 +247,19 @@ static void mobTickPathFind(Dungeon* dungeon, Mob* mob, const wchar_t* type) {
 
 //"Public" functions
 
+const wchar_t* mobGetSymbol(Mob *mob) {
+	int size = sizeof(MOB_TYPES)/sizeof(MOB_TYPES[0]);
+	return MOB_TYPES[mob->skills >= size ? size : mob->skills];
+}
+
 void mobTick(Dungeon* dungeon, Mob* mob) {
 	if (mob->hp <= 0) return;
 	size_t textLength = (size_t)(dungeon->dim.x) + 1;
-	setBufferPad(&dungeon->line2, L"Nothing important happened.", textLength);
+	setText(*dungeon, &dungeon->status, L"Nothing important happened.");
 
 	if (mob->skills & SKILL_PC) {
 		//The player
-		setBufferPad(&dungeon->line2, L"It's your turn but you lack effort to move...", textLength);
+		setText(*dungeon, &dungeon->status, L"It's your turn!");
 	} else if (mob->skills & SKILL_ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
 		mobTickRandomly(dungeon, mob, L"confused");
@@ -292,10 +292,16 @@ void mobTick(Dungeon* dungeon, Mob* mob) {
 	for (int i = 0; i < dungeon->numMobs + 1; i++) {
 		//Make sure to include the player in the attack phase
 		Mob* other = (i < dungeon->numMobs) ? &dungeon->mobs[i] : &dungeon->player;
-		if (other == mob || other->hp == 0 || mob->pos.x != other->pos.x || mob->pos.y != other->pos.y) continue;
+
+		//Collision detection. Monsters are wide so overlapping includes right one.
+		if (other == mob
+			|| other->hp == 0
+			|| (other->pos.x != mob->pos.x && other->pos.x - 1 != mob->pos.x)
+			|| mob->pos.y != other->pos.y) continue;
+
 		other->hp--;
 		wchar_t* text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
-		swprintf(dungeon->line2, textLength, L"%lc at (%d, %d) attacked %lc! %-*ls",
+		swprintf(dungeon->status, textLength, L"%ls at (%d, %d) attacked %ls! %-*ls",
 			mobGetSymbol(mob),
 			mob->pos.x,
 			mob->pos.y,

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <ncursesw/curses.h>
 
 #include "mob.h"
 #include "main.h"
@@ -20,7 +21,6 @@ const char* ALL = "--all";
 
 static volatile int running = 1;
 static void sig() {
-	wprintf(L"Caught CTRL-C: Quitting!\n");
 	fflush(stdout);
 	running = 0;
 }
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 	setlocale(LC_ALL, "");
 	srand((unsigned int) time(NULL));
 	signal(SIGINT, sig);
-	
+
 	int save = 0;
 	int load = 0;
 	int mobs = 10;
@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	//The base dungeon
 	Dungeon dungeon;
 
 	//Load dungeon from file
@@ -109,37 +110,42 @@ int main(int argc, char** argv) {
 		dungeon = dungeonGenerate(DUNGEON_DIM, mobs);
 	}
 
-	//Main loop
-	setBufferPad(&dungeon.line1, L"Adventure Commander", (size_t)dungeon.dim.x + 1);
-	setBufferPad(&dungeon.line2, L"Nothing has happened yet!", (size_t)dungeon.dim.x + 1);
-	setBuffer(&dungeon.prompt, L"(Disabled) > ", (size_t)dungeon.dim.x + 1);
-	wprintf(L"\033[H\033[J");
+	//Business executed
+	WINDOW* base = initscr();
+	cbreak();
+	noecho();
+	wclear(base);
+	curs_set(0);
+
+	//Economics established
+	setText(dungeon, &dungeon.status, L"Nothing has happened yet!");
+	setText(dungeon, &dungeon.line1, L"Something will go here one day!");
+	setText(dungeon, &dungeon.line2, L"Waiting for other players...");
 	pathCreate(&dungeon);
 	Node* turn = mobCreateQueue(&dungeon);
 	while (running && dungeon.player.hp > 0 && mobAliveCount(dungeon)) {
-		wprintf(L"\033[0;0H\n\033[0;0H");
 		int priority = queuePeekPriority(&turn);
 		Mob* mob = queuePeek(&turn).mob;
 		queuePop(&turn);
 		mobTick(&dungeon, mob);
 		queuePushSub(&turn, (NodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
 		if (all || mob->skills & SKILL_PC) {
-			dungeonPostProcess(dungeon);
-			dungeonPrint(dungeon);
+			dungeonPrint(base, dungeon);
 			usleep(200000);
 		}
 	}
 
-	wprintf(L"\033[0;0H\n\033[0;0H");
-	dungeonPostProcess(dungeon);
-	dungeonPrint(dungeon);
+	//If we didn't quit early, show something
 	if (running) {
 		if (dungeon.player.hp == 0) {
-			wprintf(L"You died. Better luck next time!\n");
+			setText(dungeon, &dungeon.status, L"You died! Better luck next time!");
 		} else {
-			wprintf(L"CONGLATURATION !!!\n");
+			setText(dungeon, &dungeon.status, L"CONGLATURATION !!!");
 		}
 	}
+
+	//Show the dungeon once more before exiting.
+	dungeonPrint(base, dungeon);
 
 	//Save dungeon to file.
 	if (save) {
@@ -150,14 +156,5 @@ int main(int argc, char** argv) {
 
 	queueDestroy(&turn);
 	dungeonDestroy(&dungeon);
-}
-
-//"Public" functions
-
-void setBufferPad(wchar_t** buffer, wchar_t* text, size_t length) {
-	swprintf(*buffer, length, L"%-*ls", length, text);
-}
-
-void setBuffer(wchar_t** buffer, wchar_t* text, size_t length) {
-	swprintf(*buffer, length, L"%ls", text);
+	endwin();
 }

@@ -1,9 +1,12 @@
+#define _XOPEN_SOURCE_EXTENDED
+
 #include <wchar.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <endian.h>
+#include <ncursesw/curses.h>
 
 #include "mob.h"
 #include "dungeon.h"
@@ -40,7 +43,7 @@ const wchar_t SYM_ROCK_HARD = L'\x2593';
 
 //Hall
 const wchar_t SYM_HALL = L'\x2022';
-const wchar_t SYM_HALL_NESW = L'\x256C';
+const wchar_t SYM_HALL_NESW = L' ';
 const wchar_t SYM_HALL_NES = L'\x2560';
 const wchar_t SYM_HALL_ESW = L'\x2566';
 const wchar_t SYM_HALL_SWN = L'\x2563';
@@ -229,21 +232,17 @@ static int dungeonIsFull(Dungeon dungeon) {
 
 static void dungeonFinalize(Dungeon *dungeon, int mobs) {
 	//Setup buffer
-	dungeon->line1 = calloc((size_t) (dungeon->dim.x) + 1, sizeof(wchar_t));
-	dungeon->line2 = calloc((size_t) (dungeon->dim.x) + 1, sizeof(wchar_t));
-	dungeon->prompt = calloc((size_t) (dungeon->dim.x) + 1, sizeof(wchar_t));
+	size_t len = (size_t) (dungeon->dim.x) + 1;
+	dungeon->status = calloc(len, sizeof(wchar_t));
+	dungeon->line1 = calloc(len, sizeof(wchar_t));
+	dungeon->line2 = calloc(len, sizeof(wchar_t));
 
 	//Create mobs
 	dungeon->numMobs = mobs;
 	dungeon->mobs = mobGenerateAll(*dungeon);
-
-	//Prettify the dungeon.
-	dungeonPostProcess(*dungeon);
 }
 
-//"Public" functions
-
-void dungeonPostProcess(Dungeon dungeon) {
+static void dungeonPostProcess(Dungeon dungeon) {
 	for(int row = 0; row < dungeon.dim.y; row++) {
 		for(int col = 0; col < dungeon.dim.x; col++) {
 			Tile* tile = &dungeon.tiles[row][col];
@@ -336,6 +335,14 @@ void dungeonPostProcess(Dungeon dungeon) {
 			}
 		}
 	}
+}
+
+//"Public" functions
+
+void setText(Dungeon dungeon, wchar_t** buffer, wchar_t* text) {
+	//Reset buffer
+	size_t len = (size_t)(dungeon.dim.x) + 1;
+	swprintf(*buffer, len, L"%-*ls", len, text);
 }
 
 Dungeon dungeonGenerate(Point dim, int mobs) {
@@ -555,9 +562,9 @@ void dungeonDestroy(Dungeon* dungeon) {
 		free(dungeon->tiles[row]);
 	}
 
+	free(dungeon->status);
 	free(dungeon->line1);
 	free(dungeon->line2);
-	free(dungeon->prompt);
 	free(dungeon->mobs);
 	free(dungeon->tiles);
 	free(dungeon->rooms);
@@ -568,55 +575,44 @@ void dungeonDestroy(Dungeon* dungeon) {
 	dungeon->numMobs = 0;
 }
 
-void dungeonPrint(Dungeon dungeon) {
-	//Set up screen buffer
-	Point dim = {0};
-	dim.x = dungeon.dim.x + 1;
-	dim.y = dungeon.dim.y;
-	wchar_t screen[dim.y][dim.x];
-	memset(screen, 0, dim.y * dim.x * sizeof(wchar_t));
+void dungeonPrint(WINDOW* win, Dungeon dungeon) {
+	//Make the dungeon look nice
+	dungeonPostProcess(dungeon);
 
-	//Print status messages
-	wprintf(L"%ls\n", dungeon.line1);
-	wprintf(L"%ls\n", dungeon.line2);
+	//Some consoles leave artifacts when using emoji
+	//So clear them every once in a while.
+	static int render = 0;
+	if (render == 10) {
+		render = 0;
+		wclear(win);
+	}
+
+	//Write status
+	mvwaddwstr(win, 0, 0, dungeon.status);
 
 	//Write tiles
 	for (int row = 0; row < dungeon.dim.y; row++) {
+		wchar_t screen[dungeon.dim.x + 1];
 		for (int col = 0; col < dungeon.dim.x; col++) {
-			screen[row][col] = dungeon.tiles[row][col].symbol;
+			screen[col] = dungeon.tiles[row][col].symbol;
 		}
+
+		screen[dungeon.dim.x] = L'\0';
+		mvwaddwstr(win, row + 1, 0, screen);
 	}
 
 	//Write mobs
-	screen[dungeon.player.pos.y][dungeon.player.pos.x] = SYM_PLAY;
+	mvwaddwstr(win, dungeon.player.pos.y + 1, dungeon.player.pos.x, SYM_PLAY);
 	for (int mob = 0; mob < dungeon.numMobs; mob++) {
 		Mob m = dungeon.mobs[mob];
-		if (m.hp > 0) screen[m.pos.y][m.pos.x] = MOB_TYPES[m.skills];
+		if (m.hp > 0) mvwaddwstr(win, m.pos.y + 1, m.pos.x, MOB_TYPES[m.skills]);
 	}
 
-	//Write to screen
-	for (int row = 0; row < dim.y; row++) {
-		screen[row][dim.x - 1] = "\0"[0];
-		wprintf(L"%ls\n", (wchar_t*) screen[row]);
-	}
+	//Write other statuses
+	mvwaddwstr(win, dungeon.dim.y + 1, 0, dungeon.line1);
+	mvwaddwstr(win, dungeon.dim.y + 2, 0, dungeon.line2);
 
-	//Print the console
-	wprintf(L"%ls", dungeon.prompt);
-
-	fflush(stdout);
-}
-
-void pathPrint(Dungeon dungeon, int** path) {
-	for (int row = 0; row < dungeon.dim.y; row++) {
-		for (int col = 0; col < dungeon.dim.x; col++) {
-			if (row == dungeon.player.pos.y && col == dungeon.player.pos.x) {
-				wprintf(L"%lc", SYM_PLAY);
-			} else if (path[row][col] != INT32_MAX) {
-				wprintf(L"%d", path[row][col] % 10);
-			} else {
-				wprintf(L" ");
-			}
-		}
-		wprintf(L"\n");
-	}
+	//Flip screen
+	wrefresh(win);
+	render++;
 }
