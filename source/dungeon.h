@@ -38,6 +38,7 @@ typedef struct {
 	Room* rooms;
 	int numRooms;
 	int numMobs;
+	int emoji;
 	int** pathFloor;
 	int** pathDig;
 } Dungeon;
@@ -45,8 +46,8 @@ typedef struct {
 extern const Point DUNGEON_DIM;
 
 void setText(Dungeon dungeon, wchar_t** buffer, wchar_t* text);
-Dungeon dungeonGenerate(Point dim, int mobs);
-Dungeon dungeonLoad(FILE* file, int mobs);
+Dungeon dungeonGenerate(Point dim, int mobs, int emoji);
+Dungeon dungeonLoad(FILE* file, int mobs, int emoji);
 void dungeonSave(Dungeon dungeon, FILE* file);
 void dungeonDestroy(Dungeon* dungeon);
 void dungeonPrint(WINDOW* window, Dungeon dungeon);

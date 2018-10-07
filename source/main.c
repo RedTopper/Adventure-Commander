@@ -17,7 +17,9 @@ const char* HELP = "--help";
 const char* SAVE = "--save";
 const char* LOAD = "--load";
 const char* MOBS = "--nummon";
+const char* LAME = "--lame";
 const char* ALL = "--all";
+
 
 static volatile int running = 1;
 static void sig() {
@@ -29,12 +31,14 @@ static void help(char* message, char* command, Error error ) {
 	wprintf(L"%s: ", command);
 	wprintf(L"%s\n", message);
 	wprintf(
-		L"Adventure Commander Help: \n"
+		L"Remember, please see the readme if anything looks weird!\n"
+		L"Adventure Commander Help:\n"
 		L"[--help] Show this\n"
+		L"[--lame] Disable emoji support\n"
 		L"[--load] Load a file from ~/.rlg327/dungeon\n"
 		L"[--save] Write a dungeon to ~/.rlg327/dungeon\n"
-		L"[--nummon] <count> Number of monsters to generate\n"
 		L"[--all] Show all moves instead of just PC moves\n"
+		L"[--nummon] <count> Number of monsters to generate\n"
 	);
 	exit(error);
 }
@@ -72,7 +76,8 @@ int main(int argc, char** argv) {
 	int load = 0;
 	int mobs = 10;
 	int all = 0;
-	
+	int emoji = 1;
+
 	//Parse arguments
 	for (int arg = 1; arg < argc; arg++) {
 		if (strlen(argv[arg]) < 3 || argv[arg][0] != '-' || argv[arg][1] != '-') {
@@ -82,6 +87,8 @@ int main(int argc, char** argv) {
 			//Check if correct argument
 			if (strcmp(HELP, argv[arg]) == 0) {
 				help("Listing Commands", argv[arg], 0);
+			} else if (strcmp(LAME, argv[arg]) == 0) {
+				emoji = 0;
 			} else if (strcmp(SAVE, argv[arg]) == 0) {
 				save = 1;
 			} else if (strcmp(LOAD, argv[arg]) == 0) {
@@ -104,10 +111,10 @@ int main(int argc, char** argv) {
 	//Load dungeon from file
 	if (load) {
 		FILE* file = get("rb");
-		dungeon = dungeonLoad(file, mobs);
+		dungeon = dungeonLoad(file, mobs, emoji);
 		fclose(file);
 	} else {
-		dungeon = dungeonGenerate(DUNGEON_DIM, mobs);
+		dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji);
 	}
 
 	//Business executed
@@ -127,7 +134,7 @@ int main(int argc, char** argv) {
 		int priority = queuePeekPriority(&turn);
 		Mob* mob = queuePeek(&turn).mob;
 		queuePop(&turn);
-		mobTick(&dungeon, mob);
+		mobTick(mob, &dungeon);
 		queuePushSub(&turn, (NodeData){.mob=mob}, priority + 1000/mob->speed, mob->order);
 		if (all || mob->skills & SKILL_PC) {
 			dungeonPrint(base, dungeon);

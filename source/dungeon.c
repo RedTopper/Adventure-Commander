@@ -230,7 +230,7 @@ static int dungeonIsFull(Dungeon dungeon) {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
-static void dungeonFinalize(Dungeon *dungeon, int mobs) {
+static void dungeonFinalize(Dungeon *dungeon, int mobs, int emoji) {
 	//Setup buffer
 	size_t len = (size_t) (dungeon->dim.x) + 1;
 	dungeon->status = calloc(len, sizeof(wchar_t));
@@ -240,6 +240,7 @@ static void dungeonFinalize(Dungeon *dungeon, int mobs) {
 	//Create mobs
 	dungeon->numMobs = mobs;
 	dungeon->mobs = mobGenerateAll(*dungeon);
+	dungeon->emoji = emoji;
 }
 
 static void dungeonPostProcess(Dungeon dungeon) {
@@ -345,7 +346,7 @@ void setText(Dungeon dungeon, wchar_t** buffer, wchar_t* text) {
 	swprintf(*buffer, len, L"%-*ls", len, text);
 }
 
-Dungeon dungeonGenerate(Point dim, int mobs) {
+Dungeon dungeonGenerate(Point dim, int mobs, int emoji) {
 	Dungeon dungeon = {0};
 	dungeon.dim = dim;
 	
@@ -409,12 +410,12 @@ Dungeon dungeonGenerate(Point dim, int mobs) {
 	memcpy(dungeon.rooms, rooms, sizeof(Room) * count);
 	
 	//Finalize dungeon
-	dungeonFinalize(&dungeon, mobs);
+	dungeonFinalize(&dungeon, mobs, emoji);
 	
 	return dungeon;
 }
 
-Dungeon dungeonLoad(FILE* file, int mobs) {
+Dungeon dungeonLoad(FILE* file, int mobs, int emoji) {
 	size_t length = strlen(HEADER);
 	char head[length + 1];
 	size_t read = 0;
@@ -510,7 +511,7 @@ Dungeon dungeonLoad(FILE* file, int mobs) {
 	}
 
 	//Finalize dungeon
-	dungeonFinalize(&dungeon, mobs);
+	dungeonFinalize(&dungeon, mobs, emoji);
 	
 	return dungeon;
 }
@@ -579,14 +580,6 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	//Make the dungeon look nice
 	dungeonPostProcess(dungeon);
 
-	//Some consoles leave artifacts when using emoji
-	//So clear them every once in a while.
-	static int render = 0;
-	if (render == 10) {
-		render = 0;
-		wclear(win);
-	}
-
 	//Write status
 	mvwaddwstr(win, 0, 0, dungeon.status);
 
@@ -605,7 +598,7 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	mvwaddwstr(win, dungeon.player.pos.y + 1, dungeon.player.pos.x, SYM_PLAY);
 	for (int mob = 0; mob < dungeon.numMobs; mob++) {
 		Mob m = dungeon.mobs[mob];
-		if (m.hp > 0) mvwaddwstr(win, m.pos.y + 1, m.pos.x, MOB_TYPES[m.skills]);
+		if (m.hp > 0) mvwaddwstr(win, m.pos.y + 1, m.pos.x, mobGetSymbol(&m, dungeon));
 	}
 
 	//Write other statuses
@@ -614,5 +607,4 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 
 	//Flip screen
 	wrefresh(win);
-	render++;
 }

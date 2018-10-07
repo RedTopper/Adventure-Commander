@@ -8,14 +8,17 @@ ajwalter
 
 # Build
 Install ncurses on Fedora: `sudo yum install ncurses-devel`
-Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- Wide character support
+Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- IMPORTANT
 Then run `make` then `./game`
 
 # Notable features for this version
+- Emoji for monsters (use --lame to disable)
+- Player can move
 - Uses ncurses
-- Emoji for monsters
 
 # Changes from specifications
+- Mobs use emoji if not disabled
+- In order to support this, mobs are 2 characters wide
 - Intelligent monsters follow the player with path finding for up to 5 turns
 - Immutable dungeon walls are LOWER HALF BLOCK, UPPER HALF BLOCK and FULL BLOCK
 - Halls are BOX DRAWING DOUBLE * (I used most of the double lined characters)
@@ -27,7 +30,7 @@ This game uses UTF-8 to make it look nice! Please read this if your terminal
 looks messed up (ex: question marks or blank output):
 - If you are using `gnome-terminal` (called Terminal), UTF-8 works. 
 - If you are using `xterm`, press CTRL + RIGHT CLICK and enable TrueType fonts.
-  WARNING: All monsters will be boring boxes if you do this!
+WARNING: All monsters will be boxes if you do this without --lame (sad)!
 (Tested on CS327FedoraLinux)
 
 # Other information

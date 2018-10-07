@@ -33,10 +33,31 @@ const wchar_t* MOB_TYPES[] = {
 	L"?"
 };
 
-static void mobPrintText(Dungeon* dungeon, Mob* mob, const wchar_t* text, const wchar_t* type) {
+const wchar_t* MOB_TYPES_BORING[] = {
+		L"sk", //Skull   (    )
+		L"hu", //Empty   (I   )
+		L"gh", //Ghost   ( T  )
+		L"de", //Demon   (IT  )
+		L"bo", //Boar    (  D )
+		L"mo", //Monkey  (I D )
+		L"OG", //Ogre    ( TD )
+		L"DR", //Dragon  (ITD )
+		L"sk", //Skull   (   E)
+		L"sq", //Squid   (I  E)
+		L"sn", //Snake   ( D E)
+		L"go", //Goblin  (IT E)
+		L"MO", //Monster (  DE)
+		L"TI", //Tiger   (I DE)
+		L"AL", //Alien   ( TDE)
+		L"PU", //Pumpkin (ITDE)
+		SYM_PLAY_MACRO,
+		L"?"
+};
+
+static void mobPrintText(Mob* mob, Dungeon* dungeon, const wchar_t* text, const wchar_t* type) {
 	size_t textLength = (size_t) (dungeon->dim.x) + 1;
 	swprintf(dungeon->status, textLength, L"%ls at (%d, %d) is %ls and %-*ls",
-		mobGetSymbol(mob),
+		mobGetSymbol(mob, *dungeon),
 		mob->pos.x,
 		mob->pos.y,
 		type,
@@ -45,7 +66,7 @@ static void mobPrintText(Dungeon* dungeon, Mob* mob, const wchar_t* text, const 
 	);
 }
 
-static Point mobValidSpawnPoint(Dungeon dungeon, Mob* mobs, int i) {
+static Point mobValidSpawnPoint(Mob* mobs, Dungeon dungeon, int i) {
 	Point pos = {0};
 
 	while(1) {
@@ -72,7 +93,7 @@ static Point mobValidSpawnPoint(Dungeon dungeon, Mob* mobs, int i) {
 	return pos;
 }
 
-static int mobCanSeePC(Dungeon* dungeon, Mob* mob) {
+static int mobCanSeePC(Mob* mob, Dungeon* dungeon) {
 	Point current = mob->pos;
 	Point end = dungeon->player.pos;
 	Point sign;
@@ -125,7 +146,7 @@ static Point mobGetNextPoint(Point start, Point end) {
 	return current;
 }
 
-static int mobMove(Dungeon* dungeon, Mob* mob, Point new) {
+static int mobMove(Mob* mob, Dungeon* dungeon, Point new) {
 	Tile* tile = &dungeon->tiles[new.y][new.x];
 	if (tile->type == ROCK && mob->skills & SKILL_TUNNELING) {
 		if (tile->hardness <= HARDNESS_RATE) {
@@ -147,9 +168,9 @@ static int mobMove(Dungeon* dungeon, Mob* mob, Point new) {
 	return MOVE_FAILURE;
 }
 
-static void mobTickStraightLine(Dungeon *dungeon, Mob *mob, const wchar_t* type) {
+static void mobTickStraightLine(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
 	Point next = mobGetNextPoint(mob->pos, dungeon->player.pos);
-	Movement movement = mobMove(dungeon, mob, next);
+	Movement movement = mobMove(mob, dungeon, next);
 
 	wchar_t* text;
 	switch (movement) {
@@ -168,15 +189,15 @@ static void mobTickStraightLine(Dungeon *dungeon, Mob *mob, const wchar_t* type)
 			break;
 	}
 
-	mobPrintText(dungeon, mob, text, type);
+	mobPrintText(mob, dungeon, text, type);
 }
 
-static void mobTickRandomly(Dungeon* dungeon, Mob* mob, const wchar_t* type) {
+static void mobTickRandomly(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
 	int dir = rand() % (int)(sizeof(ADJACENT)/sizeof(ADJACENT[0]));
 	Point new = {0};
 	new.x = ADJACENT[dir].x + mob->pos.x;
 	new.y = ADJACENT[dir].y + mob->pos.y;
-	Movement movement = mobMove(dungeon, mob, new);
+	Movement movement = mobMove(mob, dungeon, new);
 	wchar_t* text;
 	switch (movement) {
 		case MOVE_BROKE_WALL:
@@ -194,10 +215,10 @@ static void mobTickRandomly(Dungeon* dungeon, Mob* mob, const wchar_t* type) {
 			break;
 	}
 
-	mobPrintText(dungeon, mob, text, type);
+	mobPrintText(mob, dungeon, text, type);
 }
 
-static void mobTickPathFind(Dungeon* dungeon, Mob* mob, const wchar_t* type) {
+static void mobTickPathFind(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
 	int adj = sizeof(ADJACENT)/sizeof(ADJACENT[0]);
 	Point next = {0};
 	int lowest = INT32_MAX;
@@ -222,7 +243,7 @@ static void mobTickPathFind(Dungeon* dungeon, Mob* mob, const wchar_t* type) {
 
 	if (lowest < INT32_MAX) {
 		Movement movement;
-		movement = mobMove(dungeon, mob, next);
+		movement = mobMove(mob, dungeon, next);
 		wchar_t* text;
 		switch (movement) {
 			case MOVE_BROKE_WALL:
@@ -239,20 +260,24 @@ static void mobTickPathFind(Dungeon* dungeon, Mob* mob, const wchar_t* type) {
 				text = L"somehow failed to move?";
 				break;
 		}
-		mobPrintText(dungeon, mob, text, type);
+		mobPrintText(mob, dungeon, text, type);
 	} else {
-		mobTickRandomly(dungeon, mob, L"trapped");
+		mobTickRandomly(mob, dungeon, L"trapped");
 	}
 }
 
 //"Public" functions
 
-const wchar_t* mobGetSymbol(Mob *mob) {
+const wchar_t* mobGetSymbol(Mob* mob, Dungeon dungeon) {
 	int size = sizeof(MOB_TYPES)/sizeof(MOB_TYPES[0]);
-	return MOB_TYPES[mob->skills >= size ? size : mob->skills];
+	if (dungeon.emoji) {
+		return MOB_TYPES[mob->skills >= size ? size : mob->skills];
+	} else {
+		return MOB_TYPES_BORING[mob->skills >= size ? size : mob->skills];
+	}
 }
 
-void mobTick(Dungeon* dungeon, Mob* mob) {
+void mobTick(Mob* mob, Dungeon* dungeon) {
 	if (mob->hp <= 0) return;
 	size_t textLength = (size_t)(dungeon->dim.x) + 1;
 	setText(*dungeon, &dungeon->status, L"Nothing important happened.");
@@ -262,29 +287,29 @@ void mobTick(Dungeon* dungeon, Mob* mob) {
 		setText(*dungeon, &dungeon->status, L"It's your turn!");
 	} else if (mob->skills & SKILL_ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
-		mobTickRandomly(dungeon, mob, L"confused");
+		mobTickRandomly(mob, dungeon, L"confused");
 	} else if (mob->skills & SKILL_TELEPATHY) {
 		//Not the player, not erratic, but has telepathy skill
 		if (mob->skills & SKILL_INTELLIGENCE) {
-			mobTickPathFind(dungeon, mob, L"telepathic");
+			mobTickPathFind(mob, dungeon, L"telepathic");
 		} else {
-			mobTickStraightLine(dungeon, mob, L"telepathic");
+			mobTickStraightLine(mob, dungeon, L"telepathic");
 		}
 	} else if (mob->skills & SKILL_INTELLIGENCE) {
 		//Not the player, not erratic, not telepathic, but has intelligence
-		if (mobCanSeePC(dungeon, mob)) mob->known = MAX_KNOWN_TURNS;
+		if (mobCanSeePC(mob, dungeon)) mob->known = MAX_KNOWN_TURNS;
 		if (mob->known > 0) {
-			mobTickPathFind(dungeon, mob, L"smart");
+			mobTickPathFind(mob, dungeon, L"smart");
 			mob->known--;
 		} else {
-			mobTickRandomly(dungeon, mob, L"searching");
+			mobTickRandomly(mob, dungeon, L"searching");
 		}
 	} else {
 		//Not the player, not erratic, not telepathic, not intelligent, but... idk, exists?
-		if (mobCanSeePC(dungeon, mob)) {
-			mobTickStraightLine(dungeon, mob, L"a bumbling idiot");
+		if (mobCanSeePC(mob, dungeon)) {
+			mobTickStraightLine(mob, dungeon, L"a bumbling idiot");
 		} else {
-			mobTickRandomly(dungeon, mob, L"a bumbling idiot");
+			mobTickRandomly(mob, dungeon, L"a bumbling idiot");
 		}
 	}
 
@@ -302,10 +327,10 @@ void mobTick(Dungeon* dungeon, Mob* mob) {
 		other->hp--;
 		wchar_t* text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
 		swprintf(dungeon->status, textLength, L"%ls at (%d, %d) attacked %ls! %-*ls",
-			mobGetSymbol(mob),
+			mobGetSymbol(mob, *dungeon),
 			mob->pos.x,
 			mob->pos.y,
-			mobGetSymbol(other),
+			mobGetSymbol(other, *dungeon),
 			textLength,
 			text
 		);
@@ -327,7 +352,7 @@ Mob* mobGenerateAll(Dungeon dungeon) {
 	Mob* mobs = malloc(sizeof(Mob) * dungeon.numMobs);
 	for (int i = 0; i < dungeon.numMobs; i++) {
 		Mob mob = {0};
-		mob.pos = mobValidSpawnPoint(dungeon, mobs, i);
+		mob.pos = mobValidSpawnPoint(mobs, dungeon, i);
 		mob.known = 0;
 		mob.skills = rand() % 16;
 		mob.speed = (rand() % 16) + 5; //5-20
