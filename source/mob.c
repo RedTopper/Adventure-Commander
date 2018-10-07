@@ -1,6 +1,5 @@
 #include <wchar.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 #include "mob.h"
 #include "dungeon.h"
@@ -8,13 +7,10 @@
 #include "main.h"
 #include "path.h"
 
-#define SYM_PLAY_MACRO  L"@"
-
 const int MAX_KNOWN_TURNS = 5;
-const wchar_t* SYM_PLAY = SYM_PLAY_MACRO;
 const wchar_t* MOB_TYPES[] = {
 	L"\x01F480", //Skull   (    )
-	L"\x01F464", //Empty   (I   )
+	L"\x01F43A", //Angry   (I   )
 	L"\x01F47B", //Ghost   ( T  )
 	L"\x01F47F", //Demon   (IT  )
 	L"\x01F417", //Boar    (  D )
@@ -29,28 +25,28 @@ const wchar_t* MOB_TYPES[] = {
 	L"\x01F42F", //Tiger   (I DE)
 	L"\x01F47D", //Alien   ( TDE)
 	L"\x01F383", //Pumpkin (ITDE)
-	SYM_PLAY_MACRO,
-	L"?"
+	L"\x01F464", //Person
+	L"??"
 };
 
 const wchar_t* MOB_TYPES_BORING[] = {
-	L"sk", //Skull   (    )
-	L"hu", //Empty   (I   )
-	L"gh", //Ghost   ( T  )
-	L"de", //Demon   (IT  )
-	L"bo", //Boar    (  D )
-	L"mo", //Monkey  (I D )
-	L"OG", //Ogre    ( TD )
-	L"DR", //Dragon  (ITD )
-	L"sk", //Skull   (   E)
-	L"sq", //Squid   (I  E)
-	L"sn", //Snake   ( D E)
-	L"go", //Goblin  (IT E)
-	L"MO", //Monster (  DE)
-	L"TI", //Tiger   (I DE)
-	L"AL", //Alien   ( TDE)
-	L"PU", //Pumpkin (ITDE)
-	SYM_PLAY_MACRO,
+	L"k", //Skull   (    )
+	L"p", //Empty   (I   )
+	L"g", //Ghost   ( T  )
+	L"d", //Demon   (IT  )
+	L"b", //Boar    (  D )
+	L"m", //Monkey  (I D )
+	L"O", //Ogre    ( TD )
+	L"D", //Dragon  (ITD )
+	L"k", //Skull   (   E)
+	L"o", //Squid   (I  E)
+	L"s", //Snake   ( D E)
+	L"p", //Goblin  (IT E)
+	L"M", //Monster (  DE)
+	L"T", //Tiger   (I DE)
+	L"A", //Alien   ( TDE)
+	L"P", //Pumpkin (ITDE)
+	L"@",
 	L"?"
 };
 
@@ -318,19 +314,21 @@ void mobTick(Mob* mob, Dungeon* dungeon) {
 		//Make sure to include the player in the attack phase
 		Mob* other = (i < dungeon->numMobs) ? &dungeon->mobs[i] : &dungeon->player;
 
-		//Collision detection. Monsters are wide so overlapping includes right one.
-		if (other == mob
-			|| other->hp == 0
-			|| (other->pos.x != mob->pos.x && other->pos.x - 1 != mob->pos.x)
-			|| mob->pos.y != other->pos.y) continue;
+		//Collision detection. Monsters are 2 wide when emoji is enabled on most systems
+		if (!(mob != other
+			&& other->hp != 0
+			&& (mob->pos.x == other->pos.x || (dungeon->emoji && (mob->pos.x + 1 == other->pos.x || mob->pos.x - 1 == other->pos.x)))
+			&& mob->pos.y == other->pos.y)) continue;
 
 		other->hp--;
 		wchar_t* text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
-		swprintf(dungeon->status, textLength, L"%ls at (%d, %d) attacked %ls! %-*ls",
+		swprintf(dungeon->status, textLength, L"%ls at (%d, %d) attacked %ls at (%d, %d)! %-*ls",
 			mobGetSymbol(mob, *dungeon),
 			mob->pos.x,
 			mob->pos.y,
 			mobGetSymbol(other, *dungeon),
+			other->pos.x,
+			other->pos.y,
 			textLength,
 			text
 		);

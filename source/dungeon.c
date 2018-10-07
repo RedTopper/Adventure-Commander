@@ -580,13 +580,6 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	//Make the dungeon look nice
 	dungeonPostProcess(dungeon);
 
-	//Sometimes clear the screen
-	static int refresh = 0;
-	if (refresh == 32) {
-		refresh = 0;
-		wclear(win);
-	}
-
 	//Write status
 	mvwaddwstr(win, 0, 0, dungeon.status);
 
@@ -602,7 +595,7 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	}
 
 	//Write mobs
-	mvwaddwstr(win, dungeon.player.pos.y + 1, dungeon.player.pos.x, SYM_PLAY);
+	mvwaddwstr(win, dungeon.player.pos.y + 1, dungeon.player.pos.x, mobGetSymbol(&dungeon.player, dungeon));
 	for (int mob = 0; mob < dungeon.numMobs; mob++) {
 		Mob m = dungeon.mobs[mob];
 		if (m.hp > 0) mvwaddwstr(win, m.pos.y + 1, m.pos.x, mobGetSymbol(&m, dungeon));
@@ -613,6 +606,12 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	mvwaddwstr(win, dungeon.dim.y + 2, 0, dungeon.line2);
 
 	//Flip screen
+	static int refresh = 0;
+	if (dungeon.emoji && refresh == 4) {
+		redrawwin(win);
+		refresh = 0;
+	}
+
 	wrefresh(win);
 	refresh++;
 }

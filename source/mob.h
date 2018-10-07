@@ -29,7 +29,6 @@ typedef enum {
 	SKILL_PC = 0x10,
 } Skills;
 
-extern const wchar_t* SYM_PLAY;
 extern const wchar_t* MOB_TYPES[];
 extern const wchar_t* MOB_TYPES_BORING[];
 
