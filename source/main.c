@@ -131,16 +131,21 @@ int main(int argc, char** argv) {
 
 	//Economics established
 	while (running && dungeon.player->hp > 0 && mobAliveCount(dungeon)) {
-
 		int priority = queuePeekPriority(&dungeon.turn);
 		Mob* mob = queuePeek(&dungeon.turn).mob;
 		queuePop(&dungeon.turn);
 		Action action = mobTick(mob, &dungeon, base);
 		queuePushSub(&dungeon.turn, (QueueNodeData){.mob = mob}, priority + 1000/mob->speed, mob->order);
 
+		if (action == ACTION_QUIT) {
+			running = 0;
+			break;
+		}
+
 		if (action == ACTION_DOWN && !stackEmpty(&history)) {
 			stackPush(&future, (StackNodeData){.dungeon = dungeon});
 			dungeon = stackPeek(&history).dungeon;
+			setText(dungeon, &dungeon.status, L"You went down a level!");
 			stackPop(&history);
 		}
 
@@ -148,7 +153,7 @@ int main(int argc, char** argv) {
 			stackPush(&history, (StackNodeData){.dungeon = dungeon});
 			if (stackEmpty(&future)) {
 				dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji);
-				setText(dungeon, &dungeon.status, L"Up a level!");
+				setText(dungeon, &dungeon.status, L"You went up a level!");
 			} else {
 				dungeon = stackPeek(&future).dungeon;
 				stackPop(&future);
@@ -161,17 +166,18 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	//If we didn't quit early, show something
-	if (running) {
-		if (dungeon.player->hp == 0) {
-			setText(dungeon, &dungeon.status, L"You died! Better luck next time!");
-		} else {
-			setText(dungeon, &dungeon.status, L"CONGLATURATION !!!");
-		}
+	//Some status messages
+	if (running && dungeon.player->hp == 0) {
+		setText(dungeon, &dungeon.status, L"You died! Better luck next time! (Press any key)");
+	} else if (running && mobAliveCount(dungeon) == 0) {
+		setText(dungeon, &dungeon.status, L"CONGLATURATION !!! (Press any key)");
+	} else {
+		setText(dungeon, &dungeon.status, L"See you later! (Press any key)");
 	}
 
 	//Show the dungeon once more before exiting.
 	dungeonPrint(base, dungeon);
+	getch();
 
 	//Save dungeon to file.
 	if (save) {

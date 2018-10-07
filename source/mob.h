@@ -26,7 +26,8 @@ typedef enum {
 	ACTION_NONE,
 	ACTION_UP,
 	ACTION_DOWN,
-	ACTION_MOVE
+	ACTION_MOVE,
+	ACTION_QUIT
 } Action;
 
 typedef enum {

@@ -302,6 +302,9 @@ Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 				case '<':
 					action = ACTION_DOWN;
 					break;
+				case 'q':
+					action = ACTION_QUIT;
+					break;
 				default:
 					swprintf(dungeon->status, textLength, L"%d %-*ls", ch, dungeon->dim.x + 1, L"is invalid!");
 			}
