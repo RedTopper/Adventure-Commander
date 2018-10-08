@@ -1,5 +1,5 @@
-#ifndef ADVENTURE_COMMANDER_STACK_H
-#define ADVENTURE_COMMANDER_STACK_H
+#ifndef STACK_H
+#define STACK_H
 
 #include "dungeon.h"
 

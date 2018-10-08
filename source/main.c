@@ -112,14 +112,15 @@ int main(int argc, char** argv) {
 	Dungeon dungeon;
 	StackNode* history = NULL;
 	StackNode* future = NULL;
+	int floor = 0;
 
 	//Load dungeon from file
 	if (load) {
 		FILE* file = get("rb");
-		dungeon = dungeonLoad(file, mobs, emoji);
+		dungeon = dungeonLoad(file, mobs, emoji, floor);
 		fclose(file);
 	} else {
-		dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji);
+		dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji, floor);
 	}
 
 	//Business executed
@@ -151,7 +152,7 @@ int main(int argc, char** argv) {
 		if (action == ACTION_UP) {
 			stackPush(&history, (StackNodeData){.dungeon = dungeon});
 			if (stackEmpty(&future)) {
-				dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji);
+				dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji, ++floor);
 			} else {
 				dungeon = stackPeek(&future).dungeon;
 				stackPop(&future);

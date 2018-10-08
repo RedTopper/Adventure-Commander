@@ -320,6 +320,10 @@ Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 				case 'h':
 					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){-1,0}));
 					break;
+				case '5':
+				case ' ':
+					action = ACTION_STALL;
+					break;
 				case '>':
 					action = ACTION_UP;
 					break;
@@ -396,7 +400,7 @@ Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 	return action;
 }
 
-Mob* mobGeneratePlayer(Point point) {
+void mobGeneratePlayer(Dungeon* dungeon, Point point) {
 	Mob* mob = malloc(sizeof(Mob));
 	mob->pos = point;
 	mob->known = 0;
@@ -404,14 +408,14 @@ Mob* mobGeneratePlayer(Point point) {
 	mob->speed = 10;
 	mob->order = 0;
 	mob->hp = 1;
-	return mob;
+	dungeon->player = mob;
 }
 
-Mob* mobGenerateAll(Dungeon dungeon) {
-	Mob* mobs = malloc(sizeof(Mob) * dungeon.numMobs);
-	for (int i = 0; i < dungeon.numMobs; i++) {
+void mobGenerateAll(Dungeon* dungeon) {
+	Mob* mobs = malloc(sizeof(Mob) * dungeon->numMobs);
+	for (int i = 0; i < dungeon->numMobs; i++) {
 		Mob mob = {0};
-		mob.pos = mobValidSpawnPoint(mobs, dungeon, i);
+		mob.pos = mobValidSpawnPoint(mobs, *dungeon, i);
 		mob.known = 0;
 		mob.skills = rand() % 16;
 		mob.speed = (rand() % 16) + 5; //5-20
@@ -420,7 +424,7 @@ Mob* mobGenerateAll(Dungeon dungeon) {
 		mobs[i] = mob;
 	}
 
-	return mobs;
+	dungeon->mobs = mobs;
 }
 
 int mobAliveCount(Dungeon dungeon) {

@@ -8,8 +8,9 @@
 #include <endian.h>
 #include <ncursesw/curses.h>
 
-#include "mob.h"
 #include "dungeon.h"
+#include "mob.h"
+#include "entity.h"
 #include "perlin.h"
 #include "point.h"
 #include "path.h"
@@ -230,7 +231,7 @@ static int dungeonIsFull(Dungeon dungeon) {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
-static void dungeonFinalize(Dungeon *dungeon, int mobs, int emoji) {
+static void dungeonFinalize(Dungeon *dungeon, int mobs, int emoji, int floor) {
 	//Setup buffer
 	size_t len = (size_t) (dungeon->dim.x) + 1;
 	dungeon->status = calloc(len, sizeof(wchar_t));
@@ -238,9 +239,10 @@ static void dungeonFinalize(Dungeon *dungeon, int mobs, int emoji) {
 	dungeon->line2 = calloc(len, sizeof(wchar_t));
 
 	//Create mobs
-	dungeon->numMobs = mobs;
-	dungeon->mobs = mobGenerateAll(*dungeon);
+	dungeon->numMobs = mobs + floor > 100 ? 100 : mobs + floor;
 	dungeon->emoji = emoji;
+	mobGenerateAll(dungeon);
+	entityGenerateAll(dungeon, floor);
 	pathCreate(dungeon);
 	mobCreateQueue(dungeon);
 
@@ -353,7 +355,7 @@ void setText(Dungeon dungeon, wchar_t** buffer, wchar_t* text) {
 	swprintf(*buffer, len, L"%-*ls", len, text);
 }
 
-Dungeon dungeonGenerate(Point dim, int mobs, int emoji) {
+Dungeon dungeonGenerate(Point dim, int mobs, int emoji, int floor) {
 	Dungeon dungeon = {0};
 	dungeon.dim = dim;
 	
@@ -400,7 +402,7 @@ Dungeon dungeonGenerate(Point dim, int mobs, int emoji) {
 	}
 
 	//Place player
-	dungeon.player = mobGeneratePlayer((Point){
+	mobGeneratePlayer(&dungeon, (Point){
 		rooms[0].pos.x + (rooms[0].dim.x)/2,
 		rooms[0].pos.y + (rooms[0].dim.y)/2
 	});
@@ -417,12 +419,12 @@ Dungeon dungeonGenerate(Point dim, int mobs, int emoji) {
 	memcpy(dungeon.rooms, rooms, sizeof(Room) * count);
 	
 	//Finalize dungeon
-	dungeonFinalize(&dungeon, mobs, emoji);
+	dungeonFinalize(&dungeon, mobs, emoji, floor);
 	
 	return dungeon;
 }
 
-Dungeon dungeonLoad(FILE* file, int mobs, int emoji) {
+Dungeon dungeonLoad(FILE* file, int mobs, int emoji, int floor) {
 	size_t length = strlen(HEADER);
 	char head[length + 1];
 	size_t read = 0;
@@ -465,7 +467,7 @@ Dungeon dungeonLoad(FILE* file, int mobs, int emoji) {
 		exit(FILE_READ_EOF_PLAYER);
 	}
 
-	dungeon.player = mobGeneratePlayer((Point){xPlayer, yPlayer});
+	mobGeneratePlayer(&dungeon, (Point){xPlayer, yPlayer});
 	
 	//Initialize dungeon
 	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dungeon.dim.y);
@@ -518,7 +520,7 @@ Dungeon dungeonLoad(FILE* file, int mobs, int emoji) {
 	}
 
 	//Finalize dungeon
-	dungeonFinalize(&dungeon, mobs, emoji);
+	dungeonFinalize(&dungeon, mobs, emoji, floor);
 	
 	return dungeon;
 }
@@ -571,18 +573,25 @@ void dungeonDestroy(Dungeon* dungeon) {
 		free(dungeon->tiles[row]);
 	}
 
-	free(dungeon->player);
 	free(dungeon->status);
 	free(dungeon->line1);
 	free(dungeon->line2);
+	free(dungeon->player);
 	free(dungeon->mobs);
-	free(dungeon->tiles);
 	free(dungeon->rooms);
-	dungeon->tiles = NULL;
+	free(dungeon->entities);
+	free(dungeon->tiles);
+
+	dungeon->player = NULL;
+	dungeon->mobs = NULL;
 	dungeon->rooms = NULL;
+	dungeon->entities = NULL;
+	dungeon->tiles = NULL;
+
 	dungeon->dim = (Point){0};
-	dungeon->numRooms = 0;
 	dungeon->numMobs = 0;
+	dungeon->numRooms = 0;
+	dungeon->numEntities = 0;
 }
 
 void dungeonPrint(WINDOW* win, Dungeon dungeon) {

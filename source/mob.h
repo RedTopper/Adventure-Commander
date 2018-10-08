@@ -27,7 +27,8 @@ typedef enum {
 	ACTION_UP,
 	ACTION_DOWN,
 	ACTION_MOVE,
-	ACTION_QUIT
+	ACTION_QUIT,
+	ACTION_STALL
 } Action;
 
 typedef enum {
@@ -43,16 +44,16 @@ extern const wchar_t* MOB_TYPES_BORING[];
 
 #endif
 
-#if !(defined(DUNGEON_H) || defined(QUEUE_H))
+#ifndef MOB_FUNCTIONS
+#define MOB_FUNCTIONS
+
 #include "dungeon.h"
-#include "queue.h"
 
 const wchar_t* mobGetSymbol(Mob *mob, Dungeon dungeon);
-Mob* mobGeneratePlayer(Point point);
-Mob* mobGenerateAll(Dungeon dungeon);
+void mobGeneratePlayer(Dungeon* dungeon, Point point);
+void mobGenerateAll(Dungeon* dungeon);
 void mobCreateQueue(Dungeon* dungeon);
 int mobAliveCount(Dungeon dungeon);
 Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base);
 
 #endif
-
