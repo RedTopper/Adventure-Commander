@@ -21,9 +21,8 @@ typedef struct {
 #endif
 
 #ifndef ENTITY_FUNCTIONS
-#define ENTITY_FUNCTIONS
-
 #include "dungeon.h"
+#define ENTITY_FUNCTIONS
 
 void entityGenerateAll(Dungeon* dungeon, int floor);
 

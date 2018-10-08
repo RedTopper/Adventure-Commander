@@ -45,9 +45,8 @@ extern const wchar_t* MOB_TYPES_BORING[];
 #endif
 
 #ifndef MOB_FUNCTIONS
-#define MOB_FUNCTIONS
-
 #include "dungeon.h"
+#define MOB_FUNCTIONS
 
 const wchar_t* mobGetSymbol(Mob *mob, Dungeon dungeon);
 void mobGeneratePlayer(Dungeon* dungeon, Point point);
