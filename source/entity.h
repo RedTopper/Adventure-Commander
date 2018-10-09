@@ -15,7 +15,6 @@ typedef enum {
 typedef struct {
 	Point pos;
 	EntityType type;
-	wchar_t* symbol;
 } Entity;
 
 #endif
@@ -25,5 +24,6 @@ typedef struct {
 #define ENTITY_FUNCTIONS
 
 void entityGenerateAll(Dungeon* dungeon, int floor);
+const wchar_t* entityGetSymbol(Entity* entity);
 
 #endif

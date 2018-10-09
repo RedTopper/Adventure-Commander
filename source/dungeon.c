@@ -612,6 +612,12 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 		mvwaddwstr(win, row + 1, 0, screen);
 	}
 
+	//Write entities
+	for (int entity = 0; entity < dungeon.numEntities; entity++) {
+		Entity e = dungeon.entities[entity];
+		mvwaddwstr(win, e.pos.y + 1, e.pos.x, entityGetSymbol(&e));
+	}
+
 	//Write players
 	if(dungeon.player->hp > 0) {
 		mvwaddwstr(win, dungeon.player->pos.y + 1, dungeon.player->pos.x, mobGetSymbol(dungeon.player, dungeon));

@@ -1,6 +1,7 @@
 build/
+test/
 game
+.idea
+cmake-build-debug
+CMakeLists.txt
 CHANGELOG
-/.idea
-/cmake-build-debug
-/CMakeLists.txt

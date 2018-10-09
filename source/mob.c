@@ -51,6 +51,15 @@ const wchar_t* MOB_TYPES_BORING[] = {
 	L"?"
 };
 
+static int mobIsOn(Mob* mob, Dungeon* dungeon, EntityType type) {
+	for (int i = 0; i < dungeon->numEntities; i++) {
+		Entity e = dungeon->entities[i];
+		if (mob->pos.x == e.pos.x && mob->pos.y == e.pos.y && e.type == type) return 1;
+	}
+
+	return 0;
+}
+
 static void mobPrintText(Mob* mob, Dungeon* dungeon, const wchar_t* text, const wchar_t* type) {
 	size_t textLength = (size_t) (dungeon->dim.x) + 1;
 	swprintf(dungeon->status, textLength, L"%ls at (%d, %d) is %ls and %-*ls",
@@ -63,7 +72,7 @@ static void mobPrintText(Mob* mob, Dungeon* dungeon, const wchar_t* text, const 
 	);
 }
 
-static Point mobValidSpawnPoint(Mob* mobs, Dungeon dungeon, int i) {
+static Point mobValidSpawnPoint(Dungeon dungeon, int i) {
 	Point pos = {0};
 
 	while(1) {
@@ -80,7 +89,7 @@ static Point mobValidSpawnPoint(Mob* mobs, Dungeon dungeon, int i) {
 		//Not on mob
 		int onMob = 0;
 		for (int mob = 0; !onMob && mob < i; mob++) {
-			Mob m = mobs[mob];
+			Mob m = dungeon.mobs[mob];
 			if (pos.x == m.pos.x && pos.y == m.pos.y) onMob = 1;
 		}
 
@@ -268,9 +277,9 @@ static void mobTickPathFind(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
 const wchar_t* mobGetSymbol(Mob* mob, Dungeon dungeon) {
 	int size = sizeof(MOB_TYPES)/sizeof(MOB_TYPES[0]);
 	if (dungeon.emoji) {
-		return MOB_TYPES[mob->skills >= size ? size : mob->skills];
+		return MOB_TYPES[mob->skills >= size ? size - 1 : mob->skills];
 	} else {
-		return MOB_TYPES_BORING[mob->skills >= size ? size : mob->skills];
+		return MOB_TYPES_BORING[mob->skills >= size ? size - 1 : mob->skills];
 	}
 }
 
@@ -325,10 +334,18 @@ Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 					action = ACTION_STALL;
 					break;
 				case '>':
-					action = ACTION_UP;
+					if (mobIsOn(mob, dungeon, STAIRS_DOWN)) {
+						action = ACTION_DOWN;
+					} else {
+						setText(*dungeon, &dungeon->status, L"You are not on a down staircase!");
+					}
 					break;
 				case '<':
-					action = ACTION_DOWN;
+					if (mobIsOn(mob, dungeon, STAIRS_UP)) {
+						action = ACTION_UP;
+					} else {
+						setText(*dungeon, &dungeon->status, L"You are not on an up staircase!");
+					}
 					break;
 				case 'q':
 					action = ACTION_QUIT;
@@ -413,9 +430,10 @@ void mobGeneratePlayer(Dungeon* dungeon, Point point) {
 
 void mobGenerateAll(Dungeon* dungeon) {
 	Mob* mobs = malloc(sizeof(Mob) * dungeon->numMobs);
+	dungeon->mobs = mobs;
 	for (int i = 0; i < dungeon->numMobs; i++) {
 		Mob mob = {0};
-		mob.pos = mobValidSpawnPoint(mobs, *dungeon, i);
+		mob.pos = mobValidSpawnPoint(*dungeon, i);
 		mob.known = 0;
 		mob.skills = rand() % 16;
 		mob.speed = (rand() % 16) + 5; //5-20
@@ -423,8 +441,6 @@ void mobGenerateAll(Dungeon* dungeon) {
 		mob.hp = 1;
 		mobs[i] = mob;
 	}
-
-	dungeon->mobs = mobs;
 }
 
 int mobAliveCount(Dungeon dungeon) {
