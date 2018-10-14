@@ -1,9 +1,23 @@
 #define _XOPEN_SOURCE_EXTENDED
 
 #include <ncursesw/curses.h>
+#include <stdlib.h>
 
 #include "player.h"
 #include "path.h"
+
+static wchar_t* playerGetDistance(Mob* player, Mob* mob, Dungeon* dungeon) {
+	size_t len = 80;
+	wchar_t* str = malloc(sizeof(wchar_t) * len);
+	swprintf(str, len, L"%ls, %d %ls and %d %ls.",
+		mobGetSymbol(mob, *dungeon),
+		abs(player->pos.y - mob->pos.y),
+		mob->pos.y > player->pos.y ? L"south" : L"north",
+		abs(player->pos.x - mob->pos.x),
+		mob->pos.x < player->pos.x ? L"west" : L"east"
+	);
+	return str;
+}
 
 static void playerMap(Mob *player, Dungeon *dungeon, WINDOW* base) {
 	int offset = 0;
@@ -37,7 +51,14 @@ static void playerMap(Mob *player, Dungeon *dungeon, WINDOW* base) {
 		mvwaddwstr(base, 0, 0, L"Monster list. Press 'q' or 'ESC' to exit.");
 		for (int line = 0; line < max; line++) {
 			Mob* mob = line + offset < dungeon->numMobs ? &dungeon->mobs[line + offset] : NULL;
-			mvwaddwstr(base, line + 1, 0, mob ? mobGetSymbol(mob, *dungeon) : L"~");
+			if (mob) {
+				wchar_t* distance = playerGetDistance(player, mob, dungeon);
+				mvwaddwstr(base, line + 1, 0, distance);
+				free(distance);
+			} else {
+				mvwaddwstr(base, line + 1, 0, L"~");
+			}
+
 		}
 
 		//Print end marker if needed
