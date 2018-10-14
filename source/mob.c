@@ -7,6 +7,7 @@
 #include "queue.h"
 #include "main.h"
 #include "path.h"
+#include "player.h"
 
 const int MAX_KNOWN_TURNS = 5;
 const wchar_t* MOB_TYPES[] = {
@@ -51,23 +52,13 @@ const wchar_t* MOB_TYPES_BORING[] = {
 	L"?"
 };
 
-static int mobIsOn(Mob* mob, Dungeon* dungeon, EntityType type) {
-	for (int i = 0; i < dungeon->numEntities; i++) {
-		Entity e = dungeon->entities[i];
-		if (mob->pos.x == e.pos.x && mob->pos.y == e.pos.y && e.type == type) return 1;
-	}
-
-	return 0;
-}
-
 static void mobPrintText(Mob* mob, Dungeon* dungeon, const wchar_t* text, const wchar_t* type) {
-	size_t textLength = (size_t) (dungeon->dim.x) + 1;
-	swprintf(dungeon->status, textLength, L"%ls at (%d, %d) is %ls and %-*ls",
+	size_t len = (size_t) (dungeon->dim.x) + 1;
+	swprintf(dungeon->status, len, L"%ls at (%d, %d) is %ls and %ls",
 		mobGetSymbol(mob, *dungeon),
 		mob->pos.x,
 		mob->pos.y,
 		type,
-		textLength,
 		text
 	);
 }
@@ -150,28 +141,6 @@ static Point mobGetNextPoint(Point start, Point end) {
 	}
 
 	return current;
-}
-
-static int mobMove(Mob* mob, Dungeon* dungeon, Point new) {
-	Tile* tile = &dungeon->tiles[new.y][new.x];
-	if (tile->type == ROCK && mob->skills & SKILL_TUNNELING) {
-		if (tile->hardness <= HARDNESS_RATE) {
-			tile->type = HALL;
-			tile->hardness = 0;
-			mob->pos = new;
-			pathCreate(dungeon);
-			return MOVE_BROKE_WALL;
-		} else {
-			tile->hardness -= HARDNESS_RATE;
-			pathCreate(dungeon);
-			return MOVE_DAMAGE_WALL;
-		}
-	} else if (tile->type == HALL || tile->type == ROOM){
-		mob->pos = new;
-		return MOVE_SUCCESS;
-	}
-
-	return MOVE_FAILURE;
 }
 
 static void mobTickStraightLine(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
@@ -274,6 +243,28 @@ static void mobTickPathFind(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
 
 //"Public" functions
 
+int mobMove(Mob* mob, Dungeon* dungeon, Point new) {
+	Tile* tile = &dungeon->tiles[new.y][new.x];
+	if (tile->type == ROCK && mob->skills & SKILL_TUNNELING) {
+		if (tile->hardness <= HARDNESS_RATE) {
+			tile->type = HALL;
+			tile->hardness = 0;
+			mob->pos = new;
+			pathCreate(dungeon);
+			return MOVE_BROKE_WALL;
+		} else {
+			tile->hardness -= HARDNESS_RATE;
+			pathCreate(dungeon);
+			return MOVE_DAMAGE_WALL;
+		}
+	} else if (tile->type == HALL || tile->type == ROOM){
+		mob->pos = new;
+		return MOVE_SUCCESS;
+	}
+
+	return MOVE_FAILURE;
+}
+
 const wchar_t* mobGetSymbol(Mob* mob, Dungeon dungeon) {
 	int size = sizeof(MOB_TYPES)/sizeof(MOB_TYPES[0]);
 	if (dungeon.emoji) {
@@ -285,82 +276,15 @@ const wchar_t* mobGetSymbol(Mob* mob, Dungeon dungeon) {
 
 Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 	if (mob->hp <= 0) return ACTION_NONE;
-	size_t textLength = (size_t)(dungeon->dim.x) + 1;
-	setText(*dungeon, &dungeon->status, L"Nothing important happened.");
+	size_t len = (size_t)(dungeon->dim.x) + 1;
+	swprintf(dungeon->status, len, L"Nothing important happened.");
 	Action action = ACTION_NONE;
 
 	if (mob->skills & SKILL_PC) {
 		//The player
-		setText(*dungeon, &dungeon->status, L"It's your turn!");
-		do {
-			dungeonPrint(base, *dungeon);
-			int ch = getch();
-			Movement move = -1;
-			switch (ch) {
-				case '7':
-				case 'y':
-					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){-1,-1}));
-					break;
-				case '8':
-				case 'k':
-					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){0,-1}));
-					break;
-				case '9':
-				case 'u':
-					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){1,-1}));
-					break;
-				case '6':
-				case 'l':
-					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){1,0}));
-					break;
-				case '3':
-				case 'n':
-					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){1,1}));
-					break;
-				case '2':
-				case 'j':
-					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){0,1}));
-					break;
-				case '1':
-				case 'b':
-					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){-1,1}));
-					break;
-				case '4':
-				case 'h':
-					move = mobMove(mob, dungeon, pointAdd(mob->pos, (Point){-1,0}));
-					break;
-				case '5':
-				case ' ':
-					action = ACTION_STALL;
-					break;
-				case '>':
-					if (mobIsOn(mob, dungeon, STAIRS_DOWN)) {
-						action = ACTION_DOWN;
-					} else {
-						setText(*dungeon, &dungeon->status, L"You are not on a down staircase!");
-					}
-					break;
-				case '<':
-					if (mobIsOn(mob, dungeon, STAIRS_UP)) {
-						action = ACTION_UP;
-					} else {
-						setText(*dungeon, &dungeon->status, L"You are not on an up staircase!");
-					}
-					break;
-				case 'q':
-					action = ACTION_QUIT;
-					break;
-				default:
-					swprintf(dungeon->status, textLength, L"%d %-*ls", ch, dungeon->dim.x + 1, L"is invalid!");
-			}
-
-			//Move the player character
-			if (move == MOVE_FAILURE) setText(*dungeon, &dungeon->status, L"I can't dig through that!");
-			if (move == MOVE_SUCCESS) {
-				action = ACTION_MOVE;
-				pathCreate(dungeon);
-			}
-		} while (action == ACTION_NONE);
+		swprintf(dungeon->status, len,  L"It's your turn!");
+		flushinp();
+		while (action == ACTION_NONE) action = playerAction(mob, dungeon, base);
 	} else if (mob->skills & SKILL_ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
 		mobTickRandomly(mob, dungeon, L"confused");
@@ -402,14 +326,13 @@ Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 
 		other->hp--;
 		wchar_t* text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
-		swprintf(dungeon->status, textLength, L"%ls at (%d, %d) attacked %ls at (%d, %d)! %-*ls",
+		swprintf(dungeon->status, len, L"%ls at (%d, %d) attacked %ls at (%d, %d)! %ls",
 			mobGetSymbol(mob, *dungeon),
 			mob->pos.x,
 			mob->pos.y,
 			mobGetSymbol(other, *dungeon),
 			other->pos.x,
 			other->pos.y,
-			textLength,
 			text
 		);
 	}

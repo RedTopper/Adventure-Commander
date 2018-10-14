@@ -1,8 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include <wchar.h>
-
 typedef enum {
 	FILE_READ_BAD = 0x10,
 	FILE_READ_BAD_HEAD,

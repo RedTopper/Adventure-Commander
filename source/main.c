@@ -166,12 +166,13 @@ int main(int argc, char** argv) {
 	}
 
 	//Some status messages
+	size_t len = (size_t) (dungeon.dim.x) + 1;
 	if (running && dungeon.player->hp == 0) {
-		setText(dungeon, &dungeon.status, L"You died! Better luck next time! (Press any key)");
+		swprintf(dungeon.status, len, L"You died! Better luck next time! (Press any key)");
 	} else if (running && mobAliveCount(dungeon) == 0) {
-		setText(dungeon, &dungeon.status, L"CONGLATURATION !!! (Press any key)");
+		swprintf(dungeon.status, len, L"CONGLATURATION !!! (Press any key)");
 	} else {
-		setText(dungeon, &dungeon.status, L"See you later! (Press any key)");
+		swprintf(dungeon.status, len, L"See you later! (Press any key)");
 	}
 
 	//Show the dungeon once more before exiting.

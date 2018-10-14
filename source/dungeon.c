@@ -247,9 +247,9 @@ static void dungeonFinalize(Dungeon *dungeon, int mobs, int emoji, int floor) {
 	mobCreateQueue(dungeon);
 
 	//Some default text
-	setText(*dungeon, &dungeon->status, L"Nothing has happened yet!");
-	setText(*dungeon, &dungeon->line1, L"Adventure Commander");
-	setText(*dungeon, &dungeon->line2, L"Status Text");
+	swprintf(dungeon->status, len, L"Nothing has happened yet!");
+	swprintf(dungeon->line1, len, L"Adventure Commander");
+	swprintf(dungeon->line2, len, L"Status Text");
 }
 
 static void dungeonPostProcess(Dungeon dungeon) {
@@ -348,12 +348,6 @@ static void dungeonPostProcess(Dungeon dungeon) {
 }
 
 //"Public" functions
-
-void setText(Dungeon dungeon, wchar_t** buffer, wchar_t* text) {
-	//Reset buffer
-	size_t len = (size_t)(dungeon.dim.x) + 1;
-	swprintf(*buffer, len, L"%-*ls", len, text);
-}
 
 Dungeon dungeonGenerate(Point dim, int mobs, int emoji, int floor) {
 	Dungeon dungeon = {0};
@@ -598,6 +592,9 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	//Make the dungeon look nice
 	dungeonPostProcess(dungeon);
 
+	//clean window
+	werase(win);
+
 	//Write status
 	mvwaddwstr(win, 0, 0, dungeon.status);
 
@@ -636,7 +633,7 @@ void dungeonPrint(WINDOW* win, Dungeon dungeon) {
 	//Some terminals have trouble with emoji, so help them out
 	//by redrawing the whole window every few frames.
 	static int refresh = 0;
-	if (dungeon.emoji && refresh == 4) {
+	if (dungeon.emoji && refresh == 5) {
 		redrawwin(win);
 		refresh = 0;
 	}

@@ -49,6 +49,7 @@ extern const wchar_t* MOB_TYPES_BORING[];
 #define MOB_FUNCTIONS
 
 const wchar_t* mobGetSymbol(Mob *mob, Dungeon dungeon);
+int mobMove(Mob* mob, Dungeon* dungeon, Point new);
 void mobGeneratePlayer(Dungeon* dungeon, Point point);
 void mobGenerateAll(Dungeon* dungeon);
 void mobCreateQueue(Dungeon* dungeon);

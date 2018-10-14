@@ -59,7 +59,6 @@ typedef struct {
 
 extern const Point DUNGEON_DIM;
 
-void setText(Dungeon dungeon, wchar_t** buffer, wchar_t* text);
 Dungeon dungeonGenerate(Point dim, int mobs, int emoji, int floor);
 Dungeon dungeonLoad(FILE* file, int mobs, int emoji, int floor);
 void dungeonSave(Dungeon dungeon, FILE* file);
