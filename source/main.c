@@ -125,6 +125,7 @@ int main(int argc, char** argv) {
 
 	//Business executed
 	WINDOW* base = initscr();
+	keypad(base, TRUE);
 	cbreak();
 	noecho();
 	wclear(base);

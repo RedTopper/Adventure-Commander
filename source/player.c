@@ -1,22 +1,57 @@
+#define _XOPEN_SOURCE_EXTENDED
+
+#include <ncursesw/curses.h>
+
 #include "player.h"
 #include "path.h"
 
-static void playerMap(Mob *mob, Dungeon *dungeon) {
-	int pos = 0;
+static void playerMap(Mob *player, Dungeon *dungeon, WINDOW* base) {
+	int offset = 0;
+	int ch = 0;
+	wclear(base);
 	while (1) {
-		int ch = getch();
+		//Clear screen and figure out characters
+		int max = LINES - 2;
+		werase(base);
 		switch (ch) {
-			case KEY_UP: //Up
-				if (pos > 0) pos--;
+			case KEY_UP:
+				if (offset == 0) beep(); //FALLTHROUGH
+			case KEY_RESIZE:
+				if (offset > 0) offset--;
 				break;
-			case KEY_DOWN: //Down
-				if (pos + dungeon->numMobs < LINES) pos++;
+			case KEY_DOWN:
+				if (offset + max < dungeon->numMobs) {
+					offset++;
+				} else {
+					beep();
+				}
 				break;
-			case 27: //Esc
+			case 27: //ESC
+			case 'q':
 				return;
 			default:
 				break;
 		}
+
+		//Show screen
+		mvwaddwstr(base, 0, 0, L"Monster list. Press 'q' or 'ESC' to exit.");
+		for (int line = 0; line < max; line++) {
+			Mob* mob = line + offset < dungeon->numMobs ? &dungeon->mobs[line + offset] : NULL;
+			mvwaddwstr(base, line + 1, 0, mob ? mobGetSymbol(mob, *dungeon) : L"~");
+		}
+
+		//Print end marker if needed
+		if (offset + max >= dungeon->numMobs) {
+			wattron(base, WA_STANDOUT);
+			mvwaddwstr(base, LINES - 1, 0, L"(END)");
+			wattroff(base, WA_STANDOUT);
+		} else {
+			mvwaddwstr(base, LINES - 1, 0, L":");
+		}
+
+		//Print and get new character
+		wrefresh(base);
+		ch = getch();
 	}
 }
 
@@ -95,8 +130,7 @@ Action playerAction(Mob* mob, Dungeon* dungeon, WINDOW* base) {
 			swprintf(dungeon->status, len, L"If you really want to quit, try 'shift-q' instead.");
 			break;
 		case 'm':
-			wclear(base);
-			playerMap(mob, dungeon);
+			playerMap(mob, dungeon, base);
 			break;
 		default:
 			swprintf(dungeon->status, len, L"%d %ls", ch, L"is invalid!");
