@@ -9,8 +9,9 @@
 static wchar_t* playerGetDistance(Mob* player, Mob* mob, Dungeon* dungeon) {
 	size_t len = 80;
 	wchar_t* str = malloc(sizeof(wchar_t) * len);
-	swprintf(str, len, L"%ls, %d %ls and %d %ls.",
+	swprintf(str, len, L"%ls %ls %d %ls and %d %ls.",
 		mobGetSymbol(mob, *dungeon),
+		mob->hp > 0 ? L"is" : L"was killed",
 		abs(player->pos.y - mob->pos.y),
 		mob->pos.y > player->pos.y ? L"south" : L"north",
 		abs(player->pos.x - mob->pos.x),
@@ -58,7 +59,6 @@ static void playerMap(Mob *player, Dungeon *dungeon, WINDOW* base) {
 			} else {
 				mvwaddwstr(base, line + 1, 0, L"~");
 			}
-
 		}
 
 		//Print end marker if needed
