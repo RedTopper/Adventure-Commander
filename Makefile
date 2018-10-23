@@ -1,27 +1,28 @@
-#Make arguments
-CFLAGS = -Wall -Wextra -finput-charset=UTF-8 -std=gnu11
-CC = gcc
+#Make Arguments
+CXX = g++
 NAME = game
 BUILD = build
 SOURCE = source
+INCLUDE = include
 LDFLAGS = -lncursesw
+CXXFLAGS = -Wall -Wextra -finput-charset=UTF-8 -std=gnu11 -I$(INCLUDE)
+DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD)/$*.d
 
-#Make rules
-src = $(wildcard $(SOURCE)/*.c)
-obj = $(src:$(SOURCE)/%.c=$(BUILD)/%.o)
-dep = $(src:$(SOURCE)/%.c=$(BUILD)/%.d)
+#Make Rules
+$(shell mkdir -p $(BUILD) >/dev/null)
 
-$(NAME): $(obj)
-	$(info *** Please read README if your console appears blank ***)
-	$(CC) -o $@ $^ $(LDFLAGS)
+src = $(wildcard $(SOURCE)/*.cpp)
+obj = $(src:$(SOURCE)/%.cpp=$(BUILD)/%.o)
+dep = $(src:$(SOURCE)/%.cpp=$(BUILD)/%.d)
 
 -include $(dep)
 
-$(BUILD)/%.d: $(SOURCE)/%.c | dir
-	@$(CPP) $(CFLAGS) $< -MM -MT $(@:.d=.o) >$@
+$(NAME): $(obj)
+	$(info *** Please read README if your console appears blank ***)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
-$(BUILD)/%.o: $(SOURCE)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+$(BUILD)/%.o: $(SOURCE)/%.cpp $(BUILD)/%.d
+	$(CXX) $(CFLAGS) $(DEPFLAGS) $<
 
 .PHONY: dir
 dir:
@@ -29,4 +30,10 @@ dir:
 
 .PHONY: clean
 clean:
-	rm -rf $(obj) $(dep) $(BUILD) $(NAME) 
+	rm -rf $(BUILD) $(NAME) 
+
+#Make Notes
+#$@ - Rule
+#$< - First Dependency
+#$^ - All Dependencies
+#$* - Stem (dir/a.foo.b, pattern a.%.b, stem dir/foo)
