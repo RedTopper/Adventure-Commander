@@ -1,115 +1,59 @@
 #define _XOPEN_SOURCE_EXTENDED
 
-#include <wchar.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <endian.h>
-#include <ncursesw/curses.h>
+#include <algorithm>
+#include <fstream>
+#include <cstring>
+#include "perlin.hpp"
+#include "dungeon.hpp"
+#include "point.hpp"
+#include "main.hpp"
 
-#include "dungeon.h"
-#include "mob.h"
-#include "entity.h"
-#include "perlin.h"
-#include "point.h"
-#include "path.h"
-#include "main.h"
+//default size
+static const Point DUNGEON_DIM = Point(80, 21); // NOLINT(cert-err58-cpp)
 
 //Number of rooms
-const int ROOMS_MIN = 5;
-const int ROOMS_MAX = 8;
-const float ROOM_MAX_FULLNESS = 0.15f;
+static const int ROOMS_MIN = 5;
+static const int ROOMS_MAX = 8;
+static const float ROOM_MAX_FULLNESS = 0.15f;
 
 //Size of rooms. 
-const int ROOM_X_MIN = 7;
-const int ROOM_X_MAX = 16;
-const int ROOM_Y_MIN = 3;
-const int ROOM_Y_MAX = 8;
+static const int ROOM_X_MIN = 7;
+static const int ROOM_X_MAX = 16;
+static const int ROOM_Y_MIN = 3;
+static const int ROOM_Y_MAX = 8;
 
 //Randomness of midpoint, radius
-const int ROOM_CON_RAD = 3;
-const int ROOM_CON_RAD_MIN = 1;
-
-//Edges across board
-const wchar_t SYM_EDGE_N = L'\x2584';
-const wchar_t SYM_EDGE_E = L'\x2588';
-const wchar_t SYM_EDGE_S = L'\x2580';
-const wchar_t SYM_EDGE_W = L'\x2588';
-
-//Rocks
-const wchar_t SYM_ROCK_SOFT = L'\x2591';
-const wchar_t SYM_ROCK_MED  = L'\x2592';
-const wchar_t SYM_ROCK_HARD = L'\x2593';
-
-//Hall
-const wchar_t SYM_HALL = L'\x2022';
-const wchar_t SYM_HALL_NESW = L' ';
-const wchar_t SYM_HALL_NES = L'\x2560';
-const wchar_t SYM_HALL_ESW = L'\x2566';
-const wchar_t SYM_HALL_SWN = L'\x2563';
-const wchar_t SYM_HALL_WNE = L'\x2569';
-const wchar_t SYM_HALL_NE = L'\x255A';
-const wchar_t SYM_HALL_ES = L'\x2554';
-const wchar_t SYM_HALL_SW = L'\x2557';
-const wchar_t SYM_HALL_WN = L'\x255D';
-const wchar_t SYM_HALL_NS = L'\x2551';
-const wchar_t SYM_HALL_EW = L'\x2550';
-
-//Rooms are air
-const wchar_t SYM_ROOM = L' ';
-const wchar_t SYM_VOID = L'x';
+static const int ROOM_CON_RAD = 3;
+static const int ROOM_CON_RAD_MIN = 1;
 
 //Magic header
-const char* HEADER = "RLG327-F2018";
-const uint32_t VERSION = 0;
+static const string HEADER = "RLG327-F2018"; // NOLINT(cert-err58-cpp)
+static const uint32_t VERSION = 0;
 
-//Default Size
-const Point DUNGEON_DIM = {80,21};
-
-static void hallPlace(Dungeon dungeon, Point point) {
-	if (point.x >= 0 
-		&& point.y >= 0
-		&& point.x < dungeon.dim.x
-		&& point.y < dungeon.dim.y) {
-		Tile* tile = &dungeon.tiles[point.y][point.x];
-		if (tile->type == ROCK) {
-			tile->type = HALL;
-			tile->symbol = SYM_HALL;
-			tile->hardness = 0;
-		}
-	}
+int Dungeon::skewBetweenRange(const int skew, const int low, const int high) {
+	int value = low;
+	while (rand() % skew && value < high) value++;
+	return value;
 }
 
-static int roomPlaceAttempt(Dungeon dungeon, Room room) {
+bool Dungeon::roomPlaceAttempt(const Room& room) {
 	for (int row = room.pos.y - 1; row < room.pos.y + room.dim.y + 1; row++) {
 		for (int col = room.pos.x - 1; col < room.pos.x + room.dim.x + 1; col++) {
-			if (row < 0) return 0;
-			if (col < 0) return 0;
-			if (row >= dungeon.dim.y) return 0;
-			if (col >= dungeon.dim.x) return 0;
-			if (dungeon.tiles[row][col].type == ROOM) return 0;
+			if (row < 0) return false;
+			if (col < 0) return false;
+			if (row >= dim.y) return false;
+			if (col >= dim.x) return false;
+			if (tiles[row][col].type == Tile::ROOM) return false;
 		}
 	}
 	
-	return 1;
+	return true;
 }
 
-static void roomPlace(Dungeon dungeon, Room room) {
-	for (int row = room.pos.y; row < room.pos.y + room.dim.y; row++) {
-		for (int col = room.pos.x; col < room.pos.x + room.dim.x; col++) {
-			Tile* tile = &dungeon.tiles[row][col];
-			tile->type = ROOM;
-			tile->symbol = SYM_ROOM;
-			tile->hardness = 0;
-		}
-	}
-}
-
-static void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
+void Dungeon::roomConnectRasterize(const Point& from, const Point& to) {
 	Point current = from;
-	Point dist = {0};
-	Point step = {0};
+	Point dist = Point();
+	Point step = Point();
 	
 	dist.x = abs(to.x - from.x);
 	dist.y = -abs(to.y - from.y);
@@ -118,7 +62,7 @@ static void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
 	
 	int error = dist.x + dist.y;
 	
-	hallPlace(dungeon, current);
+	hallPlace(current);
 	
 	while (current.x != to.x || current.y != to.y) {
 		if (2 * error - dist.y > dist.x - 2 * error) {
@@ -131,268 +75,292 @@ static void roomConnectRasterize(Dungeon dungeon, Point from, Point to) {
 			current.y += step.y;
 		}
 		
-		hallPlace(dungeon, current);
+		hallPlace(current);
 	}
 }
 
-static void roomConnect(Dungeon dungeon, Room first, Room second) {
-	Point start = {0};
-	Point end = {0};
-	Point offset = {0};
-	Point mid = {0};
-	
+void Dungeon::roomConnect(const Room& first, const Room& second) {
+	Point start = Point();
+	Point end = Point();
+	Point offset = Point();
+	Point mid = Point();
+
 	//Start anywhere in the first room
 	start.x = rand() % first.dim.x + first.pos.x;
 	start.y = rand() % first.dim.y + first.pos.y;
-	
+
 	//End anywhere in the second room
 	end.x = rand() % second.dim.x + second.pos.x;
 	end.y = rand() % second.dim.y + second.pos.y;
-	
+
 	//Find some value to offset the midpoint.
 	offset.x = (rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN);
 	offset.y = (rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN);
 	offset.x *= rand() % 2 ? 1 : -1;
 	offset.y *= rand() % 2 ? 1 : -1;
-	
+
 	//Get the actual midpoint.
 	mid.x = (int)(((float)(start.x) + (float)(end.x)) / 2.0f + (float)offset.x);
 	mid.y = (int)(((float)(start.y) + (float)(end.y)) / 2.0f + (float)offset.y);
-	
+
 	//Check bounds of midpoint.
 	if(mid.x < 1) mid.x = 1;
 	if(mid.y < 1) mid.y = 1;
-	if(mid.x > dungeon.dim.x - 2) mid.x = dungeon.dim.x - 2;
-	if(mid.y > dungeon.dim.y - 2) mid.y = dungeon.dim.y - 2;
+	if(mid.x > dim.x - 2) mid.x = dim.x - 2;
+	if(mid.y > dim.y - 2) mid.y = dim.y - 2;
 
-	roomConnectRasterize(dungeon, start, mid);
-	roomConnectRasterize(dungeon, mid, end);
+	roomConnectRasterize(start, mid);
+	roomConnectRasterize(mid, end);
 }
 
-static Room roomGenerate(Dungeon dungeon) {
-	Point dim = {0};
-	Point pos = {0};
+void Dungeon::roomPlace(Room room) {
+	for (int row = room.pos.y; row < room.pos.y + room.dim.y; row++) {
+		for (int col = room.pos.x; col < room.pos.x + room.dim.x; col++) {
+			Tile& tile = tiles[row][col];
+			tile.type = Tile::ROOM;
+			tile.symbol = Tile::ROOM_SYM;
+			tile.hardness = 0;
+		}
+	}
+
+	rooms.push_back(room);
+}
+
+void Dungeon::roomGenerate() {
+	Point dim = Point();
+	Point pos = Point();
 	Room room;
 	
 	do {
-		dim.x = utilSkewedBetweenRange(ROOM_X_MIN, ROOM_X_MAX);
-		dim.y = utilSkewedBetweenRange(ROOM_Y_MIN, ROOM_Y_MAX);
-		pos.x = (rand() % (dungeon.dim.x - 1 - dim.x)) + 1;
-		pos.y = (rand() % (dungeon.dim.y - 1 - dim.y)) + 1;
+		dim.x = skewBetweenRange(4, ROOM_X_MIN, ROOM_X_MAX);
+		dim.y = skewBetweenRange(4, ROOM_Y_MIN, ROOM_Y_MAX);
+		pos.x = (rand() % (dim.x - 1 - dim.x)) + 1;
+		pos.y = (rand() % (dim.y - 1 - dim.y)) + 1;
 		room = (Room){pos, dim};
-	} while (!roomPlaceAttempt(dungeon, room));
+	} while (!roomPlaceAttempt(room));
 
-	return room;
+	roomPlace(room);
 }
 
-static Tile tileGenerate(Point dim, Point pos, uint8_t hardness, const float* seed) {
+void Dungeon::hallPlace(const Point& point) {
+	if (point > Point::ZERO && point < (dim - Point(1,1))) {
+		Tile& tile = tiles[point.y][point.x];
+		if (tile.type == Tile::ROCK) {
+			tile.type = Tile::HALL;
+			tile.symbol = Tile::HALL_SYM;
+			tile.hardness = 0;
+		}
+	}
+}
+
+void Dungeon::tilePlace(const Point &pos, uint8_t hardness, const float* seed) {
 	Tile tile = {0};
 	
 	//Defaults
-	tile.symbol = SYM_VOID;
-	tile.type = VOID;
+	tile.symbol = Tile::VOID_SYM;
+	tile.type = Tile::VOID;
 	tile.hardness = 0xFF;
 
-	if (seed != NULL) {
+	if (seed != nullptr) {
 		//We were given a seed to generate the map
 		if (pos.y == 0 || pos.y == dim.y - 1 || pos.x == 0 || pos.x == dim.x - 1) {
-			tile.type = EDGE;
+			tile.type = Tile::EDGE;
 			tile.hardness = 0xFF;
 		} else {
-			tile.type = ROCK;
+			tile.type = Tile::ROCK;
 			tile.hardness = (uint8_t)(noise2D(dim, pos, seed, 4, 0.2f) * 255.0f);
 		}
 	} else if (hardness == 0xFF) {
 		//Edge if hardness is 255.
-		tile.type = EDGE;
+		tile.type = Tile::EDGE;
 		tile.hardness = 0xFF;
 	} else if (hardness == 0x00) {
 		//Hallway if hardness is 0. Will convert rooms to rooms during load.
-		tile.type = HALL;
+		tile.type = Tile::HALL;
 		tile.hardness = 0x00;
 	} else {
 		//If not max hardness or not min hardness, then it's a rock.
-		tile.type = ROCK;
+		tile.type = Tile::ROCK;
 		tile.hardness = hardness;
 	}
-	
-	return tile;
+
+	tiles[pos.y][pos.x] = tile;
 }
 
-static int dungeonIsFull(Dungeon dungeon) {
-	float total = dungeon.dim.x * dungeon.dim.y;
+int Dungeon::isFull() {
+	float total = dim.x * dim.y;
 	float room = 0.0;
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		for(int col = 0; col < dungeon.dim.x; col++) {
-			if (dungeon.tiles[row][col].type == ROOM) room = room + 1.0f;
+	for(int row = 0; row < dim.y; row++) {
+		for(int col = 0; col < dim.x; col++) {
+			if (tiles[row][col].type == Tile::ROOM) room = room + 1.0f;
 		}
 	}
 	
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
-static void dungeonFinalize(Dungeon *dungeon, int mobs, int emoji, int floor) {
-	//Setup buffer
-	size_t len = (size_t) (dungeon->dim.x) + 1;
-	dungeon->status = calloc(len, sizeof(wchar_t));
-	dungeon->line1 = calloc(len, sizeof(wchar_t));
-	dungeon->line2 = calloc(len, sizeof(wchar_t));
+void Dungeon::entityGenerate() {
+	//Create up stairs always
+	Entity up(this, Entity::STAIRS_UP);
+	entities.push_back(up);
 
+	if (floor) {
+		//Above the 0th floor, allow player to go down.
+		Entity down(this, Entity::STAIRS_DOWN);
+		entities.push_back(down);
+	}
+}
+
+void Dungeon::finalize(const int mobs) {
 	//Create mobs
-	dungeon->numMobs = mobs + floor > 100 ? 100 : mobs + floor;
-	dungeon->emoji = emoji;
+	int numMobs = mobs + floor > 100 ? 100 : mobs + floor;
 	mobGenerateAll(dungeon);
-	entityGenerateAll(dungeon, floor);
+	entityGenerate();
 	pathCreate(dungeon);
 	mobCreateQueue(dungeon);
 
 	//Some default text
-	swprintf(dungeon->status, len, L"Nothing has happened yet!");
-	swprintf(dungeon->line1, len, L"Adventure Commander");
-	swprintf(dungeon->line2, len, L"Status Text");
+	status = L"Nothing has happened yet!";
+	line1 = L"Adventure Commander";
+	line2 = L"Status Text";
 }
 
-static void dungeonPostProcess(Dungeon dungeon) {
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		for(int col = 0; col < dungeon.dim.x; col++) {
-			Tile* tile = &dungeon.tiles[row][col];
+void Dungeon::postProcess() {
+	for(int row = 0; row < dim.y; row++) {
+		for(int col = 0; col < dim.x; col++) {
+			Tile& tile = tiles[row][col];
 
 			//Render rock hardness
-			if (tile->type == ROCK) {
-				if (tile->hardness < 0x55) {
-					tile->symbol = SYM_ROCK_SOFT;
-				} else if (tile->hardness < 0xAA) {
-					tile->symbol = SYM_ROCK_MED;
+			if (tile.type == Tile::ROCK) {
+				if (tile.hardness < 0x55) {
+					tile.symbol = Tile::ROCK_SOFT;
+				} else if (tile.hardness < 0xAA) {
+					tile.symbol = Tile::ROCK_MED;
 				} else {
-					tile->symbol = SYM_ROCK_HARD;
+					tile.symbol = Tile::ROCK_HARD;
 				}
 			}
 
 			//Render the edge
-			if (tile->type == EDGE) {
+			if (tile.type == Tile::EDGE) {
 				if (row == 0) {
-					tile->symbol = SYM_EDGE_N;
-				} else if (row == dungeon.dim.y - 1) {
-					tile->symbol = SYM_EDGE_S;
+					tile.symbol = Tile::EDGE_N;
+				} else if (row == dim.y - 1) {
+					tile.symbol = Tile::EDGE_S;
 				} else if (col == 0) {
-					tile->symbol = SYM_EDGE_W;
-				} else if (col == dungeon.dim.x - 1) {
-					tile->symbol = SYM_EDGE_E;
+					tile.symbol = Tile::EDGE_W;
+				} else if (col == dim.x - 1) {
+					tile.symbol = Tile::EDGE_E;
 				}
 			}
 
-			if (tile->type == ROOM) {
-				tile->symbol = SYM_ROOM;
+			if (tile.type == Tile::ROOM) {
+				tile.symbol = Tile::ROOM_SYM;
 			}
 
-			if (tile->type != HALL) continue;
+			if (tile.type != Tile::HALL) continue;
 
-			Tile* tileN = &dungeon.tiles[row - 1][col];
-			Tile* tileE = &dungeon.tiles[row][col + 1];
-			Tile* tileS = &dungeon.tiles[row + 1][col];
-			Tile* tileW = &dungeon.tiles[row][col - 1];
+			Tile& tileN = tiles[row - 1][col];
+			Tile& tileE = tiles[row][col + 1];
+			Tile& tileS = tiles[row + 1][col];
+			Tile& tileW = tiles[row][col - 1];
 			
 			int NESW = 0x000F
-				& (((tileN->type == HALL || tileN->type == ROOM) << 3) 
-				| ((tileE->type == HALL || tileE->type == ROOM) << 2)
-				| ((tileS->type == HALL || tileS->type == ROOM) << 1)
-				| (tileW->type == HALL || tileW->type == ROOM));
+				& (((tileN.type == Tile::HALL || tileN.type == Tile::ROOM) << 3)
+				| ((tileE.type == Tile::HALL || tileE.type == Tile::ROOM) << 2)
+				| ((tileS.type == Tile::HALL || tileS.type == Tile::ROOM) << 1)
+				| (tileW.type == Tile::HALL || tileW.type == Tile::ROOM));
 			
 			switch (NESW) {
 				case 0x0F: //1111
-					tile->symbol = SYM_HALL_NESW;
+					tile.symbol = Tile::HALL_NESW;
 					break;
 				case 0x0E: //1110
-					tile->symbol = SYM_HALL_NES;
+					tile.symbol = Tile::HALL_NES;
 					break;
 				case 0x07: //0111
-					tile->symbol = SYM_HALL_ESW;
+					tile.symbol = Tile::HALL_ESW;
 					break;
 				case 0x0B: //1011
-					tile->symbol = SYM_HALL_SWN;
+					tile.symbol = Tile::HALL_SWN;
 					break;
 				case 0x0D: //1101
-					tile->symbol = SYM_HALL_WNE;
+					tile.symbol = Tile::HALL_WNE;
 					break;
 				case 0x0C: //1100
-					tile->symbol = SYM_HALL_NE;
+					tile.symbol = Tile::HALL_NE;
 					break;
 				case 0x06: //0110
-					tile->symbol = SYM_HALL_ES;
+					tile.symbol = Tile::HALL_ES;
 					break;
 				case 0x03: //0011
-					tile->symbol = SYM_HALL_SW;
+					tile.symbol = Tile::HALL_SW;
 					break;
 				case 0x09: //1001
-					tile->symbol = SYM_HALL_WN;
+					tile.symbol = Tile::HALL_WN;
 					break;
 				case 0x0A: //1010
-					tile->symbol = SYM_HALL_NS;
+					tile.symbol = Tile::HALL_NS;
 					break;
 				case 0x05: //0101
-					tile->symbol = SYM_HALL_EW;
+					tile.symbol = Tile::HALL_EW;
 					break;
 				case 0x08: //1000
 				case 0x02: //0010
-					tile->symbol = SYM_HALL_NS;
+					tile.symbol = Tile::HALL_NS;
 					break;
 				case 0x04: //0100
 				case 0x01: //0001
-					tile->symbol = SYM_HALL_EW;
+					tile.symbol = Tile::HALL_EW;
 					break;
 				default:  //No chars for stubs.
-					tile->symbol = SYM_HALL;
+					tile.symbol = Tile::HALL_SYM;
 			}
 		}
 	}
 }
 
-//"Public" functions
-
-Dungeon dungeonGenerate(Point dim, int mobs, int emoji, int floor) {
-	Dungeon dungeon = {0};
-	dungeon.dim = dim;
+Dungeon::Dungeon(const Point& dim, int mobs, int floor, bool emoji) {
+	if (dim < Point(1,1)) return;
+	this->dim = dim;
+	this->emoji = emoji;
+	this->floor = floor;
 	
-	if (dim.x < 1 || dim.y < 1) return dungeon;
-	
-	//Get seed for perlin noise
+	//Get seed for noise
 	float seed[dim.y * dim.x];
 	for (int i = 0; i < dim.y * dim.x; i++) {
 		seed[i] = (float)rand() / (float)RAND_MAX;
 	}
 	
 	//Initialize dungeon
-	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dim.y);
+	tiles = vector<vector<Tile>>((unsigned long)(dim.y), vector<Tile>((unsigned long)(dim.x)));
 	for(int row = 0; row < dim.y; row++) {
-		dungeon.tiles[row] = malloc(sizeof(Tile) * dim.x);
 		for(int col = 0; col < dim.x; col++) {
-			dungeon.tiles[row][col] = tileGenerate(dim, (Point){col, row}, 0x01, seed);
+			tilePlace((Point) {col, row}, 0x01, seed);
 		}
 	}
 	
-	Room rooms[ROOMS_MAX];
-	int count = 0;
-	
 	//Create rooms
-	for(count = 0; count < ROOMS_MAX; count++) {
-		if (count >= ROOMS_MIN && dungeonIsFull(dungeon)) break;
-		rooms[count] = roomGenerate(dungeon);
-		roomPlace(dungeon, rooms[count]);
+	for(int count = 0; count < ROOMS_MAX; count++) {
+		if (count >= ROOMS_MIN && isFull()) break;
+		roomGenerate();
 	}
 	
 	//Normalize
-	for(int i = 0; i < count; i++) {
-		rooms[i].pos.x -= (dungeon.dim.x)/2;
-		rooms[i].pos.y -= (dungeon.dim.y)/2;
+	for (auto &room : rooms) {
+		room.pos -= Point(dim.x/2, dim.y/2);
 	}
 	
 	//Sort (for consistency)
-	qsort(rooms, (size_t)count, sizeof(Room), utilSortRad);
+	sort(rooms.begin(), rooms.end(), [](const Room& lhs, const Room& rhs) {
+		const Point lhsCenter = Point(lhs.pos) += Point(lhs.dim.x/2, lhs.dim.y/2);
+		const Point rhsCenter = Point(rhs.pos) += Point(rhs.dim.x/2, rhs.dim.y/2);
+		return !lhsCenter.isClockwise(rhsCenter);
+	});
 	
 	//Revert
-	for(int i = 0; i < count; i++) {
-		rooms[i].pos.x += (dungeon.dim.x)/2;
-		rooms[i].pos.y += (dungeon.dim.y)/2;
+	for (auto &room : rooms) {
+		room.pos += Point(dim.x/2, dim.y/2);
 	}
 
 	//Place player
@@ -402,238 +370,183 @@ Dungeon dungeonGenerate(Point dim, int mobs, int emoji, int floor) {
 	});
 
 	//Create the paths.
-	roomConnect(dungeon, rooms[0], rooms[count - 1]);
-	for(int first = 0; first < count - 1; first++) {
-		roomConnect(dungeon, rooms[first], rooms[first + 1]);
+	roomConnect(rooms[0], rooms[rooms.size() - 1]);
+	for(int first = 0; first < rooms.size() - 1; first++) {
+		roomConnect(rooms[first], rooms[first + 1]);
 	}
-	
-	//Copy rooms into structure
-	dungeon.numRooms = count;
-	dungeon.rooms = malloc(sizeof(Room) * count);
-	memcpy(dungeon.rooms, rooms, sizeof(Room) * count);
-	
+
 	//Finalize dungeon
-	dungeonFinalize(&dungeon, mobs, emoji, floor);
-	
-	return dungeon;
+	finalize(mobs);
 }
 
-Dungeon dungeonLoad(FILE* file, int mobs, int emoji, int floor) {
-	size_t length = strlen(HEADER);
+Dungeon::Dungeon(ifstream& file, const int mobs, const bool emoji) {
+	size_t length = HEADER.length();
 	char head[length + 1];
-	size_t read = 0;
-	Dungeon dungeon = {0};
-	dungeon.dim = DUNGEON_DIM;
+	this->dim = DUNGEON_DIM;
+	this->emoji = emoji;
+	this->floor = 0;
 	
 	//Read magic header
+	file.read(head, length);
 	head[length] = '\0';
-	read = fread(head, sizeof(char), length, file);
-	if (read != length || strcmp(head, HEADER) != 0) {
+	if (!file || HEADER == head) {
 		wprintf(L"Bad file header '%s'!\n", head);
 		exit(FILE_READ_BAD_HEAD);
 	}
 	
 	//Check file version
 	uint32_t version;
-	read = fread(&version, sizeof(uint32_t), 1, file);
+	file.read(reinterpret_cast<char*>(&version), sizeof(version));
 	version = be32toh(version);
-	if (read != 1 || version != VERSION) {
+	if (!file || version != VERSION) {
 		wprintf(L"Bad file version!\n");
 		exit(FILE_READ_BAD_VERSION);
 	}
 	
 	//Get file size
 	uint32_t size;
-	read = fread(&size, sizeof(uint32_t), 1, file);
+	file.read(reinterpret_cast<char*>(&size), sizeof(size));
 	size = be32toh(size);
-	if (read != 1) {
+	if (!file) {
 		wprintf(L"Bad file size (EOF)!\n");
 		exit(FILE_READ_EOF_SIZE);
 	}
 	
 	//Get position
-	uint8_t xPlayer;
-	uint8_t yPlayer;
-	read = fread(&xPlayer, sizeof(uint8_t), 1, file);
-	read += fread(&yPlayer, sizeof(uint8_t), 1, file);
-	if (read != 2 || xPlayer >= dungeon.dim.x || yPlayer >= dungeon.dim.y) {
+	uint8_t pos[2];
+	file.read(reinterpret_cast<char*>(&pos), sizeof(pos));
+	if (!file || pos[0] >= dim.x || pos[1] >= dim.y) {
 		wprintf(L"Bad file player co-ordinates (EOF)!\n");
 		exit(FILE_READ_EOF_PLAYER);
 	}
 
-	mobGeneratePlayer(&dungeon, (Point){xPlayer, yPlayer});
+	mobGeneratePlayer(&dungeon, (Point){pos[0], pos[1]});
 	
 	//Initialize dungeon
-	dungeon.tiles = (Tile**) malloc(sizeof(Tile*) * dungeon.dim.y);
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		dungeon.tiles[row] = malloc(sizeof(Tile) * dungeon.dim.x);
-		for(int col = 0; col < dungeon.dim.x; col++) {
+	tiles = vector<vector<Tile>>((unsigned long)(dim.y), vector<Tile>((unsigned long)(dim.x)));
+	for(int row = 0; row < dim.y; row++) {
+		for(int col = 0; col < dim.x; col++) {
 			uint8_t hardness;
-			read = fread(&hardness, sizeof(uint8_t), 1, file);
+			file.read(reinterpret_cast<char*>(&hardness), sizeof(hardness));
 			
-			if (read != 1) {
+			if (!file) {
 				wprintf(L"Missing tile harness information (EOF)!\n");
 				exit(FILE_READ_EOF_HARDNESS);
 			}
 			
-			dungeon.tiles[row][col] = tileGenerate(dungeon.dim, (Point){col, row}, hardness, NULL);
+			tilePlace(Point(col, row), hardness, nullptr);
 		}
 	}
 	
-	int i = 0;
-	int rooms = (int) ((size - ftell(file)) / 4l);
-	rooms = rooms > 0 ? rooms : 0;
-	dungeon.rooms = malloc(sizeof(Room) * rooms);
-	dungeon.numRooms = rooms;
-	
 	//Get rooms
-	while ((uint32_t)(ftell(file)) < size) {
+	while (file.tellg() < size) {
 		Room room;
-		uint8_t posX;
-		uint8_t posY;
-		uint8_t dimX;
-		uint8_t dimY;
-		read = fread(&posX, sizeof(uint8_t), 1, file);
-		read += fread(&posY, sizeof(uint8_t), 1, file);
-		read += fread(&dimX, sizeof(uint8_t), 1, file);
-		read += fread(&dimY, sizeof(uint8_t), 1, file);
-		
-		if (read != 4) {
+		uint8_t data[4];
+		file.read(reinterpret_cast<char*>(&data), sizeof(data));
+		if (!file) {
 			wprintf(L"Missing rooms information (EOF)!\n");
 			exit(FILE_READ_EOF_ROOMS);
 		}
+
+		uint8_t posX = data[0];
+		uint8_t posY = data[1];
+		uint8_t dimX = data[2];
+		uint8_t dimY = data[3];
 		
 		//Verify the rooms are in bounds. If they are not, throw them out.
-		room.pos.x = posX >= dungeon.dim.x ? dungeon.dim.x - 1 : posX;
-		room.pos.y = posY >= dungeon.dim.x ? dungeon.dim.x - 1 : posY;
-		room.dim.x = dimX + room.pos.x >= dungeon.dim.x ? 1 : dimX;
-		room.dim.y = dimY + room.pos.y >= dungeon.dim.x ? 1 : dimY;
-		
-		roomPlace(dungeon, room);
-		dungeon.rooms[i++] = room;
+		room.pos.x = posX >= dim.x ? dim.x - 1 : posX;
+		room.pos.y = posY >= dim.x ? dim.x - 1 : posY;
+		room.dim.x = dimX + room.pos.x >= dim.x ? 1 : dimX;
+		room.dim.y = dimY + room.pos.y >= dim.x ? 1 : dimY;
+
+		roomPlace(room);
 	}
 
 	//Finalize dungeon
-	dungeonFinalize(&dungeon, mobs, emoji, floor);
-	
-	return dungeon;
+	finalize(mobs);
 }
 
-void dungeonSave(Dungeon dungeon, FILE* file) {
+void Dungeon::save(ofstream& file) {
 	//Header
-	fwrite(HEADER, sizeof(char), strlen(HEADER), file);
+	file.write(HEADER.c_str(), HEADER.length());
 	
 	//Version
 	uint32_t ver = htobe32(VERSION);
-	fwrite(&ver, sizeof(uint32_t), 1, file);
+	file.write(reinterpret_cast<char*>(&ver), sizeof(ver));
 	
 	//Size of file, 22 for the header, width and height of dungeon, and extra rooms
-	uint32_t size = htobe32((uint32_t)(22 + dungeon.dim.x * dungeon.dim.y + dungeon.numRooms * 4));
-	fwrite(&size, sizeof(uint32_t), 1, file);
+	uint32_t size = htobe32((uint32_t)(22 + dim.x * dim.y + rooms.size() * 4));
+	file.write(reinterpret_cast<char*>(&size), sizeof(size));
 	
 	//Player position
-	uint8_t playerX = (uint8_t) dungeon.player->pos.x;
-	uint8_t playerY = (uint8_t) dungeon.player->pos.y;
-	fwrite(&playerX, sizeof(uint8_t), 1, file);
-	fwrite(&playerY, sizeof(uint8_t), 1, file);
+	uint8_t player[2] = {(uint8_t)this->player->pos.x, (uint8_t)this->player->pos.y};
+	file.write(reinterpret_cast<char*>(&player), sizeof(player));
 	
 	//Tiles
-	for(int row = 0; row < dungeon.dim.y; row++) {
-		for(int col = 0; col < dungeon.dim.x; col++) {
-			uint8_t hardness = dungeon.tiles[row][col].hardness;
-			fwrite(&hardness, sizeof(uint8_t), 1, file);
+	for(int row = 0; row < dim.y; row++) {
+		for(int col = 0; col < dim.x; col++) {
+			uint8_t hardness = tiles[row][col].hardness;
+			file.write(reinterpret_cast<char*>(&hardness), sizeof(hardness));
 		}
 	}
 	
 	//Rooms
-	for(int i = 0; i < dungeon.numRooms; i++) {
-		Room room = dungeon.rooms[i];
-		uint8_t posX = (uint8_t)(room.pos.x);
-		uint8_t posY = (uint8_t)(room.pos.y);
-		uint8_t dimX = (uint8_t)(room.dim.x);
-		uint8_t dimY = (uint8_t)(room.dim.y);
-		fwrite(&posX, sizeof(uint8_t), 1, file);
-		fwrite(&posY, sizeof(uint8_t), 1, file);
-		fwrite(&dimX, sizeof(uint8_t), 1, file);
-		fwrite(&dimY, sizeof(uint8_t), 1, file);
+	for (auto room : rooms) {
+		uint8_t data[4] = {
+			(uint8_t) (room.pos.x),
+			(uint8_t) (room.pos.y),
+			(uint8_t) (room.dim.x),
+			(uint8_t) (room.dim.y),
+		};
+
+		file.write(reinterpret_cast<char*>(&data), sizeof(data));
 	}
 }
 
-void dungeonDestroy(Dungeon* dungeon) {
-	pathDestroy(dungeon);
-	queueDestroy(&dungeon->turn);
-
-	for(int row = 0; row < dungeon->dim.y; row++) {
-		free(dungeon->tiles[row]);
-	}
-
-	free(dungeon->status);
-	free(dungeon->line1);
-	free(dungeon->line2);
-	free(dungeon->player);
-	free(dungeon->mobs);
-	free(dungeon->rooms);
-	free(dungeon->entities);
-	free(dungeon->tiles);
-
-	dungeon->player = NULL;
-	dungeon->mobs = NULL;
-	dungeon->rooms = NULL;
-	dungeon->entities = NULL;
-	dungeon->tiles = NULL;
-
-	dungeon->dim = (Point){0};
-	dungeon->numMobs = 0;
-	dungeon->numRooms = 0;
-	dungeon->numEntities = 0;
-}
-
-void dungeonPrint(WINDOW* win, Dungeon dungeon) {
+void Dungeon::print(WINDOW* win) {
 	//Make the dungeon look nice
-	dungeonPostProcess(dungeon);
+	postProcess();
 
 	//clean window
 	werase(win);
 
 	//Write status
-	mvwaddwstr(win, 0, 0, dungeon.status);
+	mvwaddwstr(win, 0, 0, status.c_str());
 
 	//Write tiles
-	for (int row = 0; row < dungeon.dim.y; row++) {
-		wchar_t screen[dungeon.dim.x + 1];
-		for (int col = 0; col < dungeon.dim.x; col++) {
-			screen[col] = dungeon.tiles[row][col].symbol;
+	for (int row = 0; row < dim.y; row++) {
+		wchar_t screen[dim.x + 1];
+		for (int col = 0; col < dim.x; col++) {
+			screen[col] = tiles[row][col].symbol;
 		}
 
-		screen[dungeon.dim.x] = L'\0';
+		screen[dim.x] = L'\0';
 		mvwaddwstr(win, row + 1, 0, screen);
 	}
 
 	//Write entities
-	for (int entity = 0; entity < dungeon.numEntities; entity++) {
-		Entity e = dungeon.entities[entity];
-		mvwaddwstr(win, e.pos.y + 1, e.pos.x, entityGetSymbol(&e));
+	for (auto& e : entities) {
+		mvwaddwstr(win, e.pos.y + 1, e.pos.x, e.getSymbol().c_str());
 	}
 
 	//Write players
-	if(dungeon.player->hp > 0) {
-		mvwaddwstr(win, dungeon.player->pos.y + 1, dungeon.player->pos.x, mobGetSymbol(dungeon.player, dungeon));
+	if(player->hp > 0) {
+		mvwaddwstr(win, player->pos.y + 1, player->pos.x, player->getSymbol().c_str());
 	}
 
 	//Write mobs
-	for (int mob = 0; mob < dungeon.numMobs; mob++) {
-		Mob m = dungeon.mobs[mob];
-		if (m.hp > 0) mvwaddwstr(win, m.pos.y + 1, m.pos.x, mobGetSymbol(&m, dungeon));
+	for (auto& m : mobs) {
+		if (m->hp > 0) mvwaddwstr(win, m->pos.y + 1, m->pos.x, m->getSymbol().c_str());
 	}
 
 	//Write other statuses
-	mvwaddwstr(win, dungeon.dim.y + 1, 0, dungeon.line1);
-	mvwaddwstr(win, dungeon.dim.y + 2, 0, dungeon.line2);
+	mvwaddwstr(win, dim.y + 1, 0, line1.c_str());
+	mvwaddwstr(win, dim.y + 2, 0, line2.c_str());
 
 	//Some terminals have trouble with emoji, so help them out
 	//by redrawing the whole window every few frames.
 	static int refresh = 0;
-	if (dungeon.emoji && refresh == 5) {
+	if (emoji && refresh == 5) {
 		redrawwin(win);
 		refresh = 0;
 	}

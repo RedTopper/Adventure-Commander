@@ -1,59 +1,39 @@
 #ifndef MOB_H
 #define MOB_H
 
-#include <wchar.h>
 #include <ncursesw/curses.h>
+#include "entity.hpp"
 
-#include "point.h"
+class Mob:  public Entity {
+public:
+	enum Movement {
+		MOVE_FAILURE,
+		MOVE_SUCCESS,
+		MOVE_BROKE_WALL,
+		MOVE_DAMAGE_WALL,
+	};
 
-typedef struct {
-	Point pos;
+	enum Skills {
+		SKILL_INTELLIGENCE = 0x01,
+		SKILL_TELEPATHY = 0x02,
+		SKILL_TUNNELING = 0x04,
+		SKILL_ERRATIC = 0x08,
+		SKILL_PC = 0x10,
+	};
+
+private:
 	int known;
 	int skills;
 	int speed;
 	int order;
+
+public:
 	int hp;
-} Mob;
 
-typedef enum {
-	MOVE_FAILURE,
-	MOVE_SUCCESS,
-	MOVE_BROKE_WALL,
-	MOVE_DAMAGE_WALL,
-} Movement;
-
-typedef enum {
-	ACTION_NONE,
-	ACTION_UP,
-	ACTION_DOWN,
-	ACTION_MOVE,
-	ACTION_QUIT,
-	ACTION_STALL
-} Action;
-
-typedef enum {
-	SKILL_INTELLIGENCE = 0x01,
-	SKILL_TELEPATHY = 0x02,
-	SKILL_TUNNELING = 0x04,
-	SKILL_ERRATIC = 0x08,
-	SKILL_PC = 0x10,
-} Skills;
-
-extern const wchar_t* MOB_TYPES[];
-extern const wchar_t* MOB_TYPES_BORING[];
-
-#endif
-
-#ifndef MOB_FUNCTIONS
-#include "dungeon.h"
-#define MOB_FUNCTIONS
-
-const wchar_t* mobGetSymbol(Mob *mob, Dungeon dungeon);
-int mobMove(Mob* mob, Dungeon* dungeon, Point new);
-void mobGeneratePlayer(Dungeon* dungeon, Point point);
-void mobGenerateAll(Dungeon* dungeon);
-void mobCreateQueue(Dungeon* dungeon);
-int mobAliveCount(Dungeon dungeon);
-Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base);
+	const wstring getSymbol();
+	void generateAll(int floor);
+	int move(Point destination);
+	void tick(WINDOW* base);
+};
 
 #endif

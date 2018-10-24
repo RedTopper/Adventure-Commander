@@ -1,7 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-typedef enum {
+enum Error {
 	FILE_READ_BAD = 0x10,
 	FILE_READ_BAD_HEAD,
 	FILE_READ_BAD_VERSION,
@@ -16,6 +16,6 @@ typedef enum {
 	ARGUMENT_UNKNOWN,
 	ARGUMENT_REQ_PARAM,
 	ARGUMENT_OOB,
-} Error;
+};
 
 #endif

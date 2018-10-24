@@ -1,29 +1,30 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include <wchar.h>
+#include <array>
+#include <memory>
+#include "point.hpp"
 
-#include "point.h"
+using namespace std;
 
-extern wchar_t* ENTITY_SYMBOLS[2];
+class Dungeon;
+class Entity {
+public:
+	enum Type {
+		MOB,
+		STAIRS_UP,
+		STAIRS_DOWN
+	};
 
-typedef enum {
-	STAIRS_UP,
-	STAIRS_DOWN
-} EntityType;
+	virtual const wstring getSymbol();
 
-typedef struct {
+protected:
+	Dungeon* dungeon;
+	Type type;
+
+public:
+	Entity(Dungeon* dungeon, Type type);
 	Point pos;
-	EntityType type;
-} Entity;
-
-#endif
-
-#ifndef ENTITY_FUNCTIONS
-#include "dungeon.h"
-#define ENTITY_FUNCTIONS
-
-void entityGenerateAll(Dungeon* dungeon, int floor);
-const wchar_t* entityGetSymbol(Entity* entity);
+};
 
 #endif

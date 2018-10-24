@@ -1,7 +1,7 @@
 #ifndef PERLIN_H
 #define PERLIN_H
 
-#include "point.h"
+#include "point.hpp"
 
 /**
  * A Perlin noise generator in 2D
