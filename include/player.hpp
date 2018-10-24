@@ -6,16 +6,28 @@
 class Player: public Mob {
 public:
 	enum Action {
-		ACTION_NONE,
-		ACTION_UP,
-		ACTION_DOWN,
-		ACTION_MOVE,
-		ACTION_QUIT,
-		ACTION_STALL
+		NONE,
+		UP,
+		DOWN,
+		MOVE,
+		QUIT,
+		STALL
 	};
 
-	Action playerAction(Mob* mob, Dungeon* dungeon, WINDOW* base);
-	void tick(WINDOW* base);
+private:
+	WINDOW* base;
+	Action action;
+
+private:
+	wstring relative(const Mob& other);
+	bool tickMap(int& offset, int ch);
+
+public:
+	Player(Dungeon* dungeon, WINDOW* window);
+	void tick() override;
+	const Action getAction() const {
+		return action;
+	}
 };
 
 

@@ -1,6 +1,3 @@
-
-#include <entity.hpp>
-
 #include "point.hpp"
 #include "entity.hpp"
 #include "dungeon.hpp"
@@ -11,7 +8,7 @@ Entity::Entity(Dungeon* dungeon, Type type) {
 	this->pos = getSpawn();
 }
 
-const wstring Entity::getSymbol() {
+const wstring Entity::getSymbol() const {
 	const wstring ENT[] = {
 		L"?", //Mob has it's own definition.
 		L"\x25b2", //Up pointing triangle.
@@ -19,9 +16,9 @@ const wstring Entity::getSymbol() {
 	};
 
 	const wstring ENT_BORING[] = {
-			L"?", //Mob has it's own definition.
-			L"\x25b2", //Up pointing triangle.
-			L"\x25bc", //Down pointing triangle.
+		L"?", //Mob has it's own definition.
+		L"\x25b2", //Up pointing triangle.
+		L"\x25bc", //Down pointing triangle.
 	};
 
 	if (dungeon->isFancy()) {
@@ -31,7 +28,7 @@ const wstring Entity::getSymbol() {
 	}
 }
 
-const Point Entity::getSpawn() {
+const Point Entity::getSpawn() const {
 	Point point;
 	bool onEntity = true;
 	while(onEntity) {

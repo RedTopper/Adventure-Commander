@@ -16,16 +16,22 @@ public:
 		STAIRS_DOWN
 	};
 
-	virtual const wstring getSymbol();
-	virtual const Point getSpawn();
+	virtual const wstring getSymbol() const;
+	virtual const Point getSpawn() const;
 
 protected:
 	Dungeon* dungeon;
 	Type type;
+	Point pos;
 
 public:
 	Entity(Dungeon* dungeon, Type type);
-	Point pos;
+	const Type getType() const {
+		return type;
+	}
+	const Point& getPos() const {
+		return pos;
+	}
 };
 
 #endif

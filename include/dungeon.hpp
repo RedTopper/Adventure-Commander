@@ -15,6 +15,8 @@
 #include "mob.hpp"
 #include "player.hpp"
 
+extern const Point DUNGEON_DIM;
+
 using namespace std;
 
 class Dungeon {
@@ -49,10 +51,10 @@ public:
 	wstring line1;
 	wstring line2;
 
-	static int skewBetweenRange(int skew, int low, int high);
-	Dungeon(const Point& dim, int mobs, int floor, bool emoji);
-	Dungeon(ifstream& file, int mobs, bool emoji);
+	Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji);
+	Dungeon(WINDOW* base, fstream& file, int mobs, bool emoji);
 	void save(ofstream& file);
+	int alive() const;
 	void print(WINDOW* window);
 
 	//Getters and setters

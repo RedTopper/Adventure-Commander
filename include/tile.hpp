@@ -48,9 +48,6 @@ public:
 	uint8_t hardness;
 	Symbol symbol;
 	Type type;
-
-public:
-
 };
 
 #endif

@@ -8,11 +8,20 @@ public:
 	int x;
 	int y;
 
-	Point();
-	Point(int x, int y);
-	Point(const Point& other);
+	Point() {
+		x = 0;
+		y = 0;
+	}
 
-	static const Point ZERO;
+	Point(int x, int y) {
+		this->x = x;
+		this->y = y;
+	}
+
+	Point(const Point& other) {
+		x = other.x;
+		y = other.y;
+	}
 
 	inline int isClockwise(const Point& other) const {
 		return atan2(*this^other, *this*other) > 0;

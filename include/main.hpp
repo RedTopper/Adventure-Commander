@@ -2,6 +2,7 @@
 #define MAIN_H
 
 enum Error {
+	FINE = 0,
 	FILE_READ_BAD = 0x10,
 	FILE_READ_BAD_HEAD,
 	FILE_READ_BAD_VERSION,
@@ -17,5 +18,7 @@ enum Error {
 	ARGUMENT_REQ_PARAM,
 	ARGUMENT_OOB,
 };
+
+int skewBetweenRange(int skew, int low, int high);
 
 #endif

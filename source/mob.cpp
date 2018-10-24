@@ -8,11 +8,11 @@ Mob::Mob(Dungeon* dungeon, int turn) : Entity(dungeon, Entity::MOB) {
 	known = 0;
 	skills = rand() % 16;
 	speed = (rand() % 16) + 5; //5-20
-	order = turn + 1;
+	order = turn ;
 	hp = 1;
 }
 
-const Point Mob::getSpawn() {
+const Point Mob::getSpawn() const {
 	Point point;
 	bool onMob = true;
 	while(onMob) {
@@ -39,7 +39,7 @@ const Point Mob::getSpawn() {
 	return point;
 }
 
-const wstring Mob::getSymbol() {
+const wstring Mob::getSymbol() const {
 	const wchar_t* MOB_TYPES[] = {
 		L"\x01F480", //Skull   (    )
 		L"\x01F43A", //Angry   (I   )
@@ -91,7 +91,17 @@ const wstring Mob::getSymbol() {
 
 void Mob::statusString(const wstring& text, const wstring& type) {
 	wstringstream out;
-	out << getSymbol() << " at (" << pos.x << ", " << pos.y << ") is " << type << " and " << text;
+	out
+		<< getSymbol()
+		<< " at ("
+		<< pos.x
+		<< ", "
+		<< pos.y
+		<< ") is "
+		<< type
+		<< " and "
+		<< text;
+
 	dungeon->status = out.str();
 }
 
@@ -154,17 +164,17 @@ void Mob::tickStraightLine(const wchar_t* type) {
 
 	wstring text;
 	switch (movement) {
-		case MOVE_BROKE_WALL:
+		case BROKE_WALL:
 			text = L"broke down the wall while beelining!";
 			break;
-		case MOVE_DAMAGE_WALL:
+		case DAMAGE_WALL:
 			text = L"damaged a wall while beelining!";
 			break;
-		case MOVE_SUCCESS:
+		case SUCCESS:
 			text = L"is beelining towards you!";
 			break;
 		default:
-		case MOVE_FAILURE:
+		case FAILURE:
 			text = L"tried to beeline, but failed!";
 			break;
 	}
@@ -180,17 +190,17 @@ void Mob::tickRandomly(const wchar_t* type) {
 
 	wstring text;
 	switch (movement) {
-		case MOVE_BROKE_WALL:
+		case BROKE_WALL:
 			text = L"broke down the wall!";
 			break;
-		case MOVE_DAMAGE_WALL:
+		case DAMAGE_WALL:
 			text = L"chipped at the wall!";
 			break;
-		case MOVE_SUCCESS:
+		case SUCCESS:
 			text = L"moved to a new spot!";
 			break;
 		default:
-		case MOVE_FAILURE:
+		case FAILURE:
 			text = L"did nothing!";
 			break;
 	}
@@ -209,7 +219,7 @@ void Mob::tickPathFind(const wchar_t* type) {
 		check.y += ADJACENT[i].y;
 
 		int dist;
-		if (skills & SKILL_TUNNELING) {
+		if (skills & TUNNELING) {
 			dist = dungeon->getPathDig(check);
 		} else {
 			dist = dungeon->getPathFloor(check);
@@ -226,17 +236,17 @@ void Mob::tickPathFind(const wchar_t* type) {
 		movement = move(next);
 		wstring text;
 		switch (movement) {
-			case MOVE_BROKE_WALL:
+			case BROKE_WALL:
 				text = L"broke down the wall to get to you!";
 				break;
-			case MOVE_DAMAGE_WALL:
+			case DAMAGE_WALL:
 				text = L"damaged a wall to get to you!";
 				break;
-			case MOVE_SUCCESS:
+			case SUCCESS:
 				text = L"coming after you!";
 				break;
 			default:
-			case MOVE_FAILURE:
+			case FAILURE:
 				text = L"somehow failed to move?";
 				break;
 		}
@@ -246,43 +256,43 @@ void Mob::tickPathFind(const wchar_t* type) {
 	}
 }
 
-Mob::Movement Mob::move(Point& next) {
+Mob::Movement Mob::move(const Point& next) {
 	Tile& tile = dungeon->getTile(next);
-	if (tile.type == Tile::ROCK && skills & SKILL_TUNNELING) {
+	if (tile.type == Tile::ROCK && skills & TUNNELING) {
 		if (tile.hardness <= HARDNESS_RATE) {
 			tile.type = Tile::HALL;
 			tile.hardness = 0;
 			pos = next;
 			pathCreate(dungeon);
-			return MOVE_BROKE_WALL;
+			return BROKE_WALL;
 		} else {
 			tile.hardness -= HARDNESS_RATE;
 			pathCreate(dungeon);
-			return MOVE_DAMAGE_WALL;
+			return DAMAGE_WALL;
 		}
 	} else if (tile.type == Tile::HALL || tile.type == Tile::ROOM){
 		pos = next;
-		return MOVE_SUCCESS;
+		return SUCCESS;
 	}
 
-	return MOVE_FAILURE;
+	return FAILURE;
 }
 
 void Mob::tick() {
 	if (hp <= 0) return;
 	dungeon->status = L"Nothing important happened.";
 
-	if (skills & SKILL_ERRATIC && rand() % 2) {
+	if (skills & ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
 		tickRandomly(L"confused");
-	} else if (skills & SKILL_TELEPATHY) {
+	} else if (skills & TELEPATHY) {
 		//Not the player, not erratic, but has telepathy skill
-		if (skills & SKILL_INTELLIGENCE) {
+		if (skills & INTELLIGENCE) {
 			tickPathFind(L"telepathic");
 		} else {
 			tickStraightLine(L"telepathic");
 		}
-	} else if (skills & SKILL_INTELLIGENCE) {
+	} else if (skills & INTELLIGENCE) {
 		//Not the player, not erratic, not telepathic, but has intelligence
 		if (canSeePC()) known = MAX_KNOWN_TURNS;
 		if (known > 0) {
@@ -319,15 +329,12 @@ void Mob::tick() {
 	}
 }
 
-void mobGeneratePlayer(Dungeon* dungeon, Point point) {
-	Mob* mob = malloc(sizeof(Mob));
-	mob->pos = point;
-	mob->known = 0;
-	mob->skills = SKILL_PC;
-	mob->speed = 10;
-	mob->order = 0;
-	mob->hp = 1;
-	dungeon->player = mob;
+const bool Mob::isOn(Entity::Type type) const {
+	for (auto& e : dungeon->getEntities()) {
+		if (pos == e.getPos() && e.getType() == type) return true;
+	}
+
+	return false;
 }
 
 void mobCreateQueue(Dungeon* dungeon) {

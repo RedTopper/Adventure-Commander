@@ -3,13 +3,16 @@
 #include <algorithm>
 #include <fstream>
 #include <cstring>
+#include <dungeon.hpp>
+
+
 #include "perlin.hpp"
 #include "dungeon.hpp"
 #include "point.hpp"
 #include "main.hpp"
 
 //default size
-static const Point DUNGEON_DIM = Point(80, 21); // NOLINT(cert-err58-cpp)
+const Point DUNGEON_DIM = Point(80, 21); // NOLINT(cert-err58-cpp)
 
 //Number of rooms
 static const int ROOMS_MIN = 5;
@@ -29,12 +32,6 @@ static const int ROOM_CON_RAD_MIN = 1;
 //Magic header
 static const string HEADER = "RLG327-F2018"; // NOLINT(cert-err58-cpp)
 static const uint32_t VERSION = 0;
-
-int Dungeon::skewBetweenRange(const int skew, const int low, const int high) {
-	int value = low;
-	while (rand() % skew && value < high) value++;
-	return value;
-}
 
 bool Dungeon::roomPlaceAttempt(const Room& room) {
 	for (int row = room.pos.y - 1; row < room.pos.y + room.dim.y + 1; row++) {
@@ -143,7 +140,7 @@ void Dungeon::roomGenerate() {
 }
 
 void Dungeon::hallPlace(const Point& point) {
-	if (point > Point::ZERO && point < (dim - Point(1,1))) {
+	if (point > Point() && point < (dim - Point(1,1))) {
 		Tile& tile = tiles[point.y][point.x];
 		if (tile.type == Tile::ROCK) {
 			tile.type = Tile::HALL;
@@ -201,8 +198,7 @@ int Dungeon::isFull() {
 
 void Dungeon::mobGenerate(int total) {
 	for(int i = 0; i < total; i++) {
-		auto m = make_shared<Mob>(new Mob(this, i));
-		mobs.push_back(m);
+		mobs.push_back(make_shared<Mob>(new Mob(this, i + 1)));
 	}
 }
 
@@ -326,7 +322,7 @@ void Dungeon::postProcess() {
 	}
 }
 
-Dungeon::Dungeon(const Point& dim, int mobs, int floor, bool emoji) {
+Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji) {
 	if (dim < Point(1,1)) return;
 	this->dim = dim;
 	this->emoji = emoji;
@@ -352,28 +348,16 @@ Dungeon::Dungeon(const Point& dim, int mobs, int floor, bool emoji) {
 		roomGenerate();
 	}
 	
-	//Normalize
-	for (auto &room : rooms) {
-		room.pos -= Point(dim.x/2, dim.y/2);
-	}
-	
 	//Sort (for consistency)
-	sort(rooms.begin(), rooms.end(), [](const Room& lhs, const Room& rhs) {
-		const Point lhsCenter = Point(lhs.pos) += Point(lhs.dim.x/2, lhs.dim.y/2);
-		const Point rhsCenter = Point(rhs.pos) += Point(rhs.dim.x/2, rhs.dim.y/2);
+	sort(rooms.begin(), rooms.end(), [dim](const Room& lhs, const Room& rhs) {
+		const Point lhsCenter = (Point(lhs.pos) += Point(lhs.dim.x/2, lhs.dim.y/2)) -= Point(dim.x/2, dim.y/2);
+		const Point rhsCenter = (Point(rhs.pos) += Point(rhs.dim.x/2, rhs.dim.y/2)) -= Point(dim.x/2, dim.y/2);
 		return !lhsCenter.isClockwise(rhsCenter);
 	});
-	
-	//Revert
-	for (auto &room : rooms) {
-		room.pos += Point(dim.x/2, dim.y/2);
-	}
 
 	//Place player
-	mobGeneratePlayer(&dungeon, (Point){
-		rooms[0].pos.x + (rooms[0].dim.x)/2,
-		rooms[0].pos.y + (rooms[0].dim.y)/2
-	});
+	player = make_shared<Player>(new Player(this, base));
+	player->move(Point(rooms[0].pos.x + (rooms[0].dim.x)/2, rooms[0].pos.y + (rooms[0].dim.y)/2));
 
 	//Create the paths.
 	roomConnect(rooms[0], rooms[rooms.size() - 1]);
@@ -385,7 +369,7 @@ Dungeon::Dungeon(const Point& dim, int mobs, int floor, bool emoji) {
 	finalize(mobs);
 }
 
-Dungeon::Dungeon(ifstream& file, const int mobs, const bool emoji) {
+Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) {
 	size_t length = HEADER.length();
 	char head[length + 1];
 	this->dim = DUNGEON_DIM;
@@ -426,7 +410,8 @@ Dungeon::Dungeon(ifstream& file, const int mobs, const bool emoji) {
 		exit(FILE_READ_EOF_PLAYER);
 	}
 
-	mobGeneratePlayer(&dungeon, (Point){pos[0], pos[1]});
+	player = make_shared<Player>(new Player(this, base));
+	player->move(Point(pos[0], pos[1]));
 	
 	//Initialize dungeon
 	tiles = vector<vector<Tile>>((unsigned long)(dim.y), vector<Tile>((unsigned long)(dim.x)));
@@ -485,7 +470,7 @@ void Dungeon::save(ofstream& file) {
 	file.write(reinterpret_cast<char*>(&size), sizeof(size));
 	
 	//Player position
-	uint8_t player[2] = {(uint8_t)this->player->pos.x, (uint8_t)this->player->pos.y};
+	uint8_t player[2] = {(uint8_t)this->player->getPos().x, (uint8_t)this->player->getPos().y};
 	file.write(reinterpret_cast<char*>(&player), sizeof(player));
 	
 	//Tiles
@@ -508,6 +493,8 @@ void Dungeon::save(ofstream& file) {
 		file.write(reinterpret_cast<char*>(&data), sizeof(data));
 	}
 }
+
+
 
 void Dungeon::print(WINDOW* win) {
 	//Make the dungeon look nice
@@ -532,17 +519,17 @@ void Dungeon::print(WINDOW* win) {
 
 	//Write entities
 	for (auto& e : entities) {
-		mvwaddwstr(win, e.pos.y + 1, e.pos.x, e.getSymbol().c_str());
+		mvwaddwstr(win, e.getPos().y + 1, e.getPos().x, e.getSymbol().c_str());
 	}
 
 	//Write players
-	if(player->hp > 0) {
-		mvwaddwstr(win, player->pos.y + 1, player->pos.x, player->getSymbol().c_str());
+	if(player->isAlive()) {
+		mvwaddwstr(win, player->getPos().y + 1, player->getPos().x, player->getSymbol().c_str());
 	}
 
 	//Write mobs
 	for (auto& m : mobs) {
-		if (m->hp > 0) mvwaddwstr(win, m->pos.y + 1, m->pos.x, m->getSymbol().c_str());
+		if (m->isAlive()) mvwaddwstr(win, m->getPos().y + 1, m->getPos().x, m->getSymbol().c_str());
 	}
 
 	//Write other statuses
@@ -559,4 +546,13 @@ void Dungeon::print(WINDOW* win) {
 
 	wrefresh(win);
 	refresh++;
+}
+
+int Dungeon::alive() const {
+	int alive = 0;
+	for (const auto& m : mobs) {
+		if (m->isAlive()) alive++;
+	}
+
+	return alive;
 }
