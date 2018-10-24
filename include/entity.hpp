@@ -17,6 +17,7 @@ public:
 	};
 
 	virtual const wstring getSymbol();
+	virtual const Point getSpawn();
 
 protected:
 	Dungeon* dungeon;

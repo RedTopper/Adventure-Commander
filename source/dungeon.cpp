@@ -199,6 +199,13 @@ int Dungeon::isFull() {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
+void Dungeon::mobGenerate(int total) {
+	for(int i = 0; i < total; i++) {
+		auto m = make_shared<Mob>(new Mob(this, i));
+		mobs.push_back(m);
+	}
+}
+
 void Dungeon::entityGenerate() {
 	//Create up stairs always
 	Entity up(this, Entity::STAIRS_UP);
@@ -213,8 +220,7 @@ void Dungeon::entityGenerate() {
 
 void Dungeon::finalize(const int mobs) {
 	//Create mobs
-	int numMobs = mobs + floor > 100 ? 100 : mobs + floor;
-	mobGenerateAll(dungeon);
+	mobGenerate(mobs + floor > 100 ? 100 : mobs + floor);
 	entityGenerate();
 	pathCreate(dungeon);
 	mobCreateQueue(dungeon);

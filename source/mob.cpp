@@ -1,98 +1,103 @@
-#include <wchar.h>
-#include <stdlib.h>
-#include <ncursesw/curses.h>
-
-#include "mob.h"
-#include "dungeon.h"
-#include "queue.h"
-#include "main.h"
-#include "path.h"
-#include "player.h"
+#include "path.hpp"
+#include "mob.hpp"
+#include "dungeon.hpp"
 
 const int MAX_KNOWN_TURNS = 5;
-const wchar_t* MOB_TYPES[] = {
-	L"\x01F480", //Skull   (    )
-	L"\x01F43A", //Angry   (I   )
-	L"\x01F47B", //Ghost   ( T  )
-	L"\x01F47F", //Demon   (IT  )
-	L"\x01F417", //Boar    (  D )
-	L"\x01F435", //Monkey  (I D )
-	L"\x01F479", //Ogre    ( TD )
-	L"\x01F432", //Dragon  (ITD )
-	L"\x01F480", //Skull   (   E)
-	L"\x01F419", //Squid   (I  E)
-	L"\x01F40D", //Snake   ( D E)
-	L"\x01F47A", //Goblin  (IT E)
-	L"\x01F47E", //Monster (  DE)
-	L"\x01F42F", //Tiger   (I DE)
-	L"\x01F47D", //Alien   ( TDE)
-	L"\x01F383", //Pumpkin (ITDE)
-	L"\x01F464", //Person
-	L"??"
-};
 
-const wchar_t* MOB_TYPES_BORING[] = {
-	L"k", //Skull   (    )
-	L"p", //Empty   (I   )
-	L"g", //Ghost   ( T  )
-	L"d", //Demon   (IT  )
-	L"b", //Boar    (  D )
-	L"m", //Monkey  (I D )
-	L"O", //Ogre    ( TD )
-	L"D", //Dragon  (ITD )
-	L"k", //Skull   (   E)
-	L"o", //Squid   (I  E)
-	L"s", //Snake   ( D E)
-	L"p", //Goblin  (IT E)
-	L"M", //Monster (  DE)
-	L"T", //Tiger   (I DE)
-	L"A", //Alien   ( TDE)
-	L"P", //Pumpkin (ITDE)
-	L"@",
-	L"?"
-};
-
-static void mobPrintText(Mob* mob, Dungeon* dungeon, const wchar_t* text, const wchar_t* type) {
-	size_t len = (size_t) (dungeon->dim.x) + 1;
-	swprintf(dungeon->status, len, L"%ls at (%d, %d) is %ls and %ls",
-		mobGetSymbol(mob, *dungeon),
-		mob->pos.x,
-		mob->pos.y,
-		type,
-		text
-	);
+Mob::Mob(Dungeon* dungeon, int turn) : Entity(dungeon, Entity::MOB) {
+	known = 0;
+	skills = rand() % 16;
+	speed = (rand() % 16) + 5; //5-20
+	order = turn + 1;
+	hp = 1;
 }
 
-static Point mobValidSpawnPoint(Dungeon dungeon, int i) {
-	Point pos = {0};
-
-	while(1) {
-		pos.x = rand() % dungeon.dim.x;
-		pos.y = rand() % dungeon.dim.y;
-		Tile tile = dungeon.tiles[pos.y][pos.x];
+const Point Mob::getSpawn() {
+	Point point;
+	bool onMob = true;
+	while(onMob) {
+		point.x = rand() % dungeon->getDim().x;
+		point.y = rand() % dungeon->getDim().y;
+		const Tile& tile = dungeon->getTile(pos);
 
 		//Spawn on floor
-		if (!(tile.type == ROOM || tile.type == HALL)) continue;
+		if (!(tile.type == Tile::ROOM || tile.type == Tile::HALL)) continue;
 
 		//Not on player
-		if (pos.x == dungeon.player->pos.x || pos.y == dungeon.player->pos.y) continue;
+		if (pos == dungeon->getPlayer().pos) continue;
 
 		//Not on mob
-		int onMob = 0;
-		for (int mob = 0; !onMob && mob < i; mob++) {
-			Mob m = dungeon.mobs[mob];
-			if (pos.x == m.pos.x && pos.y == m.pos.y) onMob = 1;
+		onMob = false;
+		for (const auto& m : dungeon->getMobs()) {
+			if (point.x == m->pos.x) {
+				onMob = true;
+				break;
+			};
 		}
-
-		if (!onMob) break;
 	}
 
-	return pos;
+	return point;
 }
 
-static int mobCanSeePC(Mob* mob, Dungeon* dungeon) {
-	Point current = mob->pos;
-	Point end = dungeon->player->pos;
+const wstring Mob::getSymbol() {
+	const wchar_t* MOB_TYPES[] = {
+		L"\x01F480", //Skull   (    )
+		L"\x01F43A", //Angry   (I   )
+		L"\x01F47B", //Ghost   ( T  )
+		L"\x01F47F", //Demon   (IT  )
+		L"\x01F417", //Boar    (  D )
+		L"\x01F435", //Monkey  (I D )
+		L"\x01F479", //Ogre    ( TD )
+		L"\x01F432", //Dragon  (ITD )
+		L"\x01F480", //Skull   (   E)
+		L"\x01F419", //Squid   (I  E)
+		L"\x01F40D", //Snake   ( D E)
+		L"\x01F47A", //Goblin  (IT E)
+		L"\x01F47E", //Monster (  DE)
+		L"\x01F42F", //Tiger   (I DE)
+		L"\x01F47D", //Alien   ( TDE)
+		L"\x01F383", //Pumpkin (ITDE)
+		L"\x01F464", //Person
+		L"??"
+	};
+
+	const wchar_t* MOB_TYPES_BORING[] = {
+		L"k", //Skull   (    )
+		L"p", //Empty   (I   )
+		L"g", //Ghost   ( T  )
+		L"d", //Demon   (IT  )
+		L"b", //Boar    (  D )
+		L"m", //Monkey  (I D )
+		L"O", //Ogre    ( TD )
+		L"D", //Dragon  (ITD )
+		L"k", //Skull   (   E)
+		L"o", //Squid   (I  E)
+		L"s", //Snake   ( D E)
+		L"p", //Goblin  (IT E)
+		L"M", //Monster (  DE)
+		L"T", //Tiger   (I DE)
+		L"A", //Alien   ( TDE)
+		L"P", //Pumpkin (ITDE)
+		L"@",
+		L"?"
+	};
+
+	if (dungeon->isFancy()) {
+		return MOB_TYPES[skills];
+	} else {
+		return MOB_TYPES_BORING[skills];
+	}
+}
+
+void Mob::statusString(const wstring& text, const wstring& type) {
+	wstringstream out;
+	out << getSymbol() << " at (" << pos.x << ", " << pos.y << ") is " << type << " and " << text;
+	dungeon->status = out.str();
+}
+
+bool Mob::canSeePC() {
+	Point current = Point(pos);
+	Point end = dungeon->getPlayer().pos;
 	Point sign;
 	Point diff;
 	diff.x = abs(end.x - current.x),
@@ -103,8 +108,8 @@ static int mobCanSeePC(Mob* mob, Dungeon* dungeon) {
 	int err = (diff.x > diff.y ? diff.x : -diff.y)/2, e2;
 
 	while(!(current.x == end.x && current.y == end.y)) {
-		Tile tile = dungeon->tiles[current.y][current.x];
-		if (!(tile.type == HALL || tile.type == ROOM)) return 0;
+		const Tile& tile = dungeon->getTile(current);
+		if (!(tile.type == Tile::HALL || tile.type == Tile::ROOM)) return false;
 
 		e2 = err;
 		if (e2 > -diff.x) {
@@ -118,12 +123,12 @@ static int mobCanSeePC(Mob* mob, Dungeon* dungeon) {
 		}
 	}
 
-	return 1;
+	return true;
 }
 
-static Point mobGetNextPoint(Point start, Point end) {
-	if (start.x == end.x && start.y == end.y) return start;
-	Point current = start;
+Point Mob::nextPoint(Point end) {
+	if (pos == end) return pos;
+	Point current = pos;
 	Point sign;
 	Point diff;
 	diff.x = abs(end.x - current.x),
@@ -143,11 +148,11 @@ static Point mobGetNextPoint(Point start, Point end) {
 	return current;
 }
 
-static void mobTickStraightLine(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
-	Point next = mobGetNextPoint(mob->pos, dungeon->player->pos);
-	Movement movement = mobMove(mob, dungeon, next);
+void Mob::tickStraightLine(const wchar_t* type) {
+	Point next = nextPoint(dungeon->getPlayer().pos);
+	Movement movement = move(next);
 
-	wchar_t* text;
+	wstring text;
 	switch (movement) {
 		case MOVE_BROKE_WALL:
 			text = L"broke down the wall while beelining!";
@@ -164,16 +169,16 @@ static void mobTickStraightLine(Mob* mob, Dungeon* dungeon, const wchar_t* type)
 			break;
 	}
 
-	mobPrintText(mob, dungeon, text, type);
+	statusString(text, type);
 }
 
-static void mobTickRandomly(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
+void Mob::tickRandomly(const wchar_t* type) {
 	int dir = rand() % (int)(sizeof(ADJACENT)/sizeof(ADJACENT[0]));
-	Point new = {0};
-	new.x = ADJACENT[dir].x + mob->pos.x;
-	new.y = ADJACENT[dir].y + mob->pos.y;
-	Movement movement = mobMove(mob, dungeon, new);
-	wchar_t* text;
+	Point next = Point(pos);
+	next += ADJACENT[dir];
+	Movement movement = move(next);
+
+	wstring text;
 	switch (movement) {
 		case MOVE_BROKE_WALL:
 			text = L"broke down the wall!";
@@ -190,24 +195,24 @@ static void mobTickRandomly(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
 			break;
 	}
 
-	mobPrintText(mob, dungeon, text, type);
+	statusString(text, type);
 }
 
-static void mobTickPathFind(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
+void Mob::tickPathFind(const wchar_t* type) {
 	int adj = sizeof(ADJACENT)/sizeof(ADJACENT[0]);
-	Point next = {0};
+	Point next;
 	int lowest = INT32_MAX;
 	for (int i = 0; i < adj; i++) {
 		Point check;
-		check = mob->pos;
+		check = pos;
 		check.x += ADJACENT[i].x;
 		check.y += ADJACENT[i].y;
 
 		int dist;
-		if (mob->skills & SKILL_TUNNELING) {
-			dist = dungeon->pathDig[check.y][check.x];
+		if (skills & SKILL_TUNNELING) {
+			dist = dungeon->getPathDig(check);
 		} else {
-			dist = dungeon->pathFloor[check.y][check.x];
+			dist = dungeon->getPathFloor(check);
 		}
 
 		if (dist < lowest) {
@@ -218,8 +223,8 @@ static void mobTickPathFind(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
 
 	if (lowest < INT32_MAX) {
 		Movement movement;
-		movement = mobMove(mob, dungeon, next);
-		wchar_t* text;
+		movement = move(next);
+		wstring text;
 		switch (movement) {
 			case MOVE_BROKE_WALL:
 				text = L"broke down the wall to get to you!";
@@ -235,109 +240,83 @@ static void mobTickPathFind(Mob* mob, Dungeon* dungeon, const wchar_t* type) {
 				text = L"somehow failed to move?";
 				break;
 		}
-		mobPrintText(mob, dungeon, text, type);
+		statusString(text, type);
 	} else {
-		mobTickRandomly(mob, dungeon, L"trapped");
+		tickRandomly(L"trapped");
 	}
 }
 
-//"Public" functions
-
-int mobMove(Mob* mob, Dungeon* dungeon, Point new) {
-	Tile* tile = &dungeon->tiles[new.y][new.x];
-	if (tile->type == ROCK && mob->skills & SKILL_TUNNELING) {
-		if (tile->hardness <= HARDNESS_RATE) {
-			tile->type = HALL;
-			tile->hardness = 0;
-			mob->pos = new;
+Mob::Movement Mob::move(Point& next) {
+	Tile& tile = dungeon->getTile(next);
+	if (tile.type == Tile::ROCK && skills & SKILL_TUNNELING) {
+		if (tile.hardness <= HARDNESS_RATE) {
+			tile.type = Tile::HALL;
+			tile.hardness = 0;
+			pos = next;
 			pathCreate(dungeon);
 			return MOVE_BROKE_WALL;
 		} else {
-			tile->hardness -= HARDNESS_RATE;
+			tile.hardness -= HARDNESS_RATE;
 			pathCreate(dungeon);
 			return MOVE_DAMAGE_WALL;
 		}
-	} else if (tile->type == HALL || tile->type == ROOM){
-		mob->pos = new;
+	} else if (tile.type == Tile::HALL || tile.type == Tile::ROOM){
+		pos = next;
 		return MOVE_SUCCESS;
 	}
 
 	return MOVE_FAILURE;
 }
 
-const wchar_t* mobGetSymbol(Mob* mob, Dungeon dungeon) {
-	int size = sizeof(MOB_TYPES)/sizeof(MOB_TYPES[0]);
-	if (dungeon.emoji) {
-		return MOB_TYPES[mob->skills >= size ? size - 1 : mob->skills];
-	} else {
-		return MOB_TYPES_BORING[mob->skills >= size ? size - 1 : mob->skills];
-	}
-}
+void Mob::tick() {
+	if (hp <= 0) return;
+	dungeon->status = L"Nothing important happened.";
 
-Action mobTick(Mob* mob, Dungeon* dungeon, WINDOW* base) {
-	if (mob->hp <= 0) return ACTION_NONE;
-	size_t len = (size_t)(dungeon->dim.x) + 1;
-	swprintf(dungeon->status, len, L"Nothing important happened.");
-	Action action = ACTION_NONE;
-
-	if (mob->skills & SKILL_PC) {
-		//The player
-		swprintf(dungeon->status, len,  L"It's your turn!");
-		flushinp();
-		while (action == ACTION_NONE) action = playerAction(mob, dungeon, base);
-	} else if (mob->skills & SKILL_ERRATIC && rand() % 2) {
+	if (skills & SKILL_ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
-		mobTickRandomly(mob, dungeon, L"confused");
-	} else if (mob->skills & SKILL_TELEPATHY) {
+		tickRandomly(L"confused");
+	} else if (skills & SKILL_TELEPATHY) {
 		//Not the player, not erratic, but has telepathy skill
-		if (mob->skills & SKILL_INTELLIGENCE) {
-			mobTickPathFind(mob, dungeon, L"telepathic");
+		if (skills & SKILL_INTELLIGENCE) {
+			tickPathFind(L"telepathic");
 		} else {
-			mobTickStraightLine(mob, dungeon, L"telepathic");
+			tickStraightLine(L"telepathic");
 		}
-	} else if (mob->skills & SKILL_INTELLIGENCE) {
+	} else if (skills & SKILL_INTELLIGENCE) {
 		//Not the player, not erratic, not telepathic, but has intelligence
-		if (mobCanSeePC(mob, dungeon)) mob->known = MAX_KNOWN_TURNS;
-		if (mob->known > 0) {
-			mobTickPathFind(mob, dungeon, L"smart");
-			mob->known--;
+		if (canSeePC()) known = MAX_KNOWN_TURNS;
+		if (known > 0) {
+			tickPathFind(L"smart");
+			known--;
 		} else {
-			mobTickRandomly(mob, dungeon, L"searching");
+			tickRandomly(L"searching");
 		}
 	} else {
 		//Not the player, not erratic, not telepathic, not intelligent, but... idk, exists?
-		if (mobCanSeePC(mob, dungeon)) {
-			mobTickStraightLine(mob, dungeon, L"a bumbling idiot");
+		if (canSeePC()) {
+			tickStraightLine(L"a bumbling idiot");
 		} else {
-			mobTickRandomly(mob, dungeon, L"a bumbling idiot");
+			tickRandomly(L"a bumbling idiot");
 		}
 	}
 
 	//Attack phase
-	for (int i = 0; i < dungeon->numMobs + 1; i++) {
+	for (int i = 0; i < dungeon->getMobs().size() + 1; i++) {
 		//Make sure to include the player in the attack phase
-		Mob* other = (i < dungeon->numMobs) ? &dungeon->mobs[i] : dungeon->player;
+		const shared_ptr<Mob> other = (i < dungeon->getMobs().size()) ? dungeon->getMobs()[i] : make_shared<Player>(dungeon->getPlayer());
 
 		//Collision detection. Monsters are 2 wide when emoji is enabled on most systems
-		if (!(mob != other
+		if (!(order != other->order
 			&& other->hp != 0
-			&& (mob->pos.x == other->pos.x || (dungeon->emoji && (mob->pos.x + 1 == other->pos.x || mob->pos.x - 1 == other->pos.x)))
-			&& mob->pos.y == other->pos.y)) continue;
+			&& (pos.x == other->pos.x || (dungeon->isFancy() && (pos.x + 1 == other->pos.x || pos.x - 1 == other->pos.x)))
+			&& pos.y == other->pos.y)) continue;
 
 		other->hp--;
-		wchar_t* text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
-		swprintf(dungeon->status, len, L"%ls at (%d, %d) attacked %ls at (%d, %d)! %ls",
-			mobGetSymbol(mob, *dungeon),
-			mob->pos.x,
-			mob->pos.y,
-			mobGetSymbol(other, *dungeon),
-			other->pos.x,
-			other->pos.y,
-			text
-		);
+		wstring text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
+		wstringstream status;
+		status << getSymbol() << " at (" << pos.x << ", " << pos.y << ") attacked " << other->getSymbol() << " at (" << other->pos.x << ", " << other->pos.y << ")! " << text;
+		dungeon->status = status.str();
 	}
-
-	return action;
 }
 
 void mobGeneratePlayer(Dungeon* dungeon, Point point) {
@@ -349,29 +328,6 @@ void mobGeneratePlayer(Dungeon* dungeon, Point point) {
 	mob->order = 0;
 	mob->hp = 1;
 	dungeon->player = mob;
-}
-
-void mobGenerateAll(Dungeon* dungeon) {
-	Mob* mobs = malloc(sizeof(Mob) * dungeon->numMobs);
-	dungeon->mobs = mobs;
-	for (int i = 0; i < dungeon->numMobs; i++) {
-		Mob mob = {0};
-		mob.pos = mobValidSpawnPoint(*dungeon, i);
-		mob.known = 0;
-		mob.skills = rand() % 16;
-		mob.speed = (rand() % 16) + 5; //5-20
-		mob.order = i + 1;
-		mob.hp = 1;
-		mobs[i] = mob;
-	}
-}
-
-int mobAliveCount(Dungeon dungeon) {
-	int count = 0;
-	for (int i = 0; i < dungeon.numMobs; i++) {
-		if (dungeon.mobs[i].hp > 0) count++;
-	}
-	return count;
 }
 
 void mobCreateQueue(Dungeon* dungeon) {

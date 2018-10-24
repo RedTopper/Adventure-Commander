@@ -26,14 +26,24 @@ private:
 	int skills;
 	int speed;
 	int order;
-
-public:
 	int hp;
 
-	const wstring getSymbol();
-	void generateAll(int floor);
-	int move(Point destination);
-	void tick(WINDOW* base);
+	Point nextPoint(Point end);
+	Movement move(Point& next);
+	void statusString(const wstring& text, const wstring& type);
+	void tickStraightLine(const wchar_t* type);
+	void tickRandomly(const wchar_t* type);
+	void tickPathFind(const wchar_t* type);
+	bool canSeePC();
+
+public:
+	Mob(Dungeon* dungeon, int turn);
+	virtual const wstring getSymbol();
+	virtual const Point getSpawn();
+	virtual void tick();
+	bool isAlive() {
+		return hp > 0;
+	}
 };
 
 #endif

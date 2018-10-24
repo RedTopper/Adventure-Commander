@@ -26,11 +26,8 @@ private:
 	vector<Room> rooms;
 	vector<Entity> entities;
 	vector<vector<Tile>> tiles;
-	vector<vector<int>> pathFllor;
+	vector<vector<int>> pathFloor;
 	vector<vector<int>> pathDig;
-	wstring status;
-	wstring line1;
-	wstring line2;
 	bool emoji;
 	int floor;
 
@@ -42,11 +39,16 @@ private:
 	void hallPlace(const Point& point);
 	void tilePlace(const Point &pos, uint8_t hardness, const float* seed);
 	void entityGenerate();
+	void mobGenerate(int total);
 	void finalize(int mobs);
 	void postProcess();
 	int isFull();
 
 public:
+	wstring status;
+	wstring line1;
+	wstring line2;
+
 	static int skewBetweenRange(int skew, int low, int high);
 	Dungeon(const Point& dim, int mobs, int floor, bool emoji);
 	Dungeon(ifstream& file, int mobs, bool emoji);
@@ -55,7 +57,16 @@ public:
 
 	//Getters and setters
 	const vector<Entity> getEntities() const {
-		return vector<Entity>();
+		return entities;
+	}
+	const vector<shared_ptr<Mob>> getMobs() const {
+		return mobs;
+	}
+	const void setPathFloor(vector<vector<int>>& path) {
+		pathFloor = path;
+	}
+	const void setPathDig(vector<vector<int>>& path) {
+		pathDig = path;
 	}
 	const Player getPlayer() const {
 		return *player;
@@ -63,8 +74,17 @@ public:
 	const Point getDim() const {
 		return dim;
 	}
-	const vector<vector<Tile>> getTiles() const {
-		return tiles;
+	const bool isFancy() const {
+		return emoji;
+	}
+	const int getPathFloor(Point p) const {
+		return pathFloor[p.y][p.x];
+	}
+	const int getPathDig(Point p) const {
+		return pathDig[p.y][p.x];
+	}
+	Tile& getTile(Point p) {
+		return tiles[p.y][p.x];
 	}
 };
 
