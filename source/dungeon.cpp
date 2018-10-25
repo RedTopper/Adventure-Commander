@@ -214,12 +214,18 @@ void Dungeon::entityGenerate() {
 	}
 }
 
-void Dungeon::finalize(const int mobs) {
+void Dungeon::finalize(const int count) {
 	//Create mobs
-	mobGenerate(mobs + floor > 100 ? 100 : mobs + floor);
+	mobGenerate(count + floor > 100 ? 100 : count + floor);
 	entityGenerate();
-	pathCreate(dungeon);
-	mobCreateQueue(dungeon);
+	recalculate();
+
+	//Create the turn queue
+	turn = priority_queue<shared_ptr<Mob>, vector<shared_ptr<Mob>>, TurnOrder>();
+	turn.push(player);
+	for (const auto& m : mobs) {
+		turn.push(m);
+	}
 
 	//Some default text
 	status = L"Nothing has happened yet!";
@@ -322,7 +328,7 @@ void Dungeon::postProcess() {
 	}
 }
 
-Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji) {
+Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji) : map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	if (dim < Point(1,1)) return;
 	this->dim = dim;
 	this->emoji = emoji;
@@ -369,7 +375,7 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji
 	finalize(mobs);
 }
 
-Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) {
+Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) : map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	size_t length = HEADER.length();
 	char head[length + 1];
 	this->dim = DUNGEON_DIM;
@@ -457,7 +463,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 	finalize(mobs);
 }
 
-void Dungeon::save(ofstream& file) {
+void Dungeon::save(fstream& file) {
 	//Header
 	file.write(HEADER.c_str(), HEADER.length());
 	
@@ -555,4 +561,11 @@ int Dungeon::alive() const {
 	}
 
 	return alive;
+}
+
+void Dungeon::rotate() {
+	shared_ptr<Mob> mob = turn.top();
+	mob->nextTurn();
+	turn.pop();
+	turn.push(mob);
 }

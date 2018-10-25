@@ -9,6 +9,7 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(dungeon, 0) {
 	this->known = 0;
 	this->speed = 10;
 	this->hp = 1;
+	this->turn = 1000/speed;
 }
 
 wstring Player::relative(const Mob& other) {
@@ -148,6 +149,6 @@ void Player::tick() {
 	if (res == FAILURE) dungeon->status =  L"I can't dig through that!";
 	if (res == SUCCESS) {
 		action = MOVE;
-		pathCreate(dungeon);
+		dungeon->recalculate();
 	}
 }

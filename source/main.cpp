@@ -7,6 +7,7 @@
 #include <string>
 #include <stack>
 #include <fstream>
+#include <unistd.h>
 
 #include "main.hpp"
 #include "dungeon.hpp"
@@ -119,7 +120,7 @@ int main(int argc, char** argv) {
 	//Load dungeon from file
 	if (load) {
 		fstream file = get(fstream::in);
-		dungeon = make_shared<Dungeon>(new Dungeon(base, file, mobs, emoji);
+		dungeon = make_shared<Dungeon>(new Dungeon(base, file, mobs, emoji));
 		file.close();
 	} else {
 		dungeon = make_shared<Dungeon>(new Dungeon(base, DUNGEON_DIM, mobs, 0, emoji));
@@ -127,76 +128,57 @@ int main(int argc, char** argv) {
 
 	//Economics established
 	while (dungeon->getPlayer().isAlive() > 0 && dungeon->alive()) {
-		int priority = queuePeekPriority(&dungeon.turn);
-		Mob* mob = queuePeek(&dungeon.turn).mob;
-		queuePop(&dungeon.turn);
-		Action action = mobTick(mob, &dungeon, base);
-		queuePushSub(&dungeon.turn, (QueueNodeData){.mob = mob}, priority + 1000/mob->speed, mob->order);
+		shared_ptr<Mob> mob = dungeon->getCurrentTurn();
+		shared_ptr<Player> player;
+		mob->tick();
+		if (player = dynamic_pointer_cast<Player>(mob)) {
+			auto action = player->getAction();
+			if (action == Player::QUIT) break;
+			if (action == Player::DOWN && !history.empty()) {
+				future.push(dungeon);
+				dungeon = history.top();
+				history.pop();
+			}
 
-		if (action == ACTION_QUIT) {
-			running = 0;
-			break;
-		}
-
-		if (action == ACTION_DOWN && !stackEmpty(&history)) {
-			stackPush(&future, (StackNodeData){.dungeon = dungeon});
-			dungeon = stackPeek(&history).dungeon;
-			stackPop(&history);
-		}
-
-		if (action == ACTION_UP) {
-			stackPush(&history, (StackNodeData){.dungeon = dungeon});
-			if (stackEmpty(&future)) {
-				dungeon = dungeonGenerate(DUNGEON_DIM, mobs, emoji, ++floor);
-			} else {
-				dungeon = stackPeek(&future).dungeon;
-				stackPop(&future);
+			if (action == Player::UP) {
+				history.push(dungeon);
+				if (future.empty()) {
+					dungeon = make_shared<Dungeon>(new Dungeon(base, DUNGEON_DIM, mobs, ++floor, emoji));
+				} else {
+					dungeon = future.top();
+					future.pop();
+				}
 			}
 		}
 
-		if (all || mob->skills & SKILL_PC) {
-			dungeonPrint(base, dungeon);
-			if (all) usleep(500000);
+		dungeon->rotate();
+
+		if (all) {
+			dungeon->print(base);
+			usleep(500000);
 		}
 	}
 
 	//Some status messages
-	if (running && dungeon.player->hp == 0) {
-		swprintf(dungeon.status, len, L"You died! Better luck next time! (Press any key)");
-	} else if (running && mobAliveCount(dungeon) == 0) {
-		swprintf(dungeon.status, len, L"CONGLATURATION !!! (Press any key)");
+	if (!dungeon->getPlayer().isAlive()) {
+		dungeon->status = L"You died! Better luck next time! (Press any key)";
+	} else if (dungeon->alive() == 0) {
+		dungeon->status = L"CONGLATURATION !!! (Press any key)";
 	} else {
-		swprintf(dungeon.status, len, L"See you later! (Press any key)");
+		dungeon->status = L"See you later! (Press any key)";
 	}
 
 	//Show the dungeon once more before exiting.
 	redrawwin(base);
-	dungeonPrint(base, dungeon);
+	dungeon->print(base);
 	getch();
 
 	//Save dungeon to file.
 	if (save) {
-		FILE* file = get("wb");
-		dungeonSave(dungeon, file);
-		fclose(file);
+		fstream file = get(fstream::out);
+		dungeon->save(file);
+		file.close();
 	}
-
-	//Free the stacks
-	while(!stackEmpty(&history)) {
-		Dungeon temp = stackPeek(&history).dungeon;
-		dungeonDestroy(&temp);
-		stackPop(&history);
-	}
-
-	//Free the future too
-	while(!stackEmpty(&future)) {
-		Dungeon temp = stackPeek(&future).dungeon;
-		dungeonDestroy(&temp);
-		stackPop(&future);
-	}
-
-	//And free the current dungeon
-	dungeonDestroy(&dungeon);
 
 	//That's all folks.
 	endwin();

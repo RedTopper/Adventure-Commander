@@ -5,11 +5,12 @@
 const int MAX_KNOWN_TURNS = 5;
 
 Mob::Mob(Dungeon* dungeon, int turn) : Entity(dungeon, Entity::MOB) {
-	known = 0;
-	skills = rand() % 16;
-	speed = (rand() % 16) + 5; //5-20
-	order = turn ;
-	hp = 1;
+	this->known = 0;
+	this->skills = rand() % 16;
+	this->speed = (rand() % 16) + 5; //5-20
+	this->order = turn ;
+	this->hp = 1;
+	this->turn = 1000/speed;
 }
 
 const Point Mob::getSpawn() const {
@@ -183,9 +184,9 @@ void Mob::tickStraightLine(const wchar_t* type) {
 }
 
 void Mob::tickRandomly(const wchar_t* type) {
-	int dir = rand() % (int)(sizeof(ADJACENT)/sizeof(ADJACENT[0]));
+	int dir = rand() % (int)(sizeof(Path::ADJACENT)/sizeof(Path::ADJACENT[0]));
 	Point next = Point(pos);
-	next += ADJACENT[dir];
+	next += Path::ADJACENT[dir];
 	Movement movement = move(next);
 
 	wstring text;
@@ -209,20 +210,19 @@ void Mob::tickRandomly(const wchar_t* type) {
 }
 
 void Mob::tickPathFind(const wchar_t* type) {
-	int adj = sizeof(ADJACENT)/sizeof(ADJACENT[0]);
+	int adj = sizeof(Path::ADJACENT)/sizeof(Path::ADJACENT[0]);
 	Point next;
 	int lowest = INT32_MAX;
 	for (int i = 0; i < adj; i++) {
 		Point check;
 		check = pos;
-		check.x += ADJACENT[i].x;
-		check.y += ADJACENT[i].y;
+		check += Path::ADJACENT[i];
 
 		int dist;
 		if (skills & TUNNELING) {
 			dist = dungeon->getPathDig(check);
 		} else {
-			dist = dungeon->getPathFloor(check);
+			dist = dungeon->getPathMap(check);
 		}
 
 		if (dist < lowest) {
@@ -259,15 +259,15 @@ void Mob::tickPathFind(const wchar_t* type) {
 Mob::Movement Mob::move(const Point& next) {
 	Tile& tile = dungeon->getTile(next);
 	if (tile.type == Tile::ROCK && skills & TUNNELING) {
-		if (tile.hardness <= HARDNESS_RATE) {
+		if (tile.hardness <= Path::HARDNESS_RATE) {
 			tile.type = Tile::HALL;
 			tile.hardness = 0;
 			pos = next;
-			pathCreate(dungeon);
+			dungeon->recalculate();
 			return BROKE_WALL;
 		} else {
-			tile.hardness -= HARDNESS_RATE;
-			pathCreate(dungeon);
+			tile.hardness -= Path::HARDNESS_RATE;
+			dungeon->recalculate();
 			return DAMAGE_WALL;
 		}
 	} else if (tile.type == Tile::HALL || tile.type == Tile::ROOM){
@@ -337,13 +337,13 @@ const bool Mob::isOn(Entity::Type type) const {
 	return false;
 }
 
-void mobCreateQueue(Dungeon* dungeon) {
-	Mob* player = dungeon->player;
-	QueueNode* queue = queueCreateSub((QueueNodeData){.mob=player}, 1000 / player->speed, player->order);
-	for (int i = 0; i < dungeon->numMobs; i++) {
-		Mob* m = &dungeon->mobs[i];
-		queuePushSub(&queue, (QueueNodeData){.mob=m}, 1000 / m->speed, m->order);
-	}
-
-	dungeon->turn = queue;
+const bool Mob::isBefore(const Mob &other) const {
+	if (turn < other.getTurn()) {
+		return true;
+	} else if (turn == other.getTurn()) {
+		return order < other.getOrder();
+	} else {
+		return false;
+	};
 }
+

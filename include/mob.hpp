@@ -27,6 +27,7 @@ protected:
 	int skills;
 	int speed;
 	int order;
+	int turn;
 	int hp;
 
 private:
@@ -45,8 +46,18 @@ public:
 	const Point getSpawn() const override;
 	virtual void tick();
 	const bool isOn(Entity::Type type) const;
+	const bool isBefore(const Mob& other) const;
 	const bool isAlive() const {
 		return hp > 0;
+	}
+	const int getTurn() const {
+		return turn;
+	}
+	const int getOrder() const {
+		return order;
+	}
+	void nextTurn() {
+		turn += speed;
 	}
 };
 

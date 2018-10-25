@@ -14,6 +14,7 @@
 #include "entity.hpp"
 #include "mob.hpp"
 #include "player.hpp"
+#include "path.hpp"
 
 extern const Point DUNGEON_DIM;
 
@@ -21,15 +22,22 @@ using namespace std;
 
 class Dungeon {
 private:
+	struct TurnOrder {
+		//Should return true if lhs is considered to go before rhs
+		bool operator()(const shared_ptr<Mob>& lhs, const shared_ptr<Mob>& rhs) const {
+			return lhs->isBefore(*rhs);
+		}
+	};
+
 	Point dim;
 	shared_ptr<Player> player;
 	vector<shared_ptr<Mob>> mobs;
-	priority_queue<shared_ptr<Mob>> turn;
+	priority_queue<shared_ptr<Mob>, vector<shared_ptr<Mob>>, TurnOrder> turn;
 	vector<Room> rooms;
 	vector<Entity> entities;
 	vector<vector<Tile>> tiles;
-	vector<vector<int>> pathFloor;
-	vector<vector<int>> pathDig;
+	Path map;
+	Path dig;
 	bool emoji;
 	int floor;
 
@@ -53,7 +61,7 @@ public:
 
 	Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji);
 	Dungeon(WINDOW* base, fstream& file, int mobs, bool emoji);
-	void save(ofstream& file);
+	void save(fstream& file);
 	int alive() const;
 	void print(WINDOW* window);
 
@@ -64,12 +72,6 @@ public:
 	const vector<shared_ptr<Mob>> getMobs() const {
 		return mobs;
 	}
-	const void setPathFloor(vector<vector<int>>& path) {
-		pathFloor = path;
-	}
-	const void setPathDig(vector<vector<int>>& path) {
-		pathDig = path;
-	}
 	const Player getPlayer() const {
 		return *player;
 	}
@@ -79,11 +81,19 @@ public:
 	const bool isFancy() const {
 		return emoji;
 	}
-	const int getPathFloor(Point p) const {
-		return pathFloor[p.y][p.x];
+	const int getPathMap(const Point& p) const {
+		return map.getDist(p);
 	}
-	const int getPathDig(Point p) const {
-		return pathDig[p.y][p.x];
+	const int getPathDig(const Point& p) const {
+		return dig.getDist(p);
+	}
+	const shared_ptr<Mob> getCurrentTurn() const {
+		return turn.top();
+	}
+	void rotate();
+	void recalculate() {
+		dig.recalculate();
+		map.recalculate();
 	}
 	Tile& getTile(Point p) {
 		return tiles[p.y][p.x];

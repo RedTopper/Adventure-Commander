@@ -1,17 +1,42 @@
 #ifndef PATH_H
 #define PATH_H
 
-#include "dungeon.h"
+#include <vector>
 
-typedef enum {
-	PATH_VIA_DIG,
-	PATH_VIA_FLOOR
-} PathFinderStyle;
+#include "point.hpp"
 
-extern const int HARDNESS_RATE;
-extern const Point ADJACENT[8];
+using namespace std;
 
-void pathCreate(Dungeon* dungeon);
-void pathDestroy(Dungeon* dungeon);
+class Dungeon;
+class Path {
+public:
+	static const int HARDNESS_RATE = 85;
+	static const Point ADJACENT[8];
+
+	enum Style {
+		VIA_DIG,
+		VIA_FLOOR
+	};
+
+private:
+	struct Priority {
+		int priority;
+		Point p;
+		bool operator()(const Priority& lhs, const Priority& rhs) const {
+			return lhs.priority < rhs.priority;
+		}
+	};
+
+	Style style;
+	Dungeon* dungeon;
+	vector<vector<int>> path;
+
+public:
+	Path(Dungeon* dungeon, Style style);
+	void recalculate();
+	const int getDist(const Point& p) const {
+		return path[p.y][p.x];
+	}
+};
 
 #endif

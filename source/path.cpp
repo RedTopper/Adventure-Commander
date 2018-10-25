@@ -1,14 +1,12 @@
-#include <stdlib.h>
-#include <stdint.h>
 
-#include "mob.h"
-#include "queue.h"
-#include "path.h"
+#include <path.hpp>
 
-const int HARDNESS_RATE = 85;
+#include "path.hpp"
+#include "point.hpp"
+#include "path.hpp"
+#include "dungeon.hpp"
 
-//Loop of next points
-const Point ADJACENT[8] = {
+const Point Path::ADJACENT[8] = { // NOLINT(cert-err58-cpp)
 	{0, -1},
 	{1, -1},
 	{1,  0},
@@ -19,73 +17,50 @@ const Point ADJACENT[8] = {
 	{-1, -1},
 };
 
-int** pathCreateStyle(Dungeon dungeon, PathFinderStyle style) {
+Path::Path(Dungeon *dungeon, Path::Style style) {
+	Point dim = dungeon->getDim();
+	this->dungeon = dungeon;
+	this->style = style;
+	this->path = vector<vector<int>>((unsigned long)(dim.y), vector<int>((unsigned long)(dim.x)));
+}
 
-	int** distance = malloc(sizeof(int*) * dungeon.dim.y);
-	for (int row = 0; row < dungeon.dim.y; row++) {
-		distance[row] = malloc(sizeof(int) * dungeon.dim.x);
-		for (int col = 0; col < dungeon.dim.x; col++) {
-			distance[row][col] = INT32_MAX;
+void Path::recalculate() {
+	//Reset everything to max
+	for (auto& row : path) {
+		for (int& num : row) {
+			num = INT32_MAX;
 		}
 	}
 
 	//Create node for player and set distance to player to zero.
-	QueueNode* queue = queueCreate((QueueNodeData){.pos=dungeon.player->pos}, 0);
-	distance[dungeon.player->pos.y][dungeon.player->pos.x] = 0;
+	priority_queue<Priority, vector<Priority>> queue;
+	queue.push(Priority{0, dungeon->getPlayer().getPos()});
 
-	while (!queueEmpty(&queue)) {
-		Point current = queuePeek(&queue).pos;
-		queuePop(&queue);
+	while (!queue.empty()) {
+		Priority cur = queue.top();
+		queue.pop();
 
-		int distCurrent = distance[current.y][current.x];
-		for(int i = 0; i < (int)(sizeof(ADJACENT)/sizeof(ADJACENT[0])); i++) {
-			Point next = {0};
-			next.x = current.x + ADJACENT[i].x;
-			next.y = current.y + ADJACENT[i].y;
+		int distCurrent = path[cur.p.y][cur.p.x];
+		for (const auto &adj : ADJACENT) {
+			Point next = Point(cur.p);
+			next += adj;
 
 			//Make sure nothing bad happens
-			if (next.x < 0 || next.y < 0 || next.x >= dungeon.dim.x || next.y >= dungeon.dim.y) continue;
+			if (next < Point() || next >= dungeon->getDim()) continue;
 
 			//Filter out types depending on mode.
-			TileType type = dungeon.tiles[next.y][next.x].type;
-			if (type == VOID || type == EDGE) continue;
-			if (style == PATH_VIA_FLOOR && type == ROCK) continue;
+			const Tile& tile = dungeon->getTile(next);
+			if (tile.type == Tile::VOID || tile.type == Tile::EDGE) continue;
+			if (style == VIA_FLOOR && tile.type == Tile::ROCK) continue;
 
-			int nextHardness = dungeon.tiles[next.y][next.x].hardness;
-			int distNextOld = distance[next.y][next.x];
+			int nextHardness = tile.hardness;
+			int distNextOld = path[next.y][next.x];
 			int distNextNew = distCurrent + 1 + (nextHardness / HARDNESS_RATE);
 
 			if (distNextOld > distNextNew) {
-				distance[next.y][next.x] = distNextNew;
-				queuePush(&queue, (QueueNodeData){.pos=next}, distNextNew);
+				path[next.y][next.x] = distNextNew;
+				queue.push(Priority{distNextNew, next});
 			}
 		}
 	}
-
-	return distance;
-}
-
-void pathFree(Dungeon dungeon, int** path) {
-	//Can't free if there's nothing to free!
-	if (path == NULL) return;
-	for (int row = 0; row < dungeon.dim.y; row++) {
-		free(path[row]);
-	}
-
-	free(path);
-}
-
-//"Public" functions
-
-void pathCreate(Dungeon* dungeon) {
-	pathDestroy(dungeon);
-	dungeon->pathDig = pathCreateStyle(*dungeon, PATH_VIA_DIG);
-	dungeon->pathFloor = pathCreateStyle(*dungeon, PATH_VIA_FLOOR);
-}
-
-void pathDestroy(Dungeon* dungeon) {
-	pathFree(*dungeon, dungeon->pathDig);
-	pathFree(*dungeon, dungeon->pathFloor);
-	dungeon->pathDig = NULL;
-	dungeon->pathFloor = NULL;
 }
