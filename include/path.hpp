@@ -36,7 +36,7 @@ private:
 public:
 	Path(Dungeon* dungeon, Style style);
 	void recalculate();
-	const int getDist(const Point& p) const {
+	int getDist(const Point& p) const {
 		return path[p.y][p.x];
 	}
 };

@@ -28,7 +28,7 @@ const wstring Entity::getSymbol() const {
 	}
 }
 
-const Point Entity::getSpawn(const bool halls) const {
+Point Entity::getSpawn(const bool halls) const {
 	Point point;
 	bool onEntity = true;
 	while(onEntity) {

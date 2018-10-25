@@ -5,7 +5,7 @@ BUILD = build
 SOURCE = source
 INCLUDE = include
 LDFLAGS = -lncursesw
-CXXFLAGS = -Wall -finput-charset=UTF-8 -I$(INCLUDE)
+CXXFLAGS = -Wall -Wextra -finput-charset=UTF-8 -I$(INCLUDE)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD)/$*.d
 
 #Make Rules

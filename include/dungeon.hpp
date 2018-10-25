@@ -67,36 +67,36 @@ public:
 	void print(WINDOW* window);
 
 	//Getters and setters
-	const vector<Entity> getEntities() const {
+	const vector<Entity>& getEntities() const {
 		return entities;
 	}
-	const vector<shared_ptr<Mob>> getMobs() const {
+	const vector<shared_ptr<Mob>>& getMobs() const {
 		return mobs;
 	}
-	const shared_ptr<Player> getPlayer() const {
+	const shared_ptr<Player>& getPlayer() const {
 		return player;
 	}
-	const Point getDim() const {
+	const shared_ptr<Mob>& getCurrentTurn() const {
+		return turn.top();
+	}
+	const Point& getDim() const {
 		return dim;
 	}
-	const bool isFancy() const {
+	Tile& getTile(Point p) {
+		return tiles[p.y][p.x];
+	}
+	bool isFancy() const {
 		return emoji;
 	}
-	const int getPathMap(const Point& p) const {
+	int getPathMap(const Point& p) const {
 		return map.getDist(p);
 	}
-	const int getPathDig(const Point& p) const {
+	int getPathDig(const Point& p) const {
 		return dig.getDist(p);
-	}
-	const shared_ptr<Mob> getCurrentTurn() const {
-		return turn.top();
 	}
 	void recalculate() {
 		dig.recalculate();
 		map.recalculate();
-	}
-	Tile& getTile(Point p) {
-		return tiles[p.y][p.x];
 	}
 };
 

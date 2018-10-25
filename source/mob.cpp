@@ -286,7 +286,7 @@ void Mob::tick() {
 	}
 
 	//Attack phase
-	for (int i = 0; i < dungeon->getMobs().size() + 1; i++) {
+	for (uint i = 0; i < dungeon->getMobs().size() + 1; i++) {
 		//Make sure to include the player in the attack phase
 		const shared_ptr<Mob> other = (i < dungeon->getMobs().size()) ? dungeon->getMobs()[i] : dungeon->getPlayer();
 
@@ -304,7 +304,7 @@ void Mob::tick() {
 	}
 }
 
-const bool Mob::isOn(Entity::Type type) const {
+bool Mob::isOn(Entity::Type type) const {
 	for (auto& e : dungeon->getEntities()) {
 		if (pos == e.getPos() && e.getType() == type) return true;
 	}
@@ -312,7 +312,7 @@ const bool Mob::isOn(Entity::Type type) const {
 	return false;
 }
 
-const bool Mob::isBefore(const Mob &other) const {
+bool Mob::isBefore(const Mob &other) const {
 	if (turn < other.getTurn()) {
 		return true;
 	} else if (turn == other.getTurn()) {

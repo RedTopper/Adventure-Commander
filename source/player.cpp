@@ -25,7 +25,7 @@ wstring Player::relative(const Mob& other) {
 	return str.str();
 }
 
-bool Player::tickMap(int& offset, const int ch) {
+bool Player::tickMap(uint& offset, const int ch) {
 	//Clear screen and figure out characters
 	int max = LINES - 2;
 	werase(base);
@@ -79,7 +79,7 @@ void Player::tick() {
 	action = NONE;
 	Movement res = IDLE;
 	int ch = getch();
-	int offset = 0;
+	uint offset = 0;
 	switch (ch) {
 		case '7':
 		case 'y':

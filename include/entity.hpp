@@ -22,11 +22,11 @@ protected:
 	Dungeon* dungeon;
 	Type type;
 	Point pos;
-	const Point getSpawn(bool halls) const;
+	Point getSpawn(bool halls) const;
 
 public:
 	Entity(Dungeon* dungeon, Type type, bool halls);
-	const Type getType() const {
+	const Type& getType() const {
 		return type;
 	}
 	const Point& getPos() const {

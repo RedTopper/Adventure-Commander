@@ -148,7 +148,7 @@ void Dungeon::hallPlace(const Point& point) {
 }
 
 void Dungeon::tilePlace(const Point &pos, uint8_t hardness, const float* seed) {
-	Tile tile = {0};
+	Tile tile{};
 	
 	//Defaults
 	tile.symbol = Tile::VOID_SYM;
@@ -364,7 +364,7 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji
 
 	//Create the paths.
 	roomConnect(rooms[0], rooms[rooms.size() - 1]);
-	for(int first = 0; first < rooms.size() - 1; first++) {
+	for(uint first = 0; first < rooms.size() - 1; first++) {
 		roomConnect(rooms[first], rooms[first + 1]);
 	}
 

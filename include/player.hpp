@@ -20,12 +20,12 @@ private:
 
 private:
 	wstring relative(const Mob& other);
-	bool tickMap(int& offset, int ch);
+	bool tickMap(uint& offset, int ch);
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
 	void tick() override;
-	const Action getAction() const {
+	Action getAction() const {
 		return action;
 	}
 };

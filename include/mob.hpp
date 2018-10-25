@@ -44,15 +44,15 @@ public:
 
 	const wstring getSymbol() const override;
 	virtual void tick();
-	const bool isOn(Entity::Type type) const;
-	const bool isBefore(const Mob& other) const;
-	const bool isAlive() const {
+	bool isOn(Entity::Type type) const;
+	bool isBefore(const Mob& other) const;
+	bool isAlive() const {
 		return hp > 0;
 	}
-	const int getTurn() const {
+	int getTurn() const {
 		return turn;
 	}
-	const int getOrder() const {
+	int getOrder() const {
 		return order;
 	}
 	void nextTurn() {
