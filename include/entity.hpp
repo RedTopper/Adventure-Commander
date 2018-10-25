@@ -22,6 +22,7 @@ protected:
 	Dungeon* dungeon;
 	Type type;
 	Point pos;
+	bool remembered;
 	Point getSpawn(bool halls) const;
 
 public:
@@ -34,6 +35,12 @@ public:
 	}
 	void setPos(const Point& p) {
 		pos = p;
+	}
+	bool isRemembered() const {
+		return remembered;
+	}
+	void setRemembered(bool r) {
+		remembered = r;
 	}
 };
 

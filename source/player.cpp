@@ -137,6 +137,7 @@ bool Player::tickTarget(const int ch, Point& dest) {
 }
 
 void Player::tick() {
+	dungeon->updateFoggy();
 	dungeon->print(base);
 	action = NONE;
 	Movement res = IDLE;
@@ -209,8 +210,12 @@ void Player::tick() {
 			dungeon->status = L"You cheater! You entered teleport mode!";
 			while(tickTarget(ch, dest)) ch = getch();
 			break;
+		case 'f':
+			dungeon->status = L"You cheater! You toggled the fog!";
+			dungeon->setFoggy(!dungeon->isFoggy());
+			break;
 		default:
-			dungeon->status = to_wstring(ch) + L"is invalid";
+			dungeon->status = to_wstring(ch) + L" is invalid!";
 	}
 
 	//Move the player character

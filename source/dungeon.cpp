@@ -211,26 +211,7 @@ void Dungeon::entityGenerate() {
 	}
 }
 
-void Dungeon::finalize(const int count) {
-	//Create mobs
-	mobGenerate(count + floor > 100 ? 100 : count + floor);
-	entityGenerate();
-	recalculate();
-
-	//Create the turn queue
-	turn = priority_queue<shared_ptr<Mob>, vector<shared_ptr<Mob>>, TurnOrder>();
-	turn.push(player);
-	for (const auto& m : mobs) {
-		turn.push(m);
-	}
-
-	//Some default text
-	status = L"Nothing has happened yet!";
-	line1 = L"Adventure Commander";
-	line2 = L"Status Text";
-}
-
-void Dungeon::postProcess() {
+void Dungeon::postProcess(vector<vector<Tile>>& tiles) {
 	for(int row = 0; row < dim.y; row++) {
 		for(int col = 0; col < dim.x; col++) {
 			Tile& tile = tiles[row][col];
@@ -325,7 +306,37 @@ void Dungeon::postProcess() {
 	}
 }
 
-Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji) : map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
+void Dungeon::finalize(const int count) {
+	//Create mobs
+	mobGenerate(count + floor > 100 ? 100 : count + floor);
+	entityGenerate();
+	recalculate();
+
+	//Create the turn queue
+	turn = priority_queue<shared_ptr<Mob>, vector<shared_ptr<Mob>>, TurnOrder>();
+	turn.push(player);
+	for (const auto& m : mobs) {
+		turn.push(m);
+	}
+
+	//Some default text
+	status = L"Nothing has happened yet!";
+	line1 = L"Adventure Commander";
+	line2 = L"Status Text";
+
+	//slap in some fog
+	foggy = true;
+	for (auto& row : fog) {
+		for (auto& tile : row) {
+			tile.type = Tile::VOID;
+			tile.symbol = Tile::VOID_SYM;
+			tile.hardness = 0;
+		}
+	}
+}
+
+Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji)
+		: map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	if (dim < Point(1,1)) return;
 	this->dim = dim;
 	this->emoji = emoji;
@@ -339,6 +350,7 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji
 
 	//Initialize dungeon
 	tiles = vector<vector<Tile>>((unsigned long)(dim.y), vector<Tile>((unsigned long)(dim.x)));
+	fog = tiles;
 	for(int row = 0; row < dim.y; row++) {
 		for(int col = 0; col < dim.x; col++) {
 			tilePlace((Point) {col, row}, 0x01, seed);
@@ -372,7 +384,8 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji
 	finalize(mobs);
 }
 
-Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) : map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
+Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji)
+		: map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	size_t length = HEADER.length();
 	char head[length + 1];
 	this->dim = DUNGEON_DIM;
@@ -419,6 +432,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 	
 	//Initialize dungeon
 	tiles = vector<vector<Tile>>((unsigned long)(dim.y), vector<Tile>((unsigned long)(dim.x)));
+	fog = tiles;
 	for(int row = 0; row < dim.y; row++) {
 		for(int col = 0; col < dim.x; col++) {
 			uint8_t hardness;
@@ -504,8 +518,10 @@ void Dungeon::save(fstream& file) {
 }
 
 void Dungeon::print(WINDOW* win) {
+	vector<vector<Tile>>& tiles = foggy ? this->fog : this->tiles;
+
 	//Make the dungeon look nice
-	postProcess();
+	postProcess(tiles);
 
 	//clean window
 	werase(win);
@@ -526,6 +542,8 @@ void Dungeon::print(WINDOW* win) {
 
 	//Write entities
 	for (auto& e : entities) {
+		if (isOutOfRange(e)) continue;
+		e.setRemembered(true);
 		mvwaddwstr(win, e.getPos().y + 1, e.getPos().x, e.getSymbol().c_str());
 	}
 
@@ -536,7 +554,11 @@ void Dungeon::print(WINDOW* win) {
 
 	//Write mobs
 	for (auto& m : mobs) {
-		if (m->isAlive()) mvwaddwstr(win, m->getPos().y + 1, m->getPos().x, m->getSymbol().c_str());
+		if (!m->isAlive()) continue;
+		if (isOutOfRange(*m)) continue;
+
+		//Render only if the player is near
+		mvwaddwstr(win, m->getPos().y + 1, m->getPos().x, m->getSymbol().c_str());
 	}
 
 	//Write other statuses
@@ -569,4 +591,15 @@ void Dungeon::rotate() {
 	mob->nextTurn();
 	turn.pop();
 	turn.push(mob);
+}
+
+void Dungeon::updateFoggy() {
+	if (!player) return;
+	for (int row = player->getPos().y - FOG_Y; row <= player->getPos().y + FOG_Y; row++) {
+		for (int col = player->getPos().x - FOG_X; col <= player->getPos().x + FOG_X; col++) {
+			if (row >= 0 && col >= 0 && row < dim.y && col < dim.x) {
+				fog[row][col] = tiles[row][col];
+			}
+		}
+	}
 }

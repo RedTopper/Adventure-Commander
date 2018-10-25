@@ -6,6 +6,7 @@ Entity::Entity(Dungeon* dungeon, Type type, bool halls) {
 	this->dungeon = dungeon;
 	this->type = type;
 	this->pos = getSpawn(halls);
+	this->remembered = false;
 }
 
 const wstring Entity::getSymbol() const {

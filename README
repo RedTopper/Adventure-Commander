@@ -14,12 +14,12 @@ Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- IMPORTANT
 3. Run `./game` with wanted options
 
 # Notable features for this version
-- Monster map with scrolling (press m)
-- Emoji for monsters (use --lame to disable)
-- Player can move
-- Uses ncurses
+- There is fog of war (f)
+- Teleport anywhere with (g)
+- Everything (I mean it!) is in C++
 
 # Changes from specifications
+- I made the visible area slightly bigger.
 - Mobs use emoji if not disabled
 - In order to support this, mobs are 2 characters wide
 - Intelligent monsters follow the player with path finding for up to 5 turns

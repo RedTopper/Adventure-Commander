@@ -41,7 +41,7 @@ public:
 
 		//Rooms are air
 		ROOM_SYM = L' ',
-		VOID_SYM = L'x',
+		VOID_SYM = L' ',
 	};
 
 public:

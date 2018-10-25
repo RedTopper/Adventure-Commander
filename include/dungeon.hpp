@@ -36,11 +36,18 @@ private:
 	vector<Room> rooms;
 	vector<Entity> entities;
 	vector<vector<Tile>> tiles;
+	vector<vector<Tile>> fog;
 	Path map;
 	Path dig;
 	bool emoji;
+	bool foggy;
 	int floor;
 
+public:
+	static const int FOG_X = 3;
+	static const int FOG_Y = 2;
+
+private:
 	bool roomPlaceAttempt(const Room& room);
 	void roomConnectRasterize(const Point& from, const Point& to);
 	void roomConnect(const Room& first, const Room& second);
@@ -51,7 +58,7 @@ private:
 	void entityGenerate();
 	void mobGenerate(int total);
 	void finalize(int mobs);
-	void postProcess();
+	void postProcess(vector<vector<Tile>>& tiles);
 	int isFull();
 
 public:
@@ -64,6 +71,7 @@ public:
 	void save(fstream& file);
 	int alive() const;
 	void rotate();
+	void updateFoggy();
 	void print(WINDOW* window);
 
 	//Getters and setters
@@ -88,6 +96,16 @@ public:
 	bool isFancy() const {
 		return emoji;
 	}
+	bool isFoggy() const {
+		return foggy;
+	}
+	bool isOutOfRange(const Entity& e) {
+		return foggy && !e.isRemembered() && player
+			&& (e.getPos().x - player->getPos().x < -FOG_X
+			|| e.getPos().x - player->getPos().x > FOG_X
+			|| e.getPos().y - player->getPos().y < -FOG_Y
+			|| e.getPos().y - player->getPos().y > FOG_Y);
+	}
 	int getPathMap(const Point& p) const {
 		return map.getDist(p);
 	}
@@ -98,6 +116,10 @@ public:
 		dig.recalculate();
 		map.recalculate();
 	}
+	void setFoggy(const bool foggy) {
+		this->foggy = foggy;
+	}
+
 };
 
 #endif
