@@ -5,7 +5,7 @@ BUILD = build
 SOURCE = source
 INCLUDE = include
 LDFLAGS = -lncursesw
-CXXFLAGS = -Wall -Wextra -finput-charset=UTF-8 -std=gnu11 -I$(INCLUDE)
+CXXFLAGS = -Wall -finput-charset=UTF-8 -I$(INCLUDE)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD)/$*.d
 
 #Make Rules
@@ -15,22 +15,22 @@ src = $(wildcard $(SOURCE)/*.cpp)
 obj = $(src:$(SOURCE)/%.cpp=$(BUILD)/%.o)
 dep = $(src:$(SOURCE)/%.cpp=$(BUILD)/%.d)
 
--include $(dep)
-
 $(NAME): $(obj)
 	$(info *** Please read README if your console appears blank ***)
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+$(BUILD)/%.o: $(SOURCE)/%.cpp
 $(BUILD)/%.o: $(SOURCE)/%.cpp $(BUILD)/%.d
-	$(CXX) $(CFLAGS) $(DEPFLAGS) $<
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-.PHONY: dir
-dir:
-	@mkdir -p $(BUILD)
+$(BUILD)/%.d: ;
+.PRECIOUS: $(BUILD)/%.d
 
 .PHONY: clean
 clean:
 	rm -rf $(BUILD) $(NAME) 
+
+-include $(dep)
 
 #Make Notes
 #$@ - Rule
