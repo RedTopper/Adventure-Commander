@@ -32,6 +32,9 @@ public:
 	const Point& getPos() const {
 		return pos;
 	}
+	void setPos(const Point& p) {
+		pos = p;
+	}
 };
 
 #endif

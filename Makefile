@@ -6,7 +6,7 @@ SOURCE = source
 INCLUDE = include
 LDFLAGS = -lncursesw
 CXXFLAGS = -Wall -Wextra -finput-charset=UTF-8 -I$(INCLUDE)
-DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD)/$*.d
+DEPFLAGS = -MMD -MP -MF $(BUILD)/$*.d
 
 #Make Rules
 $(shell mkdir -p $(BUILD) >/dev/null)

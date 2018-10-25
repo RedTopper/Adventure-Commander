@@ -1,3 +1,6 @@
+
+#include <mob.hpp>
+
 #include "path.hpp"
 #include "mob.hpp"
 #include "dungeon.hpp"
@@ -285,6 +288,10 @@ void Mob::tick() {
 		}
 	}
 
+	attack();
+}
+
+void Mob::attack() {
 	//Attack phase
 	for (uint i = 0; i < dungeon->getMobs().size() + 1; i++) {
 		//Make sure to include the player in the attack phase
@@ -292,9 +299,9 @@ void Mob::tick() {
 
 		//Collision detection. Monsters are 2 wide when emoji is enabled on most systems
 		if (!(order != other->order
-			&& other->hp != 0
-			&& (pos.x == other->pos.x || (dungeon->isFancy() && (pos.x + 1 == other->pos.x || pos.x - 1 == other->pos.x)))
-			&& pos.y == other->pos.y)) continue;
+		      && other->hp != 0
+		      && (pos.x == other->pos.x || (dungeon->isFancy() && (pos.x + 1 == other->pos.x || pos.x - 1 == other->pos.x)))
+		      && pos.y == other->pos.y)) continue;
 
 		other->hp--;
 		wstring text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";

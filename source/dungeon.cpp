@@ -3,9 +3,8 @@
 #include <algorithm>
 #include <fstream>
 #include <cstring>
-#include <dungeon.hpp>
 
-
+#include "dungeon.hpp"
 #include "perlin.hpp"
 #include "dungeon.hpp"
 #include "point.hpp"
@@ -207,6 +206,7 @@ void Dungeon::entityGenerate() {
 	if (floor) {
 		//Above the 0th floor, allow player to go down.
 		Entity down(this, Entity::STAIRS_DOWN, false);
+		down.setPos(player->getPos());
 		entities.push_back(down);
 	}
 }
@@ -383,6 +383,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 	file.read(head, length);
 	head[length] = '\0';
 	if (!file || HEADER != head) {
+		endwin();
 		wprintf(L"Bad file header '%s'!\n", head);
 		exit(FILE_READ_BAD_HEAD);
 	}
@@ -392,6 +393,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 	file.read(reinterpret_cast<char*>(&version), sizeof(version));
 	version = be32toh(version);
 	if (!file || version != VERSION) {
+		endwin();
 		wprintf(L"Bad file version!\n");
 		exit(FILE_READ_BAD_VERSION);
 	}
@@ -401,6 +403,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 	file.read(reinterpret_cast<char*>(&size), sizeof(size));
 	size = be32toh(size);
 	if (!file) {
+		endwin();
 		wprintf(L"Bad file size (EOF)!\n");
 		exit(FILE_READ_EOF_SIZE);
 	}
@@ -409,6 +412,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 	uint8_t pos[2];
 	file.read(reinterpret_cast<char*>(&pos), sizeof(pos));
 	if (!file || pos[0] >= dim.x || pos[1] >= dim.y) {
+		endwin();
 		wprintf(L"Bad file player co-ordinates (EOF)!\n");
 		exit(FILE_READ_EOF_PLAYER);
 	}
@@ -421,6 +425,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 			file.read(reinterpret_cast<char*>(&hardness), sizeof(hardness));
 			
 			if (!file) {
+				endwin();
 				wprintf(L"Missing tile harness information (EOF)!\n");
 				exit(FILE_READ_EOF_HARDNESS);
 			}
@@ -435,6 +440,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 		uint8_t data[4];
 		file.read(reinterpret_cast<char*>(&data), sizeof(data));
 		if (!file) {
+			endwin();
 			wprintf(L"Missing rooms information (EOF)!\n");
 			exit(FILE_READ_EOF_ROOMS);
 		}

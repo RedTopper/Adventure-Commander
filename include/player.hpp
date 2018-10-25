@@ -20,7 +20,8 @@ private:
 
 private:
 	wstring relative(const Mob& other);
-	bool tickMap(uint& offset, int ch);
+	bool tickMap(int ch, uint& offset);
+	bool tickTarget(int ch, Point& dest);
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
@@ -28,6 +29,8 @@ public:
 	Action getAction() const {
 		return action;
 	}
+
+
 };
 
 

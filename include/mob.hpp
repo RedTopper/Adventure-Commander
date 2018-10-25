@@ -5,6 +5,14 @@
 #include "entity.hpp"
 
 class Mob:  public Entity {
+protected:
+	int known;
+	int skills;
+	int speed;
+	int order;
+	int turn;
+	int hp;
+
 public:
 	enum Movement {
 		IDLE,
@@ -22,14 +30,6 @@ public:
 		PC = 0x10,
 	};
 
-protected:
-	int known;
-	int skills;
-	int speed;
-	int order;
-	int turn;
-	int hp;
-
 private:
 	Point nextPoint(Point end);
 	void statusString(const wstring& text, const wstring& type);
@@ -38,12 +38,14 @@ private:
 	void tickPathFind(const wchar_t* type);
 	bool canSeePC();
 
+protected:
+	void attack();
+
 public:
 	Mob(Dungeon* dungeon, int turn);
-	Movement move(const Point& next);
-
-	const wstring getSymbol() const override;
 	virtual void tick();
+	Movement move(const Point& next);
+	const wstring getSymbol() const override;
 	bool isOn(Entity::Type type) const;
 	bool isBefore(const Mob& other) const;
 	bool isAlive() const {

@@ -25,7 +25,7 @@ wstring Player::relative(const Mob& other) {
 	return str.str();
 }
 
-bool Player::tickMap(uint& offset, const int ch) {
+bool Player::tickMap(const int ch, uint& offset) {
 	//Clear screen and figure out characters
 	int max = LINES - 2;
 	werase(base);
@@ -74,12 +74,75 @@ bool Player::tickMap(uint& offset, const int ch) {
 	return true;
 }
 
+bool Player::tickTarget(const int ch, Point& dest) {
+	switch (ch) {
+		case '7':
+		case 'y':
+			dest += Point(-1,-1);
+			break;
+		case '8':
+		case 'k':
+			dest += Point(0,-1);
+			break;
+		case '9':
+		case 'u':
+			dest += Point(1,-1);
+			break;
+		case '6':
+		case 'l':
+			dest += Point(1,0);
+			break;
+		case '3':
+		case 'n':
+			dest += Point(1,1);
+			break;
+		case '2':
+		case 'j':
+			dest += Point(0,1);
+			break;
+		case '1':
+		case 'b':
+			dest += Point(-1,1);
+			break;
+		case '4':
+		case 'h':
+			dest += Point(-1,0);
+			break;
+		case 27: //ESC
+		case 'q':
+			return false;
+		case 'r':
+			dest = Point((rand() % (dungeon->getDim().x - 2)) + 1, (rand() % (dungeon->getDim().y - 2)) + 1);
+			//FALLTHROUGH
+		case 'g':
+			dungeon->status = L"Woosh!";
+			dungeon->getTile(dest).type = Tile::HALL;
+			move(dest);
+			return false;
+		default:
+			break;
+	}
+
+	if (dest.x < 1) dest.x = 1;
+	if (dest.y < 1) dest.y = 1;
+	if (dest.x >= dungeon->getDim().x - 1)  dest.x = dungeon->getDim().x - 2;
+	if (dest.y >= dungeon->getDim().y - 1)  dest.y = dungeon->getDim().y - 2;
+
+	dungeon->print(base);
+
+	//Move the destination down one because of the first status line
+	mvwaddwstr(base, dest.y + 1, dest.x, L"\x00D7");
+
+	return true;
+}
+
 void Player::tick() {
 	dungeon->print(base);
 	action = NONE;
 	Movement res = IDLE;
 	int ch = getch();
 	uint offset = 0;
+	Point dest = pos;
 	switch (ch) {
 		case '7':
 		case 'y':
@@ -139,7 +202,12 @@ void Player::tick() {
 			break;
 		case 'm':
 			//keep ticking and getting characters until tick returns false
-			while(tickMap(offset, ch)) ch = getch();
+			while(tickMap(ch, offset)) ch = getch();
+			break;
+		case 'g':
+			ch = 0;
+			dungeon->status = L"You cheater! You entered teleport mode!";
+			while(tickTarget(ch, dest)) ch = getch();
 			break;
 		default:
 			dungeon->status = to_wstring(ch) + L"is invalid";
@@ -151,4 +219,6 @@ void Player::tick() {
 		action = MOVE;
 		dungeon->recalculate();
 	}
+
+	attack();
 }

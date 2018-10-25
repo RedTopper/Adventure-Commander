@@ -16,9 +16,9 @@ const wstring Entity::getSymbol() const {
 	};
 
 	const wstring ENT_BORING[] = {
-		L"?", //Mob has it's own definition.
-		L"\x25b2", //Up pointing triangle.
-		L"\x25bc", //Down pointing triangle.
+		L"?",
+		L"<",
+		L">",
 	};
 
 	if (dungeon->isFancy()) {
