@@ -110,7 +110,7 @@ void Dungeon::roomConnect(const Room& first, const Room& second) {
 	roomConnectRasterize(mid, end);
 }
 
-void Dungeon::roomPlace(Room room) {
+void Dungeon::roomPlace(const Room& room) {
 	for (int row = room.pos.y; row < room.pos.y + room.dim.y; row++) {
 		for (int col = room.pos.x; col < room.pos.x + room.dim.x; col++) {
 			Tile& tile = tiles[row][col];
@@ -124,16 +124,13 @@ void Dungeon::roomPlace(Room room) {
 }
 
 void Dungeon::roomGenerate() {
-	Point dim = Point();
-	Point pos = Point();
 	Room room;
 	
 	do {
-		dim.x = skewBetweenRange(4, ROOM_X_MIN, ROOM_X_MAX);
-		dim.y = skewBetweenRange(4, ROOM_Y_MIN, ROOM_Y_MAX);
-		pos.x = (rand() % (dim.x - 1 - dim.x)) + 1;
-		pos.y = (rand() % (dim.y - 1 - dim.y)) + 1;
-		room = (Room){pos, dim};
+		room.dim.x = skewBetweenRange(4, ROOM_X_MIN, ROOM_X_MAX);
+		room.dim.y = skewBetweenRange(4, ROOM_Y_MIN, ROOM_Y_MAX);
+		room.pos.x = (rand() % (dim.x - 1 - room.dim.x)) + 1;
+		room.pos.y = (rand() % (dim.y - 1 - room.dim.y)) + 1;
 	} while (!roomPlaceAttempt(room));
 
 	roomPlace(room);
@@ -198,18 +195,18 @@ int Dungeon::isFull() {
 
 void Dungeon::mobGenerate(int total) {
 	for(int i = 0; i < total; i++) {
-		mobs.push_back(make_shared<Mob>(new Mob(this, i + 1)));
+		mobs.push_back(make_shared<Mob>(this, i + 1));
 	}
 }
 
 void Dungeon::entityGenerate() {
 	//Create up stairs always
-	Entity up(this, Entity::STAIRS_UP);
+	Entity up(this, Entity::STAIRS_UP, false);
 	entities.push_back(up);
 
 	if (floor) {
 		//Above the 0th floor, allow player to go down.
-		Entity down(this, Entity::STAIRS_DOWN);
+		Entity down(this, Entity::STAIRS_DOWN, false);
 		entities.push_back(down);
 	}
 }
@@ -339,7 +336,7 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji
 	for (int i = 0; i < dim.y * dim.x; i++) {
 		seed[i] = (float)rand() / (float)RAND_MAX;
 	}
-	
+
 	//Initialize dungeon
 	tiles = vector<vector<Tile>>((unsigned long)(dim.y), vector<Tile>((unsigned long)(dim.x)));
 	for(int row = 0; row < dim.y; row++) {
@@ -362,7 +359,7 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji
 	});
 
 	//Place player
-	player = make_shared<Player>(new Player(this, base));
+	player = make_shared<Player>(this, base);
 	player->move(Point(rooms[0].pos.x + (rooms[0].dim.x)/2, rooms[0].pos.y + (rooms[0].dim.y)/2));
 
 	//Create the paths.
@@ -416,7 +413,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 		exit(FILE_READ_EOF_PLAYER);
 	}
 
-	player = make_shared<Player>(new Player(this, base));
+	player = make_shared<Player>(this, base);
 	player->move(Point(pos[0], pos[1]));
 	
 	//Initialize dungeon
@@ -500,8 +497,6 @@ void Dungeon::save(fstream& file) {
 	}
 }
 
-
-
 void Dungeon::print(WINDOW* win) {
 	//Make the dungeon look nice
 	postProcess();
@@ -529,7 +524,7 @@ void Dungeon::print(WINDOW* win) {
 	}
 
 	//Write players
-	if(player->isAlive()) {
+	if(player && player->isAlive()) {
 		mvwaddwstr(win, player->getPos().y + 1, player->getPos().x, player->getSymbol().c_str());
 	}
 

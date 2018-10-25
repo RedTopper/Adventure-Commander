@@ -18,14 +18,15 @@ const Point Path::ADJACENT[8] = { // NOLINT(cert-err58-cpp)
 };
 
 Path::Path(Dungeon *dungeon, Path::Style style) {
-	Point dim = dungeon->getDim();
+
 	this->dungeon = dungeon;
 	this->style = style;
-	this->path = vector<vector<int>>((unsigned long)(dim.y), vector<int>((unsigned long)(dim.x)));
 }
 
 void Path::recalculate() {
 	//Reset everything to max
+	Point dim = dungeon->getDim();
+	this->path = vector<vector<int>>((unsigned long)(dim.y), vector<int>((unsigned long)(dim.x)));
 	for (auto& row : path) {
 		for (int& num : row) {
 			num = INT32_MAX;
@@ -34,7 +35,7 @@ void Path::recalculate() {
 
 	//Create node for player and set distance to player to zero.
 	priority_queue<Priority, vector<Priority>> queue;
-	queue.push(Priority{0, dungeon->getPlayer().getPos()});
+	queue.push(Priority{0, dungeon->getPlayer()->getPos()});
 
 	while (!queue.empty()) {
 		Priority cur = queue.top();

@@ -17,15 +17,15 @@ public:
 	};
 
 	virtual const wstring getSymbol() const;
-	virtual const Point getSpawn() const;
 
 protected:
 	Dungeon* dungeon;
 	Type type;
 	Point pos;
+	const Point getSpawn(bool halls) const;
 
 public:
-	Entity(Dungeon* dungeon, Type type);
+	Entity(Dungeon* dungeon, Type type, bool halls);
 	const Type getType() const {
 		return type;
 	}

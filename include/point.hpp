@@ -27,10 +27,6 @@ public:
 		return atan2(*this^other, *this*other) > 0;
 	}
 
-	inline bool isZero() {
-		return x == 0 && y == 0;
-	}
-
 	//The dot product
 	inline int operator*(const Point& other) const {
 		return x * other.x + y * other.y;

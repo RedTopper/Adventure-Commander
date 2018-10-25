@@ -4,40 +4,13 @@
 
 const int MAX_KNOWN_TURNS = 5;
 
-Mob::Mob(Dungeon* dungeon, int turn) : Entity(dungeon, Entity::MOB) {
+Mob::Mob(Dungeon* dungeon, int turn) : Entity(dungeon, Entity::MOB, true) {
 	this->known = 0;
 	this->skills = rand() % 16;
 	this->speed = (rand() % 16) + 5; //5-20
 	this->order = turn ;
 	this->hp = 1;
 	this->turn = 1000/speed;
-}
-
-const Point Mob::getSpawn() const {
-	Point point;
-	bool onMob = true;
-	while(onMob) {
-		point.x = rand() % dungeon->getDim().x;
-		point.y = rand() % dungeon->getDim().y;
-		const Tile& tile = dungeon->getTile(pos);
-
-		//Spawn on floor
-		if (!(tile.type == Tile::ROOM || tile.type == Tile::HALL)) continue;
-
-		//Not on player
-		if (pos == dungeon->getPlayer().pos) continue;
-
-		//Not on mob
-		onMob = false;
-		for (const auto& m : dungeon->getMobs()) {
-			if (point.x == m->pos.x) {
-				onMob = true;
-				break;
-			};
-		}
-	}
-
-	return point;
 }
 
 const wstring Mob::getSymbol() const {
@@ -94,6 +67,8 @@ void Mob::statusString(const wstring& text, const wstring& type) {
 	wstringstream out;
 	out
 		<< getSymbol()
+		<< " on turn "
+		<< turn
 		<< " at ("
 		<< pos.x
 		<< ", "
@@ -108,7 +83,7 @@ void Mob::statusString(const wstring& text, const wstring& type) {
 
 bool Mob::canSeePC() {
 	Point current = Point(pos);
-	Point end = dungeon->getPlayer().pos;
+	Point end = dungeon->getPlayer()->pos;
 	Point sign;
 	Point diff;
 	diff.x = abs(end.x - current.x),
@@ -160,7 +135,7 @@ Point Mob::nextPoint(Point end) {
 }
 
 void Mob::tickStraightLine(const wchar_t* type) {
-	Point next = nextPoint(dungeon->getPlayer().pos);
+	Point next = nextPoint(dungeon->getPlayer()->pos);
 	Movement movement = move(next);
 
 	wstring text;
@@ -313,7 +288,7 @@ void Mob::tick() {
 	//Attack phase
 	for (int i = 0; i < dungeon->getMobs().size() + 1; i++) {
 		//Make sure to include the player in the attack phase
-		const shared_ptr<Mob> other = (i < dungeon->getMobs().size()) ? dungeon->getMobs()[i] : make_shared<Player>(dungeon->getPlayer());
+		const shared_ptr<Mob> other = (i < dungeon->getMobs().size()) ? dungeon->getMobs()[i] : dungeon->getPlayer();
 
 		//Collision detection. Monsters are 2 wide when emoji is enabled on most systems
 		if (!(order != other->order

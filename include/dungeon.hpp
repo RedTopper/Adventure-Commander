@@ -25,7 +25,7 @@ private:
 	struct TurnOrder {
 		//Should return true if lhs is considered to go before rhs
 		bool operator()(const shared_ptr<Mob>& lhs, const shared_ptr<Mob>& rhs) const {
-			return lhs->isBefore(*rhs);
+			return !lhs->isBefore(*rhs);
 		}
 	};
 
@@ -44,7 +44,7 @@ private:
 	bool roomPlaceAttempt(const Room& room);
 	void roomConnectRasterize(const Point& from, const Point& to);
 	void roomConnect(const Room& first, const Room& second);
-	void roomPlace(Room room);
+	void roomPlace(const Room& room);
 	void roomGenerate();
 	void hallPlace(const Point& point);
 	void tilePlace(const Point &pos, uint8_t hardness, const float* seed);
@@ -63,6 +63,7 @@ public:
 	Dungeon(WINDOW* base, fstream& file, int mobs, bool emoji);
 	void save(fstream& file);
 	int alive() const;
+	void rotate();
 	void print(WINDOW* window);
 
 	//Getters and setters
@@ -72,8 +73,8 @@ public:
 	const vector<shared_ptr<Mob>> getMobs() const {
 		return mobs;
 	}
-	const Player getPlayer() const {
-		return *player;
+	const shared_ptr<Player> getPlayer() const {
+		return player;
 	}
 	const Point getDim() const {
 		return dim;
@@ -90,7 +91,6 @@ public:
 	const shared_ptr<Mob> getCurrentTurn() const {
 		return turn.top();
 	}
-	void rotate();
 	void recalculate() {
 		dig.recalculate();
 		map.recalculate();

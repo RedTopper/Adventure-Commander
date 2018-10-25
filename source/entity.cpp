@@ -2,10 +2,10 @@
 #include "entity.hpp"
 #include "dungeon.hpp"
 
-Entity::Entity(Dungeon* dungeon, Type type) {
+Entity::Entity(Dungeon* dungeon, Type type, bool halls) {
 	this->dungeon = dungeon;
 	this->type = type;
-	this->pos = getSpawn();
+	this->pos = getSpawn(halls);
 }
 
 const wstring Entity::getSymbol() const {
@@ -28,19 +28,19 @@ const wstring Entity::getSymbol() const {
 	}
 }
 
-const Point Entity::getSpawn() const {
+const Point Entity::getSpawn(const bool halls) const {
 	Point point;
 	bool onEntity = true;
 	while(onEntity) {
 		point.x = rand() % dungeon->getDim().x;
 		point.y = rand() % dungeon->getDim().y;
-		const Tile& tile = dungeon->getTile(pos);
+		const Tile& tile = dungeon->getTile(point);
 
 		//Spawn on floor
-		if (tile.type != Tile::ROOM) continue;
+		if (!(tile.type == Tile::ROOM || (halls && tile.type == Tile::HALL))) continue;
 
 		//Not on player
-		if (point == dungeon->getPlayer().pos) continue;
+		if (dungeon->getPlayer() && point == dungeon->getPlayer()->pos) continue;
 
 		//Not on another entity
 		onEntity = false;

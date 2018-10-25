@@ -120,19 +120,25 @@ int main(int argc, char** argv) {
 	//Load dungeon from file
 	if (load) {
 		fstream file = get(fstream::in);
-		dungeon = make_shared<Dungeon>(new Dungeon(base, file, mobs, emoji));
+		dungeon = make_shared<Dungeon>(base, file, mobs, emoji);
 		file.close();
 	} else {
-		dungeon = make_shared<Dungeon>(new Dungeon(base, DUNGEON_DIM, mobs, 0, emoji));
+		dungeon = make_shared<Dungeon>(base, DUNGEON_DIM, mobs, 0, emoji);
 	}
 
 	//Economics established
-	while (dungeon->getPlayer().isAlive() > 0 && dungeon->alive()) {
+	while (dungeon->getPlayer()->isAlive() > 0 && dungeon->alive()) {
 		shared_ptr<Mob> mob = dungeon->getCurrentTurn();
 		shared_ptr<Player> player;
-		mob->tick();
 		if (player = dynamic_pointer_cast<Player>(mob)) {
-			auto action = player->getAction();
+			//If it's a player, keep ticking until something interesting happens
+			dungeon->status = L"It's your turn!";
+			Player::Action action = Player::NONE;
+			while(action == Player::NONE) {
+				player->tick();
+				action = player->getAction();
+			}
+
 			if (action == Player::QUIT) break;
 			if (action == Player::DOWN && !history.empty()) {
 				future.push(dungeon);
@@ -143,12 +149,14 @@ int main(int argc, char** argv) {
 			if (action == Player::UP) {
 				history.push(dungeon);
 				if (future.empty()) {
-					dungeon = make_shared<Dungeon>(new Dungeon(base, DUNGEON_DIM, mobs, ++floor, emoji));
+					dungeon = make_shared<Dungeon>(base, DUNGEON_DIM, mobs, ++floor, emoji);
 				} else {
 					dungeon = future.top();
 					future.pop();
 				}
 			}
+		} else {
+			mob->tick();
 		}
 
 		dungeon->rotate();
@@ -160,7 +168,7 @@ int main(int argc, char** argv) {
 	}
 
 	//Some status messages
-	if (!dungeon->getPlayer().isAlive()) {
+	if (!dungeon->getPlayer()->isAlive()) {
 		dungeon->status = L"You died! Better luck next time! (Press any key)";
 	} else if (dungeon->alive() == 0) {
 		dungeon->status = L"CONGLATURATION !!! (Press any key)";

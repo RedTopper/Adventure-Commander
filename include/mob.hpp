@@ -43,7 +43,6 @@ public:
 	Movement move(const Point& next);
 
 	const wstring getSymbol() const override;
-	const Point getSpawn() const override;
 	virtual void tick();
 	const bool isOn(Entity::Type type) const;
 	const bool isBefore(const Mob& other) const;

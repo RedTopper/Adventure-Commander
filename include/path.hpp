@@ -22,8 +22,10 @@ private:
 	struct Priority {
 		int priority;
 		Point p;
-		bool operator()(const Priority& lhs, const Priority& rhs) const {
-			return lhs.priority < rhs.priority;
+
+		//Max queue by default, we want a min queue
+		bool operator<(const Priority& other) const {
+			return priority > other.priority;
 		}
 	};
 
