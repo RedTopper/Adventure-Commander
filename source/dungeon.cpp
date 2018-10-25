@@ -382,7 +382,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 	//Read magic header
 	file.read(head, length);
 	head[length] = '\0';
-	if (!file || HEADER == head) {
+	if (!file || HEADER != head) {
 		wprintf(L"Bad file header '%s'!\n", head);
 		exit(FILE_READ_BAD_HEAD);
 	}
@@ -412,9 +412,6 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 		wprintf(L"Bad file player co-ordinates (EOF)!\n");
 		exit(FILE_READ_EOF_PLAYER);
 	}
-
-	player = make_shared<Player>(this, base);
-	player->move(Point(pos[0], pos[1]));
 	
 	//Initialize dungeon
 	tiles = vector<vector<Tile>>((unsigned long)(dim.y), vector<Tile>((unsigned long)(dim.x)));
@@ -455,6 +452,9 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji) 
 
 		roomPlace(room);
 	}
+
+	player = make_shared<Player>(this, base);
+	player->move(Point(pos[0], pos[1]));
 
 	//Finalize dungeon
 	finalize(mobs);
