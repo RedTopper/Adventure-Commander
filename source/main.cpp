@@ -9,8 +9,10 @@
 #include <fstream>
 #include <unistd.h>
 
+#include "dice.hpp"
 #include "main.hpp"
 #include "dungeon.hpp"
+#include "proto/mob.hpp"
 
 using namespace std;
 
@@ -19,6 +21,7 @@ const char* SAVE = "--save";
 const char* LOAD = "--load";
 const char* MOBS = "--nummon";
 const char* LAME = "--lame";
+const char* PARSE = "--parse";
 const char* ALL = "--all";
 
 static void help(const wstring& message, const string& command, Error error) {
@@ -74,6 +77,7 @@ int main(int argc, char** argv) {
 	int mobs = 10;
 	bool all = false;
 	bool emoji = true;
+	bool parse = false;
 
 	//Parse arguments
 	for (int argi = 1; argi < argc; argi++) {
@@ -93,6 +97,8 @@ int main(int argc, char** argv) {
 				load = true;
 			} else if (arg == ALL) {
 				all = true;
+			} else if (arg == PARSE) {
+				parse = true;
 			} else if (arg == MOBS && require(argi, argc, arg)) {
 				mobs = atoi(argv[argi]); // NOLINT(cert-err34-c)
 				if (mobs < 1) help(L"Must be between 1-100", MOBS, ARGUMENT_OOB);
@@ -101,6 +107,18 @@ int main(int argc, char** argv) {
 				help(L"Unknown argument", arg, ARGUMENT_UNKNOWN);
 			}
 		}
+	}
+
+	if (parse) {
+		string line;
+		getline(std::cin, line);
+		if (line != "RLG327 MONSTER DESCRIPTION 1") exit(FILE_READ_BAD_HEAD);
+		while (!!cin) {
+			ProtoMob mob;
+			cin >> mob;
+		}
+
+		return 0;
 	}
 
 	//The base dungeon

@@ -9,9 +9,7 @@ CXXFLAGS = -Wall -Wextra -finput-charset=UTF-8 -I$(INCLUDE)
 DEPFLAGS = -MMD -MP -MF $(BUILD)/$*.d
 
 #Make Rules
-$(shell mkdir -p $(BUILD) >/dev/null)
-
-src = $(wildcard $(SOURCE)/*.cpp)
+src = $(wildcard $(SOURCE)/*.cpp) $(wildcard $(SOURCE)/*/*.cpp)
 obj = $(src:$(SOURCE)/%.cpp=$(BUILD)/%.o)
 dep = $(src:$(SOURCE)/%.cpp=$(BUILD)/%.d)
 
@@ -21,6 +19,7 @@ $(NAME): $(obj)
 
 $(BUILD)/%.o: $(SOURCE)/%.cpp
 $(BUILD)/%.o: $(SOURCE)/%.cpp $(BUILD)/%.d
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(BUILD)/%.d: ;
