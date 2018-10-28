@@ -9,9 +9,9 @@ ProtoMob::Color ProtoMob::toColor(string color) {
 }
 
 ostream &ProtoMob::dump(ostream &out) const {
-	return <#initializer#>;
+	return out;
 }
 
 istream &ProtoMob::read(istream &in) {
-	return <#initializer#>;
+	return in;
 }
