@@ -64,7 +64,7 @@ ostream &ProtoMob::dump(ostream &out) const {
 	for(const auto& line : description) cout << line << endl;
 	out << "COLOR: '" << bitset<8>(colors) << "'" << endl;
 	out << "SPEED: '" << speed << endl;
-	out << "ABIL:  '" << bitset<16>(abilities) << "'" << endl;
+	out << "ABIL:  '" << bitset<9>(abilities) << "'" << endl;
 	out << "HP:    '" << hp << "'" << endl;
 	out << "DAM:   '" << dam << "'" << endl;
 	out << "SYMB:  '" << symbol << "'" << endl;

@@ -14,9 +14,15 @@ Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- IMPORTANT
 3. Run `./game` with wanted options
 
 # Notable features for this version
-- There is fog of war (f)
-- Teleport anywhere with (g)
-- Everything (I mean it!) is in C++
+- Parsing monster definitions, use --parse to launch the parser
+- COLOR is stored as a bit-field for later use
+- ABIL is stored as a bit-field for later use
+- Dice are stored as "streamable" objects (ie: can be read and output)
+- To see values for COLOR and ABIL, see `mob.hpp`
+- To see internal parsed structure for mobs, see `protomob.hpp`
+- To see internal parsed structure for dice, see `dice.hpp`
+
+# Stuff below is unchanged from last version
 
 # Changes from specifications
 - I made the visible area slightly bigger.
