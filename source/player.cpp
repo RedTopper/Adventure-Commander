@@ -5,7 +5,7 @@
 Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(dungeon, 0) {
 	this->base = window;
 	this->action = NONE;
-	this->skills = PC;
+	this->skills = 0;
 	this->known = 0;
 	this->speed = 10;
 	this->hp = 1;

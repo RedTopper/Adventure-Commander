@@ -23,11 +23,28 @@ public:
 	};
 
 	enum Skills {
-		INTELLIGENCE = 0x01,
-		TELEPATHY = 0x02,
-		TUNNELING = 0x04,
-		ERRATIC = 0x08,
-		PC = 0x10,
+		BAD_SKILL    = 0,
+		INTELLIGENCE = (1 << 0),
+		TELEPATHY    = (1 << 1),
+		TUNNELING    = (1 << 2),
+		ERRATIC      = (1 << 3),
+		PASS         = (1 << 4),
+		PICKUP       = (1 << 5),
+		DESTROY      = (1 << 6),
+		UNIQUE       = (1 << 7),
+		BOSS         = (1 << 8),
+	};
+
+	enum Color {
+		BAD_COLOR = 0,
+		RED     = (1 << 0),
+		GREEN   = (1 << 1),
+		BLUE    = (1 << 2),
+		CYAN    = (1 << 3),
+		YELLOW  = (1 << 4),
+		MAGENTA = (1 << 5),
+		WHITE   = (1 << 6),
+		BLACK   = (1 << 7)
 	};
 
 private:

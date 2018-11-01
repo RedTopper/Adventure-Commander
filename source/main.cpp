@@ -12,7 +12,7 @@
 #include "dice.hpp"
 #include "main.hpp"
 #include "dungeon.hpp"
-#include "proto/mob.hpp"
+#include "protomob.hpp"
 
 using namespace std;
 
@@ -34,6 +34,7 @@ static void help(const wstring& message, const string& command, Error error) {
 	wcout << L"[--load] Load a file from ~/.rlg327/dungeon" << endl;
 	wcout << L"[--save] Write a dungeon to ~/.rlg327/dungeon" << endl;
 	wcout << L"[--all] Show all moves instead of just PC moves" << endl;
+	wcout << L"[--parse] Attempt to parse ~/.rlg327/monster_desc.txt" << endl;
 	wcout << L"[--nummon] <count> Number of monsters to generate" << endl;
 	exit(error);
 }
@@ -48,14 +49,15 @@ static bool require(int& on, int count, const string& command) {
 	return true;
 }
 
-static fstream get(ios_base::openmode mode) {
+static fstream get(ios_base::openmode mode, const string& name) {
 	string dungeon = getenv("HOME");
-	dungeon += "/.rlg327/dungeon";
+	dungeon += "/.rlg327/";
+	dungeon += name;
 
 	//Load dungeon from file
 	fstream fs;
 	fs.open (dungeon, fstream::binary | mode);
-	if (!fs) {
+	if (!fs.is_open() || !fs) {
 		help(L"Failed to open file", dungeon, FILE_READ_GONE);
 	}
 
@@ -66,6 +68,20 @@ int skewBetweenRange(const int skew, const int low, const int high) {
 	int value = low;
 	while (rand() % skew && value < high) value++;
 	return value;
+}
+
+string &ltrim(string &str, const string &chars) {
+	str.erase(0, str.find_first_not_of(chars));
+	return str;
+}
+
+string &rtrim(string &str, const string &chars) {
+	str.erase(str.find_last_not_of(chars) + 1);
+	return str;
+}
+
+string &trim(string &str, const string &chars) {
+	return ltrim(rtrim(str, chars), chars);
 }
 
 int main(int argc, char** argv) {
@@ -110,12 +126,14 @@ int main(int argc, char** argv) {
 	}
 
 	if (parse) {
+		fstream file = get(fstream::in, "monster_desc.txt");
 		string line;
-		getline(std::cin, line);
+		getline(file, line);
 		if (line != "RLG327 MONSTER DESCRIPTION 1") exit(FILE_READ_BAD_HEAD);
-		while (!!cin) {
+		while (!!file) {
 			ProtoMob mob;
-			cin >> mob;
+			file >> mob;
+			if(mob.isValid()) cout << mob;
 		}
 
 		return 0;
@@ -137,7 +155,7 @@ int main(int argc, char** argv) {
 
 	//Load dungeon from file
 	if (load) {
-		fstream file = get(fstream::in);
+		fstream file = get(fstream::in, "dungeon");
 		dungeon = make_shared<Dungeon>(base, file, mobs, emoji);
 		file.close();
 	} else {
@@ -202,7 +220,7 @@ int main(int argc, char** argv) {
 
 	//Save dungeon to file.
 	if (save) {
-		fstream file = get(fstream::out);
+		fstream file = get(fstream::out, "dungeon");
 		dungeon->save(file);
 		file.close();
 	}

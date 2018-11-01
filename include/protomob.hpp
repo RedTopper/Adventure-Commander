@@ -2,7 +2,10 @@
 #define ADVENTURE_COMMANDER_MOB_HPP
 
 #include <string>
+#include <vector>
+#include "dice.hpp"
 #include "stream.hpp"
+#include "mob.hpp"
 
 using namespace std;
 
@@ -24,20 +27,28 @@ public:
 		END,
 	};
 
-	enum Color {
-		BAD_COLOR = 0,
-		RED     = (1 << 0),
-		GREEN   = (1 << 1),
-		BLUE    = (1 << 2),
-		CYAN    = (1 << 3),
-		YELLOW  = (1 << 4),
-		MAGENTA = (1 << 5),
-		WHITE   = (1 << 6),
-		BLACK   = (1 << 7)
-	};
+private:
+	bool valid = false;
+	int rarity = 0;
+	int colors = 0;
+	int abilities = 0;
+	string name;
+	string symbol;
+	vector<string> description;
+	Dice hp;
+	Dice dam;
+	Dice speed;
 
+public:
 	static KeyWord toKeyWord(string word);
-	static Color toColor(string color);
+	static Mob::Color toColor(string color);
+	static Mob::Skills toSkill(string skill);
+	bool isValid() const {
+		return valid;
+	}
+
+private:
+	void invalidate(istream &in);
 	ostream& dump(ostream& out) const override;
 	istream& read(istream& in) override;
 };

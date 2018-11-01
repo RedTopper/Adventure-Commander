@@ -1,6 +1,10 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <string>
+
+using namespace std;
+
 enum Error {
 	FINE = 0,
 	FILE_READ_BAD = 0x10,
@@ -20,5 +24,8 @@ enum Error {
 };
 
 int skewBetweenRange(int skew, int low, int high);
+string& ltrim(string& str, const string& chars = "\t\r\n ");
+string& rtrim(string& str, const string& chars = "\t\r\n ");
+string& trim(string& str, const string& chars = "\t\r\n ");
 
 #endif
