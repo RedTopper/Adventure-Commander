@@ -1,14 +1,15 @@
-#ifndef ADVENTURE_COMMANDER_PROTOITEM_HPP
-#define ADVENTURE_COMMANDER_PROTOITEM_HPP
+#ifndef ADVENTURE_COMMANDER_STREAM_ITEM_HPP
+#define ADVENTURE_COMMANDER_STREAM_ITEM_HPP
 
 #include <string>
 #include <vector>
+
 #include "dice.hpp"
 #include "stream.hpp"
 
 using namespace std;
 
-class ProtoItem : public Stream {
+class StreamItem : public Stream {
 public:
 	enum KeyWord {
 		KWD_BAD   = 0,
@@ -56,40 +57,6 @@ public:
 	};
 
 private:
-	//Fields that are required for an item to be valid.
-	static const int REQUIRED = (
-		  NAME
-		| DESC
-		| TYPE
-		| COLOR
-		| HIT
-		| DAM
-		| DODGE
-		| DEF
-		| WEIGHT
-		| SPEED
-		| ATTR
-		| VAL
-		| ART
-		| RRTY
-		| END
-	);
-
-	//What types are considered equipment
-	static const int EQUIPMENT = (
-		  WEAPON
-		| OFFHAND
-		| RANGED
-		| ARMOR
-		| HELMET
-		| CLOAK
-		| GLOVES
-		| BOOTS
-		| RING
-		| AMULET
-		| LIGHT
-	);
-
 	bool artifact = false;
 	int colors = 0;
 	int rarity = 0;
@@ -111,20 +78,12 @@ private:
 public:
 	static KeyWord toKeyWord(string word);
 	static Type toType(string word);
-
-	bool isValid() const {
-		//keywords contains all REQUIRED bits, other bits don't care
-		return (keywords & REQUIRED) == REQUIRED;
-	}
-
-	bool isEquipment() {
-		//types contains any EQUIPMENT bit, other bits MUST be 0
-		return (types | EQUIPMENT) == EQUIPMENT;
-	}
+	bool isEquipment() const;
 
 private:
 	ostream& dump(ostream& out) const override;
 	istream& read(istream& in) override;
+	int getRequired() const override;
 };
 
 #endif

@@ -1,15 +1,16 @@
-#ifndef ADVENTURE_COMMANDER_MOB_HPP
-#define ADVENTURE_COMMANDER_MOB_HPP
+#ifndef ADVENTURE_COMMANDER_STREAM_MONSTER_HPP
+#define ADVENTURE_COMMANDER_STREAM_MONSTER_HPP
 
 #include <string>
 #include <vector>
+
 #include "dice.hpp"
 #include "stream.hpp"
 #include "mob.hpp"
 
 using namespace std;
 
-class ProtoMob : public Stream {
+class StreamMob : public Stream {
 public:
 	enum KeyWord {
 		KWD_BAD   = 0,
@@ -29,20 +30,6 @@ public:
 	};
 
 private:
-	static const int REQUIRED = (
-		  NAME
-		| DESC
-		| COLOR
-		| SPEED
-		| ABIL
-		| HP
-		| DAM
-		| SYMB
-		| RRTY
-		| END
-	);
-
-	int keywords = 0;
 	int rarity = 0;
 	int colors = 0;
 	int abilities = 0;
@@ -60,14 +47,10 @@ public:
 	static Mob::Color toColor(string color);
 	static Mob::Skills toSkill(string skill);
 
-	bool isValid() const {
-		//keywords contains all REQUIRED bits, other bits don't care
-		return (keywords & REQUIRED) == REQUIRED;
-	}
-
 private:
 	ostream& dump(ostream& out) const override;
 	istream& read(istream& in) override;
+	int getRequired() const override;
 };
 
 #endif

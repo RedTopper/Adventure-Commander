@@ -1,11 +1,11 @@
 #include <iostream>
 #include <bitset>
 
-#include "protomob.hpp"
 #include "main.hpp"
-#include "protoitem.hpp"
+#include "stream/monster.hpp"
+#include "stream/object.hpp"
 
-ProtoItem::KeyWord ProtoItem::toKeyWord(string word) {
+StreamItem::KeyWord StreamItem::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
 	else if(word == "BEGIN") return BEGIN;
 	else if(word == "OBJECT") return OBJECT;
@@ -27,7 +27,7 @@ ProtoItem::KeyWord ProtoItem::toKeyWord(string word) {
 	else return KWD_BAD;
 }
 
-ProtoItem::Type ProtoItem::toType(string word) {
+StreamItem::Type StreamItem::toType(string word) {
 	if     (word == "WEAPON") return WEAPON;
 	else if(word == "OFFHAND") return OFFHAND;
 	else if(word == "RANGED") return RANGED;
@@ -50,11 +50,11 @@ ProtoItem::Type ProtoItem::toType(string word) {
 	else return TYPE_BAD;
 }
 
-ostream &ProtoItem::dump(ostream &out) const {
+ostream &StreamItem::dump(ostream &out) const {
 	return out;
 }
 
-istream &ProtoItem::read(istream &in) {
+istream &StreamItem::read(istream &in) {
 	string header;
 	in >> header;
 	if (toKeyWord(header) != BEGIN) return in;
@@ -89,14 +89,14 @@ istream &ProtoItem::read(istream &in) {
 				line >> rarity;
 				break;
 			case COLOR:
-				while(!!(line >> word)) colors |= ProtoMob::toColor(word);
+				while(!!(line >> word)) colors |= StreamMob::toColor(word);
 				break;
 			case DESC:
 				while(!!(getline(in, buff)) && trim(word = buff) != ".") description.push_back(buff);
 				break;
 			default:
 				cout << "[ERROR]: There was a problem reading a monster!" << endl;
-				cout << "[ERROR]: Set bits are " << bitset<32>(keywords) << " but should be " << bitset<32>(REQUIRED) << endl;
+				cout << "[ERROR]: Set bits are " << bitset<32>(keywords) << " but should be " << bitset<32>(getRequired()) << endl;
 				/* FALLTHROUGH */
 			case END:
 				reading = false;
@@ -106,4 +106,44 @@ istream &ProtoItem::read(istream &in) {
 
 	return in;
 }
+
+int StreamItem::getRequired() const {
+	return (
+		  NAME
+		| DESC
+		| TYPE
+		| COLOR
+		| HIT
+		| DAM
+		| DODGE
+		| DEF
+		| WEIGHT
+		| SPEED
+		| ATTR
+		| VAL
+		| ART
+		| RRTY
+		| END
+	);
+}
+
+bool StreamItem::isEquipment() const {
+	int equipment = (
+		  WEAPON
+		| OFFHAND
+		| RANGED
+		| ARMOR
+		| HELMET
+		| CLOAK
+		| GLOVES
+		| BOOTS
+		| RING
+		| AMULET
+		| LIGHT
+	);
+
+	//Checks if all "types" bits are in "equipment" bits
+	return (types | equipment) == equipment;
+}
+
 

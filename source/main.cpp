@@ -9,10 +9,10 @@
 #include <fstream>
 #include <unistd.h>
 
-#include "dice.hpp"
+#include "stream/dice.hpp"
 #include "main.hpp"
 #include "dungeon.hpp"
-#include "protomob.hpp"
+#include "stream/monster.hpp"
 
 using namespace std;
 
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
 		getline(file, line);
 		if (line != "RLG327 MONSTER DESCRIPTION 1") exit(FILE_READ_BAD_HEAD);
 		while (!!file) {
-			ProtoMob mob;
+			StreamMob mob;
 			file >> mob;
 			if(mob.isValid()) cout << mob;
 		}

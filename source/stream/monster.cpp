@@ -2,11 +2,12 @@
 #include <sstream>
 #include <iostream>
 #include <bitset>
+
 #include "main.hpp"
 #include "mob.hpp"
-#include "protomob.hpp"
+#include "stream/monster.hpp"
 
-ProtoMob::KeyWord ProtoMob::toKeyWord(string word) {
+StreamMob::KeyWord StreamMob::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
 	else if(word == "BEGIN") return BEGIN;
 	else if(word == "MONSTER") return MONSTER;
@@ -23,7 +24,7 @@ ProtoMob::KeyWord ProtoMob::toKeyWord(string word) {
 	else return KWD_BAD;
 }
 
-Mob::Color ProtoMob::toColor(string color) {
+Mob::Color StreamMob::toColor(string color) {
 	if     (color == "RED") return Mob::RED;
 	else if(color == "GREEN") return Mob::GREEN;
 	else if(color == "BLUE") return Mob::BLUE;
@@ -35,7 +36,7 @@ Mob::Color ProtoMob::toColor(string color) {
 	else return Mob::COLOR_BAD;
 }
 
-Mob::Skills ProtoMob::toSkill(string skill) {
+Mob::Skills StreamMob::toSkill(string skill) {
 	if     (skill == "SMART") return Mob::INTELLIGENCE;
 	else if(skill == "TELE") return Mob::TELEPATHY;
 	else if(skill == "TUNNEL") return Mob::TUNNELING;
@@ -48,7 +49,7 @@ Mob::Skills ProtoMob::toSkill(string skill) {
 	else return Mob::SKILL_BAD;
 }
 
-ostream &ProtoMob::dump(ostream &out) const {
+ostream& StreamMob::dump(ostream& out) const {
 	out << "BEGIN PARSED MONSTER" << endl;
 	out << "NAME:  '" << name << "'" << endl;
 	out << "DESC:" << endl;
@@ -63,7 +64,7 @@ ostream &ProtoMob::dump(ostream &out) const {
 	return out;
 }
 
-istream &ProtoMob::read(istream &in) {
+istream& StreamMob::read(istream& in) {
 	string header;
 	in >> header;
 	if (toKeyWord(header) != BEGIN) return in;
@@ -114,7 +115,7 @@ istream &ProtoMob::read(istream &in) {
 				break;
 			default:
 				cout << "[ERROR]: There was a problem reading a monster!" << endl;
-				cout << "[ERROR]: Set bits are " << bitset<16>(keywords) << " but should be " << bitset<16>(REQUIRED) << endl;
+				cout << "[ERROR]: Set bits are " << bitset<16>(keywords) << " but should be " << bitset<16>(getRequired()) << endl;
 				/* FALLTHROUGH */
 			case END:
 				reading = false;
@@ -123,6 +124,21 @@ istream &ProtoMob::read(istream &in) {
 	}
 
 	return in;
+}
+
+int StreamMob::getRequired() const {
+	return (
+		  NAME
+		| DESC
+		| COLOR
+		| SPEED
+		| ABIL
+		| HP
+		| DAM
+		| SYMB
+		| RRTY
+		| END
+	);
 }
 
 
