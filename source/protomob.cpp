@@ -7,7 +7,8 @@
 #include "protomob.hpp"
 
 ProtoMob::KeyWord ProtoMob::toKeyWord(string word) {
-	if     (word == "BEGIN") return BEGIN;
+	if(trim(word).empty()) return KWD_EMPTY;
+	else if(word == "BEGIN") return BEGIN;
 	else if(word == "MONSTER") return MONSTER;
 	else if(word == "NAME") return NAME;
 	else if(word == "DESC") return DESC;
@@ -19,7 +20,7 @@ ProtoMob::KeyWord ProtoMob::toKeyWord(string word) {
 	else if(word == "SYMB") return SYMB;
 	else if(word == "RRTY") return RRTY;
 	else if(word == "END") return END;
-	else return BAD_KWD;
+	else return KWD_BAD;
 }
 
 Mob::Color ProtoMob::toColor(string color) {
@@ -31,7 +32,7 @@ Mob::Color ProtoMob::toColor(string color) {
 	else if(color == "MAGENTA") return Mob::MAGENTA;
 	else if(color == "WHITE") return Mob::WHITE;
 	else if(color == "BLACK") return Mob::BLACK;
-	else return Mob::BAD_COLOR;
+	else return Mob::COLOR_BAD;
 }
 
 Mob::Skills ProtoMob::toSkill(string skill) {
@@ -44,17 +45,7 @@ Mob::Skills ProtoMob::toSkill(string skill) {
 	else if(skill == "DESTROY") return Mob::DESTROY;
 	else if(skill == "UNIQ") return Mob::UNIQUE;
 	else if(skill == "BOSS") return Mob::BOSS;
-	else return Mob::BAD_SKILL;
-}
-
-void ProtoMob::invalidate(istream& in) {
-	valid = false;
-	cerr << "[ERROR]: There was a problem reading a monster!" << endl;
-	cerr << "[ERROR]: Attempting to recover..." << endl;
-	string end;
-	while (!!in && toKeyWord(end) != END) {
-		getline(in, end);
-	}
+	else return Mob::SKILL_BAD;
 }
 
 ostream &ProtoMob::dump(ostream &out) const {
@@ -62,9 +53,9 @@ ostream &ProtoMob::dump(ostream &out) const {
 	out << "NAME:  '" << name << "'" << endl;
 	out << "DESC:" << endl;
 	for(const auto& line : description) cout << line << endl;
-	out << "COLOR: '" << bitset<8>(colors) << "'" << endl;
+	out << "COLOR: '" << bitset<16>(colors) << "'" << endl;
 	out << "SPEED: '" << speed << endl;
-	out << "ABIL:  '" << bitset<9>(abilities) << "'" << endl;
+	out << "ABIL:  '" << bitset<16>(abilities) << "'" << endl;
 	out << "HP:    '" << hp << "'" << endl;
 	out << "DAM:   '" << dam << "'" << endl;
 	out << "SYMB:  '" << symbol << "'" << endl;
@@ -73,7 +64,6 @@ ostream &ProtoMob::dump(ostream &out) const {
 }
 
 istream &ProtoMob::read(istream &in) {
-
 	string header;
 	in >> header;
 	if (toKeyWord(header) != BEGIN) return in;
@@ -82,15 +72,18 @@ istream &ProtoMob::read(istream &in) {
 
 	//consume rest of line
 	getline(in, header);
-	valid = true;
 	bool reading = true;
-	while (!!in && reading && valid) {
+	while (!!in && reading) {
 		string buff;
 		string word;
 		getline(in, buff);
 		stringstream line(buff);
 		line >> word;
-		switch (toKeyWord(word)) {
+		KeyWord key = toKeyWord(word);
+		keywords |= key;
+		switch (key) {
+			case KWD_EMPTY:
+				break;
 			case NAME:
 				getline(line, name);
 				trim(name);
@@ -119,13 +112,12 @@ istream &ProtoMob::read(istream &in) {
 			case DESC:
 				while(!!(getline(in, buff)) && trim(word = buff) != ".") description.push_back(buff);
 				break;
+			default:
+				cout << "[ERROR]: There was a problem reading a monster!" << endl;
+				cout << "[ERROR]: Set bits are " << bitset<16>(keywords) << " but should be " << bitset<16>(REQUIRED) << endl;
+				/* FALLTHROUGH */
 			case END:
 				reading = false;
-				break;
-			default:
-			case BEGIN:
-			case BAD_KWD:
-				invalidate(in);
 				break;
 		}
 	}

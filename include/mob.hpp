@@ -23,7 +23,7 @@ public:
 	};
 
 	enum Skills {
-		BAD_SKILL    = 0,
+		SKILL_BAD    = 0,
 		INTELLIGENCE = (1 << 0),
 		TELEPATHY    = (1 << 1),
 		TUNNELING    = (1 << 2),
@@ -36,7 +36,7 @@ public:
 	};
 
 	enum Color {
-		BAD_COLOR = 0,
+		COLOR_BAD = 0,
 		RED     = (1 << 0),
 		GREEN   = (1 << 1),
 		BLUE    = (1 << 2),
