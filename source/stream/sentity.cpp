@@ -2,10 +2,10 @@
 #include <bitset>
 
 #include "main.hpp"
-#include "stream/monster.hpp"
-#include "stream/object.hpp"
+#include "stream/smob.hpp"
+#include "stream/sentity.hpp"
 
-StreamItem::KeyWord StreamItem::toKeyWord(string word) {
+SEntity::KeyWord SEntity::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
 	else if(word == "BEGIN") return BEGIN;
 	else if(word == "OBJECT") return OBJECT;
@@ -27,7 +27,7 @@ StreamItem::KeyWord StreamItem::toKeyWord(string word) {
 	else return KWD_BAD;
 }
 
-StreamItem::Type StreamItem::toType(string word) {
+SEntity::Type SEntity::toType(string word) {
 	if     (word == "WEAPON") return WEAPON;
 	else if(word == "OFFHAND") return OFFHAND;
 	else if(word == "RANGED") return RANGED;
@@ -50,7 +50,7 @@ StreamItem::Type StreamItem::toType(string word) {
 	else return TYPE_BAD;
 }
 
-ostream &StreamItem::dump(ostream &out) const {
+ostream &SEntity::dump(ostream &out) const {
 	out << "BEGIN PARSED OBJECT" << endl;
 	out << "NAME:  '" << name << "'" << endl;
 	out << "DESC:" << endl;
@@ -65,13 +65,13 @@ ostream &StreamItem::dump(ostream &out) const {
 	out << "SPEED: '" << speed << "'" << endl;
 	out << "ATTR:  '" << attribute << "'" << endl;
 	out << "VAL:   '" << value << "'" << endl;
-	out << "ART:   '" << artifact << "'" << endl;
+	out << "ART:   '" << (artifact ? "yeah" : "nah") << "'" << endl;
 	out << "RRTY:  '" << rarity << "'" << endl;
 	out << "END" << endl << endl;
 	return out;
 }
 
-istream &StreamItem::read(istream &in) {
+istream &SEntity::read(istream &in) {
 	string header;
 	in >> header;
 	if (toKeyWord(header) != BEGIN) return in;
@@ -82,8 +82,7 @@ istream &StreamItem::read(istream &in) {
 	getline(in, header);
 	bool reading = true;
 	while (!!in && reading) {
-		string buff;
-		string word;
+		string buff, word;
 		getline(in, buff);
 		stringstream line(buff);
 		line >> word;
@@ -103,7 +102,7 @@ istream &StreamItem::read(istream &in) {
 				while(!!(line >> word)) types |= toType(word);
 				break;
 			case COLOR:
-				while(!!(line >> word)) colors |= StreamMob::toColor(word);
+				while(!!(line >> word)) colors |= SMob::toColor(word);
 				break;
 			case HIT:
 				line >> hit;
@@ -137,7 +136,7 @@ istream &StreamItem::read(istream &in) {
 				line >> rarity;
 				break;
 			default:
-				cout << "[ERROR]: There was a problem reading a monster!" << endl;
+				cout << "[ERROR]: There was a problem reading an object!" << endl;
 				cout << "[ERROR]: Set bits are " << bitset<32>(keywords) << " but should be " << bitset<32>(getRequired()) << endl;
 				/* FALLTHROUGH */
 			case END:
@@ -149,8 +148,7 @@ istream &StreamItem::read(istream &in) {
 	return in;
 }
 
-int StreamItem::getRequired() const {
-	cout << "TYPE:  '" << bitset<32>(types) << "'" << endl;
+int SEntity::getRequired() const {
 	return (
 		  NAME
 		| DESC
@@ -170,7 +168,7 @@ int StreamItem::getRequired() const {
 	);
 }
 
-bool StreamItem::isEquipment() const {
+bool SEntity::isEquipment() const {
 	int equipment = (
 		  WEAPON
 		| OFFHAND

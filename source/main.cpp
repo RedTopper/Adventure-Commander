@@ -11,8 +11,8 @@
 
 #include "main.hpp"
 #include "dungeon.hpp"
-#include "stream/monster.hpp"
-#include "stream/object.hpp"
+#include "stream/smob.hpp"
+#include "stream/sentity.hpp"
 #include "stream/dice.hpp"
 
 using namespace std;
@@ -132,9 +132,8 @@ int main(int argc, char** argv) {
 		getline(file, line);
 		if (line != "RLG327 OBJECT DESCRIPTION 1") exit(FILE_READ_BAD_HEAD);
 		while (!!file) {
-			StreamItem obj;
+			SEntity obj;
 			file >> obj;
-			cout << obj;
 			if(obj.isValid()) cout << obj;
 		}
 

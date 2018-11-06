@@ -15,7 +15,8 @@ public:
 	virtual int getRequired() const = 0;
 	bool isValid() const {
 		//keywords contains all required bits, other bits don't care
-		return (keywords & getRequired()) == getRequired();
+		int required = getRequired();
+		return (keywords & required) == required;
 	}
 };
 

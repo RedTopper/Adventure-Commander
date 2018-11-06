@@ -20,7 +20,6 @@ istream &Dice::read(istream &in) {
 	in >> sides;
 	if (sides < 1) sides = 1;
 	if (count < 0) count = 0;
-	if (base < 0) base = 0;
 	return in;
 }
 

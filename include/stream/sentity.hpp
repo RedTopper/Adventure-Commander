@@ -9,7 +9,7 @@
 
 using namespace std;
 
-class StreamItem : public Stream {
+class SEntity : public Stream {
 public:
 	enum KeyWord {
 		KWD_BAD   = 0,
@@ -61,7 +61,6 @@ private:
 	int rarity = 0;
 
 	int types = 0;
-	int keywords = 0;
 	int colors = 0;
 
 	string name;

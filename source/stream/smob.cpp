@@ -5,9 +5,9 @@
 
 #include "main.hpp"
 #include "mob.hpp"
-#include "stream/monster.hpp"
+#include "stream/smob.hpp"
 
-StreamMob::KeyWord StreamMob::toKeyWord(string word) {
+SMob::KeyWord SMob::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
 	else if(word == "BEGIN") return BEGIN;
 	else if(word == "MONSTER") return MONSTER;
@@ -24,7 +24,7 @@ StreamMob::KeyWord StreamMob::toKeyWord(string word) {
 	else return KWD_BAD;
 }
 
-Mob::Color StreamMob::toColor(string color) {
+Mob::Color SMob::toColor(string color) {
 	if     (color == "RED") return Mob::RED;
 	else if(color == "GREEN") return Mob::GREEN;
 	else if(color == "BLUE") return Mob::BLUE;
@@ -36,7 +36,7 @@ Mob::Color StreamMob::toColor(string color) {
 	else return Mob::COLOR_BAD;
 }
 
-Mob::Skills StreamMob::toSkill(string skill) {
+Mob::Skills SMob::toSkill(string skill) {
 	if     (skill == "SMART") return Mob::INTELLIGENCE;
 	else if(skill == "TELE") return Mob::TELEPATHY;
 	else if(skill == "TUNNEL") return Mob::TUNNELING;
@@ -49,7 +49,7 @@ Mob::Skills StreamMob::toSkill(string skill) {
 	else return Mob::SKILL_BAD;
 }
 
-ostream& StreamMob::dump(ostream& out) const {
+ostream& SMob::dump(ostream& out) const {
 	out << "BEGIN PARSED MONSTER" << endl;
 	out << "NAME:  '" << name << "'" << endl;
 	out << "DESC:" << endl;
@@ -64,7 +64,7 @@ ostream& StreamMob::dump(ostream& out) const {
 	return out;
 }
 
-istream& StreamMob::read(istream& in) {
+istream& SMob::read(istream& in) {
 	string header;
 	in >> header;
 	if (toKeyWord(header) != BEGIN) return in;
@@ -75,8 +75,7 @@ istream& StreamMob::read(istream& in) {
 	getline(in, header);
 	bool reading = true;
 	while (!!in && reading) {
-		string buff;
-		string word;
+		string buff, word;
 		getline(in, buff);
 		stringstream line(buff);
 		line >> word;
@@ -126,7 +125,7 @@ istream& StreamMob::read(istream& in) {
 	return in;
 }
 
-int StreamMob::getRequired() const {
+int SMob::getRequired() const {
 	return (
 		  NAME
 		| DESC
