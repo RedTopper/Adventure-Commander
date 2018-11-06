@@ -58,10 +58,11 @@ public:
 
 private:
 	bool artifact = false;
-	int colors = 0;
 	int rarity = 0;
+
 	int types = 0;
 	int keywords = 0;
+	int colors = 0;
 
 	string name;
 	vector<string> description;
@@ -79,6 +80,9 @@ public:
 	static KeyWord toKeyWord(string word);
 	static Type toType(string word);
 	bool isEquipment() const;
+	bool isArtifact() {
+		return artifact;
+	}
 
 private:
 	ostream& dump(ostream& out) const override;

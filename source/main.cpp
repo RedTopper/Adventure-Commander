@@ -9,10 +9,11 @@
 #include <fstream>
 #include <unistd.h>
 
-#include "stream/dice.hpp"
 #include "main.hpp"
 #include "dungeon.hpp"
 #include "stream/monster.hpp"
+#include "stream/object.hpp"
+#include "stream/dice.hpp"
 
 using namespace std;
 
@@ -126,14 +127,15 @@ int main(int argc, char** argv) {
 	}
 
 	if (parse) {
-		fstream file = get(fstream::in, "monster_desc.txt");
+		fstream file = get(fstream::in, "object_desc.txt");
 		string line;
 		getline(file, line);
-		if (line != "RLG327 MONSTER DESCRIPTION 1") exit(FILE_READ_BAD_HEAD);
+		if (line != "RLG327 OBJECT DESCRIPTION 1") exit(FILE_READ_BAD_HEAD);
 		while (!!file) {
-			StreamMob mob;
-			file >> mob;
-			if(mob.isValid()) cout << mob;
+			StreamItem obj;
+			file >> obj;
+			cout << obj;
+			if(obj.isValid()) cout << obj;
 		}
 
 		return 0;

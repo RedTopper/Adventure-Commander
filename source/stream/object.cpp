@@ -51,6 +51,23 @@ StreamItem::Type StreamItem::toType(string word) {
 }
 
 ostream &StreamItem::dump(ostream &out) const {
+	out << "BEGIN PARSED OBJECT" << endl;
+	out << "NAME:  '" << name << "'" << endl;
+	out << "DESC:" << endl;
+	for(const auto& line : description) cout << line << endl;
+	out << "TYPE:  '" << bitset<32>(types) << "'" << endl;
+	out << "COLOR: '" << bitset<16>(colors) << "'" << endl;
+	out << "HIT:   '" << hit << "'" <<  endl;
+	out << "DAM:   '" << dam << "'" << endl;
+	out << "DODGE: '" << dodge << "'" << endl;
+	out << "DEF:   '" << def << "'" << endl;
+	out << "WEIGH: '" << weight << "'" << endl;
+	out << "SPEED: '" << speed << "'" << endl;
+	out << "ATTR:  '" << attribute << "'" << endl;
+	out << "VAL:   '" << value << "'" << endl;
+	out << "ART:   '" << artifact << "'" << endl;
+	out << "RRTY:  '" << rarity << "'" << endl;
+	out << "END" << endl << endl;
 	return out;
 }
 
@@ -79,20 +96,45 @@ istream &StreamItem::read(istream &in) {
 				getline(line, name);
 				trim(name);
 				break;
-			case DAM:
-				line >> dam;
+			case DESC:
+				while(!!(getline(in, buff)) && trim(word = buff) != ".") description.push_back(buff);
 				break;
-			case SPEED:
-				line >> speed;
-				break;
-			case RRTY:
-				line >> rarity;
+			case TYPE:
+				while(!!(line >> word)) types |= toType(word);
 				break;
 			case COLOR:
 				while(!!(line >> word)) colors |= StreamMob::toColor(word);
 				break;
-			case DESC:
-				while(!!(getline(in, buff)) && trim(word = buff) != ".") description.push_back(buff);
+			case HIT:
+				line >> hit;
+				break;
+			case DAM:
+				line >> dam;
+				break;
+			case DODGE:
+				line >> dodge;
+				break;
+			case DEF:
+				line >> def;
+				break;
+			case WEIGHT:
+				line >> weight;
+				break;
+			case SPEED:
+				line >> speed;
+				break;
+			case ATTR:
+				line >> attribute;
+				break;
+			case VAL:
+				line >> value;
+				break;
+			case ART:
+				line >> word;
+				artifact = word == "TRUE";
+				break;
+			case RRTY:
+				line >> rarity;
 				break;
 			default:
 				cout << "[ERROR]: There was a problem reading a monster!" << endl;
@@ -108,6 +150,7 @@ istream &StreamItem::read(istream &in) {
 }
 
 int StreamItem::getRequired() const {
+	cout << "TYPE:  '" << bitset<32>(types) << "'" << endl;
 	return (
 		  NAME
 		| DESC
@@ -145,5 +188,3 @@ bool StreamItem::isEquipment() const {
 	//Checks if all "types" bits are in "equipment" bits
 	return (types | equipment) == equipment;
 }
-
-
