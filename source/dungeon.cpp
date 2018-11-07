@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <fstream>
 #include <cstring>
-#include <codecvt>
-#include <locale>
 
 #include "dungeon.hpp"
 #include "perlin.hpp"

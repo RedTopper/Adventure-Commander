@@ -20,6 +20,7 @@ const char* SAVE = "--save";
 const char* LOAD = "--load";
 const char* MOBS = "--nummon";
 const char* LAME = "--lame";
+const char* HOME = "--home";
 const char* PARSE = "--parse";
 const char* ALL = "--all";
 
@@ -29,10 +30,11 @@ static void help(const string& message, const string& command, Error error) {
 	cout << "Adventure Commander Help:" << endl;
 	cout << "[--help] Show this" << endl;
 	cout << "[--lame] Disable emoji support (needed for older terms)" << endl;
-	cout << "[--load] Load a file from ~/.rlg327/dungeon" << endl;
-	cout << "[--save] Write a dungeon to ~/.rlg327/dungeon" << endl;
+	cout << "[--load] Load a file from /dungeon" << endl;
+	cout << "[--save] Write a dungeon to /dungeon" << endl;
 	cout << "[--all] Show all moves instead of just PC moves" << endl;
-	cout << "[--parse] Attempt to parse ~/.rlg327/monster_desc.txt" << endl;
+	cout << "[--parse] Attempt to parse /monster_desc.txt" << endl;
+	cout << "[--home] Access files from the ~/.rlg327 directory instead of /resource" << endl;
 	cout << "[--nummon] <count> Number of monsters to generate" << endl;
 	exit(error);
 }
@@ -47,16 +49,23 @@ static bool require(int& on, int count, const string& command) {
 	return true;
 }
 
-static fstream get(ios_base::openmode mode, const string& name) {
-	string dungeon = getenv("HOME");
-	dungeon += "/.rlg327/";
-	dungeon += name;
+static fstream get(ios_base::openmode mode, const string& name, bool home) {
+	string path;
+	if (home) {
+		path = getenv("HOME");
+		path += "/.rlg327/";
+	} else {
+		path = "./resource/";
+	}
 
-	//Load dungeon from file
+	//Add filename and load from file
+	path += name;
 	fstream fs;
-	fs.open (dungeon, fstream::binary | mode);
+	fs.open (path, fstream::binary | mode);
 	if (!fs.is_open() || !fs) {
-		help("Failed to open file", dungeon, FILE_READ_GONE);
+		string message = "Failed to open file";
+		if (!home) message += "\nUse --home to load from home directory instead.";
+		help(message, path, FILE_READ_GONE);
 	}
 
 	return fs;
@@ -82,16 +91,34 @@ string &trim(string &str, const string &chars) {
 	return ltrim(rtrim(str, chars), chars);
 }
 
+template <class T>
+vector<T> createClass(const string& filename, const string& header, bool home){
+	string line;
+	vector<T> factory;
+	fstream desc = get(fstream::in, filename, home);
+	getline(desc, line);
+	if (line.find(header) == string::npos) exit(FILE_READ_BAD_HEAD);
+	while (!!desc) {
+		T obj;
+		desc >> obj;
+		if(obj.isValid()) factory.push_back(obj);
+	}
+
+	desc.close();
+	return factory;
+}
+
 int main(int argc, char** argv) {
 	setlocale(LC_ALL, "en_US.UTF-8");
 	srand((unsigned int) time(nullptr));
 
+	int mobs = 10;
 	bool save = false;
 	bool load = false;
-	int mobs = 10;
 	bool all = false;
 	bool emoji = true;
 	bool parse = false;
+	bool home = false;
 
 	//Parse arguments
 	for (int argi = 1; argi < argc; argi++) {
@@ -111,6 +138,8 @@ int main(int argc, char** argv) {
 				load = true;
 			} else if (arg == ALL) {
 				all = true;
+			} else if (arg == HOME) {
+				home = true;
 			} else if (arg == PARSE) {
 				parse = true;
 			} else if (arg == MOBS && require(argi, argc, arg)) {
@@ -123,17 +152,14 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if (parse) {
-		fstream file = get(fstream::in, "object_desc.txt");
-		string line;
-		getline(file, line);
-		if (line != "RLG327 OBJECT DESCRIPTION 1") exit(FILE_READ_BAD_HEAD);
-		while (!!file) {
-			SEntity obj;
-			file >> obj;
-			if(obj.isValid()) cout << obj;
-		}
+	//Load both factory files
+	vector<SMob> factoryMobs = createClass<SMob>("monster_desc.txt", "RLG327 MONSTER DESCRIPTION 1", home);
+	vector<SEntity> factoryObjects = createClass<SEntity>("object_desc.txt", "RLG327 OBJECT DESCRIPTION 1", home);
 
+	//Still output the files loaded if needed
+	if (parse) {
+		for(auto& o : factoryMobs) cout << o;
+		for(auto& o : factoryObjects) cout << o;
 		return 0;
 	}
 
@@ -153,7 +179,7 @@ int main(int argc, char** argv) {
 
 	//Load dungeon from file
 	if (load) {
-		fstream file = get(fstream::in, "dungeon");
+		fstream file = get(fstream::in, "dungeon", home);
 		dungeon = make_shared<Dungeon>(base, file, mobs, emoji);
 		file.close();
 	} else {
@@ -218,7 +244,7 @@ int main(int argc, char** argv) {
 
 	//Save dungeon to file.
 	if (save) {
-		fstream file = get(fstream::out, "dungeon");
+		fstream file = get(fstream::out, "dungeon", home);
 		dungeon->save(file);
 		file.close();
 	}

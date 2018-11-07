@@ -1,7 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <curses.h>
+#include <ncursesw/curses.h>
 #include "mob.hpp"
 
 class Player: public Mob {
@@ -30,8 +30,6 @@ public:
 	Action getAction() const {
 		return action;
 	}
-
-
 };
 
 #endif
