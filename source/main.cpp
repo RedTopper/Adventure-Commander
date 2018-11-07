@@ -124,31 +124,27 @@ int main(int argc, char** argv) {
 	for (int argi = 1; argi < argc; argi++) {
 		string arg = argv[argi];
 		if (arg.length() < 3 || arg[0] != '-' || arg[1] != '-') {
-			//Check length
 			help("Bad argument", arg, ARGUMENT_NO_DASH);
+		} else if (HELP == arg) {
+			help("Listing Commands", arg, FINE);
+		} else if (arg == LAME) {
+			emoji = false;
+		} else if (arg == SAVE) {
+			save = true;
+		} else if (arg == LOAD) {
+			load = true;
+		} else if (arg == ALL) {
+			all = true;
+		} else if (arg == HOME) {
+			home = true;
+		} else if (arg == PARSE) {
+			parse = true;
+		} else if (arg == MOBS && require(argi, argc, arg)) {
+			mobs = atoi(argv[argi]); // NOLINT(cert-err34-c)
+			if (mobs < 1) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
+			if (mobs > 100) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
 		} else {
-			//Check if correct argument
-			if (HELP == arg) {
-				help("Listing Commands", arg, FINE);
-			} else if (arg == LAME) {
-				emoji = false;
-			} else if (arg == SAVE) {
-				save = true;
-			} else if (arg == LOAD) {
-				load = true;
-			} else if (arg == ALL) {
-				all = true;
-			} else if (arg == HOME) {
-				home = true;
-			} else if (arg == PARSE) {
-				parse = true;
-			} else if (arg == MOBS && require(argi, argc, arg)) {
-				mobs = atoi(argv[argi]); // NOLINT(cert-err34-c)
-				if (mobs < 1) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
-				if (mobs > 100) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
-			} else {
-				help("Unknown argument", arg, ARGUMENT_UNKNOWN);
-			}
+			help("Unknown argument", arg, ARGUMENT_UNKNOWN);
 		}
 	}
 
