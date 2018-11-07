@@ -1,8 +1,8 @@
-#define _XOPEN_SOURCE_EXTENDED
-
 #include <algorithm>
 #include <fstream>
 #include <cstring>
+#include <codecvt>
+#include <locale>
 
 #include "dungeon.hpp"
 #include "perlin.hpp"
@@ -194,7 +194,8 @@ int Dungeon::isFull() {
 
 void Dungeon::mobGenerate(int total) {
 	for(int i = 0; i < total; i++) {
-		mobs.push_back(make_shared<Mob>(this, i + 1));
+		//TODO: update this
+		//mobs.push_back(make_shared<Mob>(this, i + 1));
 	}
 }
 
@@ -320,9 +321,9 @@ void Dungeon::finalize(const int count) {
 	}
 
 	//Some default text
-	status = L"Nothing has happened yet!";
-	line1 = L"Adventure Commander";
-	line2 = L"Status Text";
+	status = "Nothing has happened yet!";
+	line1 = "Adventure Commander";
+	line2 = "Status Text";
 
 	//slap in some fog
 	foggy = true;
@@ -527,29 +528,28 @@ void Dungeon::print(WINDOW* win) {
 	werase(win);
 
 	//Write status
-	mvwaddwstr(win, 0, 0, status.c_str());
+	mvwaddstr(win, 0, 0, status.c_str());
 
 	//Write tiles
 	for (int row = 0; row < dim.y; row++) {
-		wchar_t screen[dim.x + 1];
+		string line;
 		for (int col = 0; col < dim.x; col++) {
-			screen[col] = tiles[row][col].symbol;
+			line += Tile::getStr(tiles[row][col].symbol);
 		}
 
-		screen[dim.x] = L'\0';
-		mvwaddwstr(win, row + 1, 0, screen);
+		mvwaddstr(win, row + 1, 0, line.c_str());
 	}
 
 	//Write entities
 	for (auto& e : entities) {
 		if (isOutOfRange(e)) continue;
 		e.setRemembered(true);
-		mvwaddwstr(win, e.getPos().y + 1, e.getPos().x, e.getSymbol().c_str());
+		mvwaddstr(win, e.getPos().y + 1, e.getPos().x, e.getSymbol().c_str());
 	}
 
 	//Write players
 	if(player && player->isAlive()) {
-		mvwaddwstr(win, player->getPos().y + 1, player->getPos().x, player->getSymbol().c_str());
+		mvwaddstr(win, player->getPos().y + 1, player->getPos().x, player->getSymbol().c_str());
 	}
 
 	//Write mobs
@@ -558,12 +558,12 @@ void Dungeon::print(WINDOW* win) {
 		if (isOutOfRange(*m)) continue;
 
 		//Render only if the player is near
-		mvwaddwstr(win, m->getPos().y + 1, m->getPos().x, m->getSymbol().c_str());
+		mvwaddstr(win, m->getPos().y + 1, m->getPos().x, m->getSymbol().c_str());
 	}
 
 	//Write other statuses
-	mvwaddwstr(win, dim.y + 1, 0, line1.c_str());
-	mvwaddwstr(win, dim.y + 2, 0, line2.c_str());
+	mvwaddstr(win, dim.y + 1, 0, line1.c_str());
+	mvwaddstr(win, dim.y + 2, 0, line2.c_str());
 
 	//Some terminals have trouble with emoji, so help them out
 	//by redrawing the whole window every few frames.

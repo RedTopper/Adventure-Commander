@@ -1,12 +1,12 @@
 #ifndef DUNGEON_H
 #define DUNGEON_H
 
+#include <ncursesw/curses.h>
 #include <string>
 #include <vector>
 #include <queue>
 #include <array>
 #include <memory>
-#include <ncursesw/curses.h>
 
 #include "point.hpp"
 #include "tile.hpp"
@@ -62,9 +62,9 @@ private:
 	int isFull();
 
 public:
-	wstring status;
-	wstring line1;
-	wstring line2;
+	string status;
+	string line1;
+	string line2;
 
 	Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji);
 	Dungeon(WINDOW* base, fstream& file, int mobs, bool emoji);

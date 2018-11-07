@@ -1,73 +1,34 @@
-
-#include <mob.hpp>
-
 #include "path.hpp"
 #include "mob.hpp"
 #include "dungeon.hpp"
 
 const int MAX_KNOWN_TURNS = 5;
 
-Mob::Mob(Dungeon* dungeon, int turn) : Entity(dungeon, Entity::MOB, true) {
+Mob::Mob(
+	Dungeon* dungeon,
+	int turn,
+	int skills,
+	int speed,
+	int hp,
+	Color color,
+	const string& name,
+	const string& symbol,
+	const vector<string>& description
+) : Entity(dungeon, Entity::MOB, true) {
 	this->known = 0;
-	this->skills = rand() % 16;
-	this->speed = (rand() % 16) + 5; //5-20
-	this->order = turn ;
-	this->hp = 1;
+	this->order = turn;
+	this->skills = skills;
+	this->speed = speed;
+	this->hp = hp;
+	this->color = color;
+	this->name = name;
+	this->symbol = symbol;
+	this->description = description;
 	this->turn = 1000/speed;
 }
 
-const wstring Mob::getSymbol() const {
-	const wchar_t* MOB_TYPES[] = {
-		L"\x01F480", //Skull   (    )
-		L"\x01F43A", //Angry   (I   )
-		L"\x01F47B", //Ghost   ( T  )
-		L"\x01F47F", //Demon   (IT  )
-		L"\x01F417", //Boar    (  D )
-		L"\x01F435", //Monkey  (I D )
-		L"\x01F479", //Ogre    ( TD )
-		L"\x01F432", //Dragon  (ITD )
-		L"\x01F480", //Skull   (   E)
-		L"\x01F419", //Squid   (I  E)
-		L"\x01F40D", //Snake   ( D E)
-		L"\x01F47A", //Goblin  (IT E)
-		L"\x01F47E", //Monster (  DE)
-		L"\x01F42F", //Tiger   (I DE)
-		L"\x01F47D", //Alien   ( TDE)
-		L"\x01F383", //Pumpkin (ITDE)
-		L"\x01F464", //Person
-		L"??"
-	};
-
-	const wchar_t* MOB_TYPES_BORING[] = {
-		L"k", //Skull   (    )
-		L"p", //Empty   (I   )
-		L"g", //Ghost   ( T  )
-		L"d", //Demon   (IT  )
-		L"b", //Boar    (  D )
-		L"m", //Monkey  (I D )
-		L"O", //Ogre    ( TD )
-		L"D", //Dragon  (ITD )
-		L"k", //Skull   (   E)
-		L"o", //Squid   (I  E)
-		L"s", //Snake   ( D E)
-		L"p", //Goblin  (IT E)
-		L"M", //Monster (  DE)
-		L"T", //Tiger   (I DE)
-		L"A", //Alien   ( TDE)
-		L"P", //Pumpkin (ITDE)
-		L"@",
-		L"?"
-	};
-
-	if (dungeon->isFancy()) {
-		return MOB_TYPES[skills];
-	} else {
-		return MOB_TYPES_BORING[skills];
-	}
-}
-
-void Mob::statusString(const wstring& text, const wstring& type) {
-	wstringstream out;
+void Mob::statusString(const string& text, const string& type) {
+	stringstream out;
 	out
 		<< getSymbol()
 		<< " on turn "
@@ -137,57 +98,57 @@ Point Mob::nextPoint(Point end) {
 	return current;
 }
 
-void Mob::tickStraightLine(const wchar_t* type) {
+void Mob::tickStraightLine(const string& type) {
 	Point next = nextPoint(dungeon->getPlayer()->pos);
 	Movement movement = move(next);
 
-	wstring text;
+	string text;
 	switch (movement) {
 		case BROKE_WALL:
-			text = L"broke down the wall while beelining!";
+			text = "broke down the wall while beelining!";
 			break;
 		case DAMAGE_WALL:
-			text = L"damaged a wall while beelining!";
+			text = "damaged a wall while beelining!";
 			break;
 		case SUCCESS:
-			text = L"is beelining towards you!";
+			text = "is beelining towards you!";
 			break;
 		default:
 		case FAILURE:
-			text = L"tried to beeline, but failed!";
+			text = "tried to beeline, but failed!";
 			break;
 	}
 
 	statusString(text, type);
 }
 
-void Mob::tickRandomly(const wchar_t* type) {
+void Mob::tickRandomly(const string& type) {
 	int dir = rand() % (int)(sizeof(Path::ADJACENT)/sizeof(Path::ADJACENT[0]));
 	Point next = Point(pos);
 	next += Path::ADJACENT[dir];
 	Movement movement = move(next);
 
-	wstring text;
+	string text;
 	switch (movement) {
 		case BROKE_WALL:
-			text = L"broke down the wall!";
+			text = "broke down the wall!";
 			break;
 		case DAMAGE_WALL:
-			text = L"chipped at the wall!";
+			text = "chipped at the wall!";
 			break;
 		case SUCCESS:
-			text = L"moved to a new spot!";
+			text = "moved to a new spot!";
 			break;
 		default:
 		case FAILURE:
-			text = L"did nothing!";
+			text = "did nothing!";
 			break;
 	}
 
 	statusString(text, type);
 }
 
-void Mob::tickPathFind(const wchar_t* type) {
+void Mob::tickPathFind(const string& type) {
 	int adj = sizeof(Path::ADJACENT)/sizeof(Path::ADJACENT[0]);
 	Point next;
 	int lowest = INT32_MAX;
@@ -212,25 +173,25 @@ void Mob::tickPathFind(const wchar_t* type) {
 	if (lowest < INT32_MAX) {
 		Movement movement;
 		movement = move(next);
-		wstring text;
+		string text;
 		switch (movement) {
 			case BROKE_WALL:
-				text = L"broke down the wall to get to you!";
+				text = "broke down the wall to get to you!";
 				break;
 			case DAMAGE_WALL:
-				text = L"damaged a wall to get to you!";
+				text = "damaged a wall to get to you!";
 				break;
 			case SUCCESS:
-				text = L"coming after you!";
+				text = "coming after you!";
 				break;
 			default:
 			case FAILURE:
-				text = L"somehow failed to move?";
+				text = "somehow failed to move?";
 				break;
 		}
 		statusString(text, type);
 	} else {
-		tickRandomly(L"trapped");
+		tickRandomly("trapped");
 	}
 }
 
@@ -258,33 +219,33 @@ Mob::Movement Mob::move(const Point& next) {
 
 void Mob::tick() {
 	if (hp <= 0) return;
-	dungeon->status = L"Nothing important happened.";
+	dungeon->status = "Nothing important happened.";
 
 	if (skills & ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
-		tickRandomly(L"confused");
+		tickRandomly("confused");
 	} else if (skills & TELEPATHY) {
 		//Not the player, not erratic, but has telepathy skill
 		if (skills & INTELLIGENCE) {
-			tickPathFind(L"telepathic");
+			tickPathFind("telepathic");
 		} else {
-			tickStraightLine(L"telepathic");
+			tickStraightLine("telepathic");
 		}
 	} else if (skills & INTELLIGENCE) {
 		//Not the player, not erratic, not telepathic, but has intelligence
 		if (canSeePC()) known = MAX_KNOWN_TURNS;
 		if (known > 0) {
-			tickPathFind(L"smart");
+			tickPathFind("smart");
 			known--;
 		} else {
-			tickRandomly(L"searching");
+			tickRandomly("searching");
 		}
 	} else {
 		//Not the player, not erratic, not telepathic, not intelligent, but... idk, exists?
 		if (canSeePC()) {
-			tickStraightLine(L"a bumbling idiot");
+			tickStraightLine("a bumbling idiot");
 		} else {
-			tickRandomly(L"a bumbling idiot");
+			tickRandomly("a bumbling idiot");
 		}
 	}
 
@@ -304,8 +265,8 @@ void Mob::attack() {
 		      && pos.y == other->pos.y)) continue;
 
 		other->hp--;
-		wstring text = (other->hp == 0) ? L"It killed it brutally!" : L"Looks like it hurt!";
-		wstringstream status;
+		string text = (other->hp == 0) ? "It killed it brutally!" : "Looks like it hurt!";
+		stringstream status;
 		status << getSymbol() << " at (" << pos.x << ", " << pos.y << ") attacked " << other->getSymbol() << " at (" << other->pos.x << ", " << other->pos.y << ")! " << text;
 		dungeon->status = status.str();
 	}

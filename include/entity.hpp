@@ -16,7 +16,7 @@ public:
 		STAIRS_DOWN
 	};
 
-	virtual const wstring getSymbol() const;
+	virtual const string getSymbol() const;
 
 protected:
 	Dungeon* dungeon;

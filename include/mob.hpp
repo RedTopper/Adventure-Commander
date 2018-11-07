@@ -1,18 +1,12 @@
 #ifndef MOB_H
 #define MOB_H
 
-#include <ncursesw/curses.h>
+#include <vector>
+
+#include "stream/dice.hpp"
 #include "entity.hpp"
 
 class Mob:  public Entity {
-protected:
-	int known;
-	int skills;
-	int speed;
-	int order;
-	int turn;
-	int hp;
-
 public:
 	enum Movement {
 		IDLE,
@@ -47,22 +41,47 @@ public:
 		BLACK   = (1 << 7)
 	};
 
+protected:
+	int known;  //How many turns the player is known for
+	int order;
+	int turn;
+
+	//From Factory
+	int skills; //Array of Mob::Skills bits
+	int speed;
+	int hp;
+	string name;
+	string symbol;
+	vector<string> description;
+	Color color;
+	Dice dam;
+
 private:
 	Point nextPoint(Point end);
-	void statusString(const wstring& text, const wstring& type);
-	void tickStraightLine(const wchar_t* type);
-	void tickRandomly(const wchar_t* type);
-	void tickPathFind(const wchar_t* type);
+	void statusString(const string& text, const string& type);
+	void tickStraightLine(const string& type);
+	void tickRandomly(const string& type);
+	void tickPathFind(const string& type);
 	bool canSeePC();
 
 protected:
 	void attack();
 
 public:
-	Mob(Dungeon* dungeon, int turn);
+	Mob(
+		Dungeon* dungeon,
+		int turn,
+		int skills,
+		int speed,
+		int hp,
+		Color color,
+		const string& name,
+		const string& symbol,
+		const vector<string>& description
+	);
+
 	virtual void tick();
 	Movement move(const Point& next);
-	const wstring getSymbol() const override;
 	bool isOn(Entity::Type type) const;
 	bool isBefore(const Mob& other) const;
 	bool isAlive() const {
@@ -77,6 +96,9 @@ public:
 	void nextTurn() {
 		turn += speed;
 	}
+	const string getSymbol() const override {
+		return symbol;
+	};
 };
 
 #endif

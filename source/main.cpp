@@ -1,13 +1,11 @@
-#define _XOPEN_SOURCE_EXTENDED
-
 #include <iostream>
 #include <cstring>
 #include <locale>
-#include <codecvt>
 #include <string>
 #include <stack>
 #include <fstream>
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #include "main.hpp"
 #include "dungeon.hpp"
@@ -25,18 +23,17 @@ const char* LAME = "--lame";
 const char* PARSE = "--parse";
 const char* ALL = "--all";
 
-static void help(const wstring& message, const string& command, Error error) {
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> wc;
-	wcout << wc.from_bytes(command) << ": " << message << endl;
-	wcout << L"Remember, please see the readme if anything looks weird!" << endl;
-	wcout << L"Adventure Commander Help:" << endl;
-	wcout << L"[--help] Show this" << endl;
-	wcout << L"[--lame] Disable emoji support (needed for older terms)" << endl;
-	wcout << L"[--load] Load a file from ~/.rlg327/dungeon" << endl;
-	wcout << L"[--save] Write a dungeon to ~/.rlg327/dungeon" << endl;
-	wcout << L"[--all] Show all moves instead of just PC moves" << endl;
-	wcout << L"[--parse] Attempt to parse ~/.rlg327/monster_desc.txt" << endl;
-	wcout << L"[--nummon] <count> Number of monsters to generate" << endl;
+static void help(const string& message, const string& command, Error error) {
+	cout << command << ": " << message << endl;
+	cout << "Remember, please see the readme if anything looks weird!" << endl;
+	cout << "Adventure Commander Help:" << endl;
+	cout << "[--help] Show this" << endl;
+	cout << "[--lame] Disable emoji support (needed for older terms)" << endl;
+	cout << "[--load] Load a file from ~/.rlg327/dungeon" << endl;
+	cout << "[--save] Write a dungeon to ~/.rlg327/dungeon" << endl;
+	cout << "[--all] Show all moves instead of just PC moves" << endl;
+	cout << "[--parse] Attempt to parse ~/.rlg327/monster_desc.txt" << endl;
+	cout << "[--nummon] <count> Number of monsters to generate" << endl;
 	exit(error);
 }
 
@@ -44,7 +41,7 @@ static bool require(int& on, int count, const string& command) {
 	if (on < count - 1) {
 		on++;
 	} else {
-		help(L"This param requires another argument", command, ARGUMENT_REQ_PARAM);
+		help("This param requires another argument", command, ARGUMENT_REQ_PARAM);
 	}
 
 	return true;
@@ -59,7 +56,7 @@ static fstream get(ios_base::openmode mode, const string& name) {
 	fstream fs;
 	fs.open (dungeon, fstream::binary | mode);
 	if (!fs.is_open() || !fs) {
-		help(L"Failed to open file", dungeon, FILE_READ_GONE);
+		help("Failed to open file", dungeon, FILE_READ_GONE);
 	}
 
 	return fs;
@@ -86,7 +83,7 @@ string &trim(string &str, const string &chars) {
 }
 
 int main(int argc, char** argv) {
-	setlocale(LC_ALL, "");
+	setlocale(LC_ALL, "en_US.UTF-8");
 	srand((unsigned int) time(nullptr));
 
 	bool save = false;
@@ -101,11 +98,11 @@ int main(int argc, char** argv) {
 		string arg = argv[argi];
 		if (arg.length() < 3 || arg[0] != '-' || arg[1] != '-') {
 			//Check length
-			help(L"Bad argument", arg, ARGUMENT_NO_DASH);
+			help("Bad argument", arg, ARGUMENT_NO_DASH);
 		} else {
 			//Check if correct argument
 			if (HELP == arg) {
-				help(L"Listing Commands", arg, FINE);
+				help("Listing Commands", arg, FINE);
 			} else if (arg == LAME) {
 				emoji = false;
 			} else if (arg == SAVE) {
@@ -118,10 +115,10 @@ int main(int argc, char** argv) {
 				parse = true;
 			} else if (arg == MOBS && require(argi, argc, arg)) {
 				mobs = atoi(argv[argi]); // NOLINT(cert-err34-c)
-				if (mobs < 1) help(L"Must be between 1-100", MOBS, ARGUMENT_OOB);
-				if (mobs > 100) help(L"Must be between 1-100", MOBS, ARGUMENT_OOB);
+				if (mobs < 1) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
+				if (mobs > 100) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
 			} else {
-				help(L"Unknown argument", arg, ARGUMENT_UNKNOWN);
+				help("Unknown argument", arg, ARGUMENT_UNKNOWN);
 			}
 		}
 	}
@@ -169,7 +166,7 @@ int main(int argc, char** argv) {
 		shared_ptr<Player> player;
 		if (player = dynamic_pointer_cast<Player>(mob)) {
 			//If it's a player, keep ticking until something interesting happens
-			dungeon->status = L"It's your turn!";
+			dungeon->status = "It's your turn!";
 			Player::Action action = Player::NONE;
 			while(action == Player::NONE) {
 				player->tick();
@@ -200,17 +197,17 @@ int main(int argc, char** argv) {
 
 		if (all) {
 			dungeon->print(base);
-			usleep(500000);
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		}
 	}
 
 	//Some status messages
 	if (!dungeon->getPlayer()->isAlive()) {
-		dungeon->status = L"You died! Better luck next time! (Press any key)";
+		dungeon->status = "You died! Better luck next time! (Press any key)";
 	} else if (dungeon->alive() == 0) {
-		dungeon->status = L"CONGLATURATION !!! (Press any key)";
+		dungeon->status = "CONGLATURATION !!! (Press any key)";
 	} else {
-		dungeon->status = L"See you later! (Press any key)";
+		dungeon->status = "See you later! (Press any key)";
 	}
 
 	//Show the dungeon once more before exiting.

@@ -1,6 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <curses.h>
 #include "mob.hpp"
 
 class Player: public Mob {
@@ -19,7 +20,7 @@ private:
 	Action action;
 
 private:
-	wstring relative(const Mob& other);
+	string relative(const Mob& other);
 	bool tickMap(int ch, uint& offset);
 	bool tickTarget(int ch, Point& dest);
 
@@ -32,9 +33,5 @@ public:
 
 
 };
-
-
-
-
 
 #endif

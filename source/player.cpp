@@ -1,27 +1,23 @@
-#define _XOPEN_SOURCE_EXTENDED
-
 #include "dungeon.hpp"
 
-Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(dungeon, 0) {
+Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(dungeon, 0, 0, 10, 100, WHITE, "Player", "@", vector<string>()) {
 	this->base = window;
 	this->action = NONE;
-	this->skills = 0;
-	this->known = 0;
-	this->speed = 10;
-	this->hp = 1;
-	this->turn = 1000/speed;
+	if (dungeon->isFancy()) {
+		this->symbol = "\U0001F464";
+	}
 }
 
-wstring Player::relative(const Mob& other) {
-	wstringstream str;
+string Player::relative(const Mob& other) {
+	stringstream str;
 	str
 		<< other.getSymbol()
-		<< (other.isAlive() ? L" is " : L" was killed ")
+		<< (other.isAlive() ? " is " : " was killed ")
 		<< abs(pos.y - other.getPos().y)
-		<< (other.getPos().y > pos.y ?  L" south " : L" north ")
+		<< (other.getPos().y > pos.y ?  " south " : " north ")
 		<< "and "
 		<< abs(pos.x - other.getPos().x)
-		<< (other.getPos().x < pos.x ? L" west." : L" east.");
+		<< (other.getPos().x < pos.x ? " west." : " east.");
 	return str.str();
 }
 
@@ -50,23 +46,23 @@ bool Player::tickMap(const int ch, uint& offset) {
 	}
 
 	//Show screen
-	mvwaddwstr(base, 0, 0, L"Monster list. Press 'q' or 'ESC' to exit.");
+	mvwaddstr(base, 0, 0, "Monster list. Press 'q' or 'ESC' to exit.");
 	for (int line = 0; line < max; line++) {
 		const shared_ptr<Mob> mob = line + offset < dungeon->getMobs().size() ? dungeon->getMobs()[line + offset] : nullptr;
 		if (mob) {
-			mvwaddwstr(base, line + 1, 0, relative(*mob).c_str());
+			mvwaddstr(base, line + 1, 0, relative(*mob).c_str());
 		} else {
-			mvwaddwstr(base, line + 1, 0, L"~");
+			mvwaddstr(base, line + 1, 0, "~");
 		}
 	}
 
 	//Print end marker if needed
 	if (offset + max >= dungeon->getMobs().size()) {
 		wattron(base, WA_STANDOUT);
-		mvwaddwstr(base, LINES - 1, 0, L"(END)");
+		mvwaddstr(base, LINES - 1, 0, "(END)");
 		wattroff(base, WA_STANDOUT);
 	} else {
-		mvwaddwstr(base, LINES - 1, 0, L":");
+		mvwaddstr(base, LINES - 1, 0, ":");
 	}
 
 	//Print and get new character
@@ -115,7 +111,7 @@ bool Player::tickTarget(const int ch, Point& dest) {
 			dest = Point((rand() % (dungeon->getDim().x - 2)) + 1, (rand() % (dungeon->getDim().y - 2)) + 1);
 			//FALLTHROUGH
 		case 'g':
-			dungeon->status = L"Woosh!";
+			dungeon->status = "Woosh!";
 			dungeon->getTile(dest).type = Tile::HALL;
 			move(dest);
 			return false;
@@ -131,7 +127,7 @@ bool Player::tickTarget(const int ch, Point& dest) {
 	dungeon->print(base);
 
 	//Move the destination down one because of the first status line
-	mvwaddwstr(base, dest.y + 1, dest.x, L"\x00D7");
+	mvwaddstr(base, dest.y + 1, dest.x, "\x00D7");
 
 	return true;
 }
@@ -185,21 +181,21 @@ void Player::tick() {
 			if (isOn(STAIRS_DOWN)) {
 				action = DOWN;
 			} else {
-				dungeon->status = L"You are not on a down staircase!";
+				dungeon->status = "You are not on a down staircase!";
 			}
 			break;
 		case '<':
 			if (isOn(STAIRS_UP)) {
 				action = UP;
 			} else {
-				dungeon->status = L"You are not on an up staircase!";
+				dungeon->status = "You are not on an up staircase!";
 			}
 			break;
 		case 'Q':
 			action = QUIT;
 			break;
 		case 'q':
-			dungeon->status = L"If you really want to quit, try 'shift-q' instead.";
+			dungeon->status = "If you really want to quit, try 'shift-q' instead.";
 			break;
 		case 'm':
 			//keep ticking and getting characters until tick returns false
@@ -207,19 +203,19 @@ void Player::tick() {
 			break;
 		case 'g':
 			ch = 0;
-			dungeon->status = L"You cheater! You entered teleport mode!";
+			dungeon->status = "You cheater! You entered teleport mode!";
 			while(tickTarget(ch, dest)) ch = getch();
 			break;
 		case 'f':
-			dungeon->status = L"You cheater! You toggled the fog!";
+			dungeon->status = "You cheater! You toggled the fog!";
 			dungeon->setFoggy(!dungeon->isFoggy());
 			break;
 		default:
-			dungeon->status = to_wstring(ch) + L" is invalid!";
+			dungeon->status = to_string(ch) + " is invalid!";
 	}
 
 	//Move the player character
-	if (res == FAILURE) dungeon->status =  L"I can't dig through that!";
+	if (res == FAILURE) dungeon->status =  "I can't dig through that!";
 	if (res == SUCCESS) {
 		action = MOVE;
 		dungeon->recalculate();

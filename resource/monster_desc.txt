@@ -1,0 +1,324 @@
+RLG327 MONSTER DESCRIPTION 1.1
+
+BEGIN MONSTER
+NAME Skeleton
+DESC
+A spooky skeleton. It seems to be in this dungeon trying to protect
+something. Don't turn your back on it - or do, you'll probably hear it 
+coming considering how loud it is...
+.
+COLOR WHITE
+ABIL TELE
+SPEED 7+1d4
+HP 12+2d6
+DAM 0+1d8
+SYMB k💀
+RRTY 90
+END
+
+
+BEGIN MONSTER
+NAME White Wolf
+DESC
+I'd say it's probably best to not wake the white wolf, but it looks like you
+already have. It's fangs look sharp and it's growling at you. It bites hard,
+if it manages to land a hit.
+.
+COLOR WHITE
+ABIL SMART
+SPEED 10+4d2
+HP 300+1d100
+DAM 10+2d30
+SYMB p🐺
+RRTY 40
+END
+
+
+BEGIN MONSTER
+NAME Ghost
+DESC
+AHH! IT'S A GHOST! CALL THE GHOSTBUSTERS, QUICK.
+
+Looks like this ghost has no reason to stop for walls. Curiously, it seems
+to always know where you are. If it could interact with the real world
+better than causing annoying gusts of wind, perhaps it could do a little
+more to harm you.
+
+Hey, how'd it get that item through the wall anyway!
+.
+COLOR WHITE
+ABIL TELE PASS PICKUP
+SPEED 3+4d3
+HP 200+1d100
+DAM 5+1d4
+SYMB g👻
+RRTY 50
+END
+
+
+BEGIN MONSTER
+NAME Aatrox
+DESC
+Aatrox is an angry, no good demon that wants to see the destruction of the
+world. Him, with his bloody sword of doom, could stomp you in a second. 
+It's up to you to kick him out of the dungeon for good. But something seems
+different about him. You seem to recall something about him "changing" in
+a mythical book called "patch notes", but don't remember what.
+.
+COLOR RED
+ABIL SMART TELE UNIQ
+SPEED 4+2d5
+HP 537+10d85
+DAM 25+3d8
+SYMB d👿
+RRTY 10
+END
+
+
+BEGIN MONSTER
+NAME Boar-q-pine
+DESC
+A vicious boar with deadly quills. Why does this one have quills? They seem
+to get stuck everywhere anyway! It's so vicious and angry it breaks down the
+walls of the dungeon. If you manage to leave it alone for long enough it
+might collapse the ceiling!
+
+It's unfortunate that these beasts go from being a docile and friendly
+creature to an angry, vicious beast when older. This one is older, and
+doesn't look happy.
+
+Off the top of your head, you seem to recall reading about one in a book of
+four nations...
+.
+COLOR RED
+ABIL TUNNEL
+SPEED 5+1d3
+HP 60+1d10
+DAM 8+3d6
+SYMB b🐗
+RRTY 80
+END
+
+
+BEGIN MONSTER
+NAME Golden Rajang
+DESC
+IT SHOOTS ELECTRICITY? WHO THOUGHT THIS WAS A GOOD IDEA? WHY IS IT SO FAST?
+
+Maybe if I time my dodges correctly, I could roll right through it's laser
+and not get my sorry ass carted back to the camp this time. 
+
+*Reward decreased by 9800z*
+.
+COLOR YELLOW
+ABIL SMART TUNNEL
+SPEED 20+0d1
+HP 90+1d10
+DAM 16+0d1
+SYMB r🐵
+RRTY 10
+END
+
+
+BEGIN MONSTER
+NAME Ogre
+DESC
+An ogre has laye-
+
+What are you doing in my swamp?! Get out of my swamp!
+I know you are there!
+.
+COLOR GREEN
+ABIL TELE TUNNEL
+SPEED 10+0d1
+HP 50+2d500
+DAM 10+3d5
+SYMB s👹
+RRTY 30
+END
+
+
+BEGIN MONSTER
+NAME Alduin
+DESC
+Seems to share the same interests as Aatrox as a world eater.
+Perhaps this time more... literally...
+
+Vicious teeth, fierce eyes, Alduin has been waiting to take you on since the
+beginning of time. You pull out your trusty sword in preparation to strike.
+...And don't forget the cheese wheels. You'll need those too.
+
+"And the Scrolls have foretold of black wings in the cold, 
+That when brothers wage war come unfurled! Alduin, Bane 
+of Kings, ancient shadow unbound, With a hunger to 
+swallow the world!" 
+    ―Song of the Dragonborn
+.
+COLOR WHITE
+ABIL SMART TELE TUNNEL UNIQ DESTROY
+SPEED 80+0d1
+HP 6666+0d666
+DAM 0+1d4
+SYMB D🐲
+RRTY 5
+END
+
+
+BEGIN MONSTER
+NAME Octocat
+DESC
+It looks like an octopus, but it also looks like a cat. An octocat?
+Some say they love to lie in the BRANCHES of CHERRY-PICKED trees, and others
+say they can COMMIT to a full day on the beach under the sun. 
+
+Other folks tell stories of octocats with DETACHED HEADs as spooky Halloween
+stories. 
+
+Unfortunately the octocat seems to become more in danger every day with 
+people FORCE PUSHING the animal out of it's natural habitat. Maybe one day
+they will GIT GOOD and find a way to survive.
+.
+COLOR BLUE
+ABIL SMART ERRATIC PICKUP
+SPEED 13+2d4
+HP 100+1d50
+DAM 5+1d6
+SYMB o🐙
+RRTY 30
+END
+
+BEGIN MONSTER
+NAME Snake
+DESC
+This scares the octocat.
+.
+COLOR GREEN CYAN MAGENTA YELLOW
+ABIL TUNNEL ERRATIC
+SPEED 50+0d1
+HP 10+1d10
+DAM 0+10d2
+SYMB s🐍
+RRTY 75
+END
+
+
+BEGIN MONSTER
+NAME Goblin
+DESC
+It's a pretty standard goblin. Sort, angry, and packs a punch.
+
+And the punch is coming right at you! Duck! 
+Wait, that's a bad idea!
+.
+COLOR GREEN
+ABIL SMART TELE ERRATIC DESTROY
+SPEED 2+0d1
+HP 300+5d100
+DAM 100+9d9
+SYMB p👺
+RRTY 70
+END
+
+
+BEGIN MONSTER
+NAME Invader
+DESC
+It's an alien invasion! And they are shooting what appears to be little
+squares! Quick, shoot them down with a cannon before they zig zag and
+invade the world!
+
+They seem to be in a pattern, so quick, take this 2600 controller and 
+get blasting!
+
+                 
+     \     /     
+  \ /MMMMMMM\ /   
+   |MM MMM MM|   
+   \MMMMMMMMM/   
+    /      \     
+                 
+      BLOOP      
+.
+COLOR MAGENTA
+ABIL TUNNEL ERRATIC DESTROY
+SPEED 10+0d1
+HP 100+0d1
+DAM 0+3d5
+SYMB M👾
+RRTY 65
+END
+
+
+BEGIN MONSTER
+NAME Tiger
+DESC
+It's not a cat.
+But you want to pet it.
+But that would be a bad idea. 
+You would like to keep your face in-tact today.
+
+     (^\-==-/^)
+     >\\ == //<
+    :== q''p ==:     _
+     .__ qp __.    .' )
+      / ^--^ \    /\.'
+     /_`    / )  '\/
+     (  )  \  |-'-/
+     \^^,   |-|--'
+    ( `'    |_| )
+     \-     |-|/
+    (( )^---( ))
+
+[http://www.ascii-art.de/]
+.
+COLOR YELLOW
+ABIL TUNNEL ERRATIC DESTROY
+SPEED 15+1d5
+HP 200+5d10
+DAM 9+4d4
+SYMB T🐯
+RRTY 50
+END
+
+
+BEGIN MONSTER
+NAME Alien (Xenomorph XX121)
+DESC
+You know, now would be a REALLY GOOD TIME for an airlock to the vacuum of
+outer space. Where are those when you need one anyway?
+
+I guess the next best thing to take care of this would be fire, but it's
+almost certain to come back. 
+
+And it will be more angry than before.
+Very...
+Angry...
+
+"This is Ripley, last survivor of the Nostromo, signing off."
+    -Ellen Ripley
+.
+COLOR BLACK
+ABIL SMART TELE TUNNEL ERRATIC PICKUP
+SPEED 60+0d1
+HP 30+0d1
+DAM 10000+10d1000
+SYMB A👽
+RRTY 10
+END
+
+
+BEGIN MONSTER
+NAME Headless Horseman
+DESC
+He doesn't seem to be with his horse right now.
+
+He also probably wouldn't like if you stuck a candle in his head.
+.
+COLOR RED
+ABIL SMART TELE TUNNEL ERRATIC PICKUP PASS UNIQ
+SPEED 10+0d1
+HP 500+0d1
+DAM 10+10d10
+SYMB P🎃
+RRTY 5
+END

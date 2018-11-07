@@ -2,6 +2,7 @@
 #define TILE_HPP
 
 #include <cstdint>
+#include <string>
 
 class Tile {
 public:
@@ -13,35 +14,80 @@ public:
 		HALL,
 	};
 
-	enum Symbol : wchar_t {
+	enum Symbol {
 		//Edges across board
-		EDGE_N = L'\x2584',
-		EDGE_E = L'\x2588',
-		EDGE_S = L'\x2580',
-		EDGE_W = L'\x2588',
+		EDGE_N,
+		EDGE_E,
+		EDGE_S,
+		EDGE_W,
 
 		//Rocks
-		ROCK_SOFT = L'\x2591',
-		ROCK_MED = L'\x2592',
-		ROCK_HARD = L'\x2593',
+		ROCK_SOFT,
+		ROCK_MED,
+		ROCK_HARD,
 
 		//Hall
-		HALL_SYM = L'\x2022',
-		HALL_NESW = L' ',
-		HALL_NES = L'\x2560',
-		HALL_ESW = L'\x2566',
-		HALL_SWN = L'\x2563',
-		HALL_WNE = L'\x2569',
-		HALL_NE = L'\x255A',
-		HALL_ES = L'\x2554',
-		HALL_SW = L'\x2557',
-		HALL_WN = L'\x255D',
-		HALL_NS = L'\x2551',
-		HALL_EW = L'\x2550',
+		HALL_SYM,
+		HALL_NESW,
+		HALL_NES,
+		HALL_ESW,
+		HALL_SWN,
+		HALL_WNE,
+		HALL_NE,
+		HALL_ES,
+		HALL_SW,
+		HALL_WN,
+		HALL_NS,
+		HALL_EW,
 
 		//Rooms are air
-		ROOM_SYM = L' ',
-		VOID_SYM = L' ',
+		ROOM_SYM,
+		VOID_SYM,
+	};
+	
+	const static std::string getStr(Symbol sym) {
+		switch(sym) {
+			case EDGE_E:
+			case EDGE_W:
+				return "\u2588";
+			case EDGE_N:
+				return "\u2584";
+			case EDGE_S:
+				return "\u2580";
+			case ROCK_SOFT:
+				return "\u2591";
+			case ROCK_MED:
+				return "\u2592";
+			case ROCK_HARD:
+				return "\u2593";
+			case HALL_SYM:
+				return "\u2022";
+
+			case HALL_NES:
+				return "\u2560";
+			case HALL_ESW:
+				return "\u2566";
+			case HALL_SWN:
+				return "\u2563";
+			case HALL_WNE:
+				return "\u2569";
+			case HALL_NE:
+				return "\u255A";
+			case HALL_ES:
+				return "\u2554";
+			case HALL_SW:
+				return "\u2557";
+			case HALL_WN:
+				return "\u255D";
+			case HALL_NS:
+				return "\u2551";
+			case HALL_EW:
+				return "\u2550";
+			case ROOM_SYM:
+			case VOID_SYM:
+			case HALL_NESW:
+				return " ";
+		}
 	};
 
 public:

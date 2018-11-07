@@ -9,17 +9,17 @@ Entity::Entity(Dungeon* dungeon, Type type, bool halls) {
 	this->remembered = false;
 }
 
-const wstring Entity::getSymbol() const {
-	const wstring ENT[] = {
-		L"?", //Mob has it's own definition.
-		L"\x25b2", //Up pointing triangle.
-		L"\x25bc", //Down pointing triangle.
+const string Entity::getSymbol() const {
+	const string ENT[] = {
+		"?", //Mob has it's own definition.
+		"\u25b2", //Up pointing triangle.
+		"\u25bc", //Down pointing triangle.
 	};
 
-	const wstring ENT_BORING[] = {
-		L"?",
-		L"<",
-		L">",
+	const string ENT_BORING[] = {
+		"?",
+		"<",
+		">",
 	};
 
 	if (dungeon->isFancy()) {

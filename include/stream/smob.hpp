@@ -46,6 +46,10 @@ public:
 	static KeyWord toKeyWord(string word);
 	static Mob::Color toColor(string color);
 	static Mob::Skills toSkill(string skill);
+	Mob getMob(Dungeon* dungeon, int turn) const;
+	int getRarity() {
+		return rarity;
+	}
 
 private:
 	ostream& dump(ostream& out) const override;
