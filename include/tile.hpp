@@ -87,6 +87,8 @@ public:
 			case VOID_SYM:
 			case HALL_NESW:
 				return " ";
+			default:
+				return "X";
 		}
 	};
 

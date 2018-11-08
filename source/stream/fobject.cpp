@@ -1,5 +1,7 @@
 #include <iostream>
 #include <bitset>
+#include <stream/fobject.hpp>
+
 
 #include "main.hpp"
 #include "stream/fmob.hpp"
@@ -185,4 +187,25 @@ bool FObject::isEquipment() const {
 
 	//Checks if all "types" bits are in "equipment" bits
 	return (types | equipment) == equipment;
+}
+
+Object FObject::getObject(Dungeon *dungeon) {
+	return Object(
+		dungeon,
+		this,
+		getRandomColor(colors),
+		types,
+		hit.roll(),
+		dodge.roll(),
+		def.roll(),
+		weight.roll(),
+		speed.roll(),
+		attribute.roll(),
+		value.roll(),
+		dam,
+		name,
+		"*",
+		"*",
+		description
+	);
 }

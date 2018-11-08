@@ -37,6 +37,7 @@ private:
 	priority_queue<shared_ptr<Mob>, vector<shared_ptr<Mob>>, TurnOrder> turn;
 	vector<Room> rooms;
 	vector<Entity> entities;
+	vector<Object> objects;
 	vector<vector<Tile>> tiles;
 	vector<vector<Tile>> fog;
 	Path map;
@@ -49,15 +50,16 @@ public:
 	static const int FOG_Y = 2;
 
 private:
-	bool roomPlaceAttempt(const Room& room);
-	void roomConnectRasterize(const Point& from, const Point& to);
-	void roomConnect(const Room& first, const Room& second);
-	void roomPlace(const Room& room);
-	void roomGenerate();
-	void hallPlace(const Point& point);
-	void tilePlace(const Point &pos, uint8_t hardness, const float* seed);
-	void entityGenerate(int floor);
-	void mobGenerate(vector<FMob> factoryMob, int total);
+	void connectRoomRasterize(const Point &from, const Point &to);
+	void connectRoom(const Room &first, const Room &second);
+	bool placeRoomAttempt(const Room &room);
+	void placeRoom(const Room &room);
+	void placeHall(const Point &point);
+	void placeTile(const Point &pos, uint8_t hardness, const float *seed);
+	void generateRooms();
+	void generateEntities(int floor);
+	void generateObjects();
+	void generateMobs(vector<FMob> factoryMob, int total);
 	void printMob(WINDOW *win, const shared_ptr<Mob> &m);
 	void postProcess(vector<vector<Tile>>& tiles);
 	int isFull();

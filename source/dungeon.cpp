@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <fstream>
 #include <cstring>
+#include <dungeon.hpp>
+
 
 #include "dungeon.hpp"
 #include "perlin.hpp"
@@ -30,21 +32,7 @@ static const int ROOM_CON_RAD_MIN = 1;
 static const string HEADER = "RLG327-F2018"; // NOLINT(cert-err58-cpp)
 static const uint32_t VERSION = 0;
 
-bool Dungeon::roomPlaceAttempt(const Room& room) {
-	for (int row = room.pos.y - 1; row < room.pos.y + room.dim.y + 1; row++) {
-		for (int col = room.pos.x - 1; col < room.pos.x + room.dim.x + 1; col++) {
-			if (row < 0) return false;
-			if (col < 0) return false;
-			if (row >= dim.y) return false;
-			if (col >= dim.x) return false;
-			if (tiles[row][col].type == Tile::ROOM) return false;
-		}
-	}
-	
-	return true;
-}
-
-void Dungeon::roomConnectRasterize(const Point& from, const Point& to) {
+void Dungeon::connectRoomRasterize(const Point &from, const Point &to) {
 	Point current = from;
 	Point dist = Point();
 	Point step = Point();
@@ -55,8 +43,8 @@ void Dungeon::roomConnectRasterize(const Point& from, const Point& to) {
 	step.y = (from.y < to.y ? 1 : -1);
 	
 	int error = dist.x + dist.y;
-	
-	hallPlace(current);
+
+	placeHall(current);
 	
 	while (current.x != to.x || current.y != to.y) {
 		if (2 * error - dist.y > dist.x - 2 * error) {
@@ -68,12 +56,12 @@ void Dungeon::roomConnectRasterize(const Point& from, const Point& to) {
 			error += dist.x;
 			current.y += step.y;
 		}
-		
-		hallPlace(current);
+
+		placeHall(current);
 	}
 }
 
-void Dungeon::roomConnect(const Room& first, const Room& second) {
+void Dungeon::connectRoom(const Room &first, const Room &second) {
 	Point start = Point();
 	Point end = Point();
 	Point offset = Point();
@@ -103,11 +91,25 @@ void Dungeon::roomConnect(const Room& first, const Room& second) {
 	if(mid.x > dim.x - 2) mid.x = dim.x - 2;
 	if(mid.y > dim.y - 2) mid.y = dim.y - 2;
 
-	roomConnectRasterize(start, mid);
-	roomConnectRasterize(mid, end);
+	connectRoomRasterize(start, mid);
+	connectRoomRasterize(mid, end);
 }
 
-void Dungeon::roomPlace(const Room& room) {
+bool Dungeon::placeRoomAttempt(const Room &room) {
+	for (int row = room.pos.y - 1; row < room.pos.y + room.dim.y + 1; row++) {
+		for (int col = room.pos.x - 1; col < room.pos.x + room.dim.x + 1; col++) {
+			if (row < 0) return false;
+			if (col < 0) return false;
+			if (row >= dim.y) return false;
+			if (col >= dim.x) return false;
+			if (tiles[row][col].type == Tile::ROOM) return false;
+		}
+	}
+
+	return true;
+}
+
+void Dungeon::placeRoom(const Room &room) {
 	for (int row = room.pos.y; row < room.pos.y + room.dim.y; row++) {
 		for (int col = room.pos.x; col < room.pos.x + room.dim.x; col++) {
 			Tile& tile = tiles[row][col];
@@ -120,20 +122,7 @@ void Dungeon::roomPlace(const Room& room) {
 	rooms.push_back(room);
 }
 
-void Dungeon::roomGenerate() {
-	Room room;
-	
-	do {
-		room.dim.x = skewBetweenRange(4, ROOM_X_MIN, ROOM_X_MAX);
-		room.dim.y = skewBetweenRange(4, ROOM_Y_MIN, ROOM_Y_MAX);
-		room.pos.x = (rand() % (dim.x - 1 - room.dim.x)) + 1;
-		room.pos.y = (rand() % (dim.y - 1 - room.dim.y)) + 1;
-	} while (!roomPlaceAttempt(room));
-
-	roomPlace(room);
-}
-
-void Dungeon::hallPlace(const Point& point) {
+void Dungeon::placeHall(const Point &point) {
 	if (point > Point() && point < (dim - Point(1,1))) {
 		Tile& tile = tiles[point.y][point.x];
 		if (tile.type == Tile::ROCK) {
@@ -144,7 +133,7 @@ void Dungeon::hallPlace(const Point& point) {
 	}
 }
 
-void Dungeon::tilePlace(const Point &pos, uint8_t hardness, const float* seed) {
+void Dungeon::placeTile(const Point &pos, uint8_t hardness, const float *seed) {
 	Tile tile{};
 	
 	//Defaults
@@ -178,19 +167,20 @@ void Dungeon::tilePlace(const Point &pos, uint8_t hardness, const float* seed) {
 	tiles[pos.y][pos.x] = tile;
 }
 
-int Dungeon::isFull() {
-	float total = dim.x * dim.y;
-	float room = 0.0;
-	for(int row = 0; row < dim.y; row++) {
-		for(int col = 0; col < dim.x; col++) {
-			if (tiles[row][col].type == Tile::ROOM) room = room + 1.0f;
-		}
-	}
-	
-	return room/total > ROOM_MAX_FULLNESS;
+void Dungeon::generateRooms() {
+	Room room;
+
+	do {
+		room.dim.x = skewBetweenRange(4, ROOM_X_MIN, ROOM_X_MAX);
+		room.dim.y = skewBetweenRange(4, ROOM_Y_MIN, ROOM_Y_MAX);
+		room.pos.x = (rand() % (dim.x - 1 - room.dim.x)) + 1;
+		room.pos.y = (rand() % (dim.y - 1 - room.dim.y)) + 1;
+	} while (!placeRoomAttempt(room));
+
+	placeRoom(room);
 }
 
-void Dungeon::mobGenerate(vector<FMob> factoryMob, int total) {
+void Dungeon::generateMobs(vector<FMob> factoryMob, int total) {
 	int generated = 0;
 	bool running = true;
 	while(running) {
@@ -209,7 +199,11 @@ void Dungeon::mobGenerate(vector<FMob> factoryMob, int total) {
 	}
 }
 
-void Dungeon::entityGenerate(int floor) {
+void Dungeon::generateObjects() {
+	
+}
+
+void Dungeon::generateEntities(int floor) {
 	//Create up stairs always
 	Entity up(this, Entity::STAIRS_UP, Entity::Color::WHITE, false);
 	entities.push_back(up);
@@ -324,8 +318,8 @@ void Dungeon::finalize(vector<FMob>& fMob, vector<FObject>& fObject, int count, 
 	for(auto& m : fMob) m.setSpawned(false);
 
 	//Create mobs
-	mobGenerate(fMob, count + floor > 100 ? 100 : count + floor);
-	entityGenerate(floor);
+	generateMobs(fMob, count + floor > 100 ? 100 : count + floor);
+	generateEntities(floor);
 	recalculate();
 
 	//Create the turn queue
@@ -367,14 +361,14 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim)
 	fog = tiles;
 	for(int row = 0; row < dim.y; row++) {
 		for(int col = 0; col < dim.x; col++) {
-			tilePlace((Point) {col, row}, 0x01, seed);
+			placeTile((Point) {col, row}, 0x01, seed);
 		}
 	}
 	
 	//Create rooms
 	for(int count = 0; count < ROOMS_MAX; count++) {
 		if (count >= ROOMS_MIN && isFull()) break;
-		roomGenerate();
+		generateRooms();
 	}
 	
 	//Sort (for consistency)
@@ -389,9 +383,9 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim)
 	player->move(Point(rooms[0].pos.x + (rooms[0].dim.x)/2, rooms[0].pos.y + (rooms[0].dim.y)/2));
 
 	//Create the paths.
-	roomConnect(rooms[0], rooms[rooms.size() - 1]);
+	connectRoom(rooms[0], rooms[rooms.size() - 1]);
 	for(uint first = 0; first < rooms.size() - 1; first++) {
-		roomConnect(rooms[first], rooms[first + 1]);
+		connectRoom(rooms[first], rooms[first + 1]);
 	}
 }
 
@@ -452,8 +446,8 @@ Dungeon::Dungeon(WINDOW* base, fstream& file)
 				wprintf(L"Missing tile harness information (EOF)!\n");
 				exit(FILE_READ_EOF_HARDNESS);
 			}
-			
-			tilePlace(Point(col, row), hardness, nullptr);
+
+			placeTile(Point(col, row), hardness, nullptr);
 		}
 	}
 	
@@ -479,7 +473,7 @@ Dungeon::Dungeon(WINDOW* base, fstream& file)
 		room.dim.x = dimX + room.pos.x >= dim.x ? 1 : dimX;
 		room.dim.y = dimY + room.pos.y >= dim.x ? 1 : dimY;
 
-		roomPlace(room);
+		placeRoom(room);
 	}
 
 	player = make_shared<Player>(this, base);
@@ -629,4 +623,16 @@ void Dungeon::updateFoggy() {
 			}
 		}
 	}
+}
+
+int Dungeon::isFull() {
+	float total = dim.x * dim.y;
+	float room = 0.0;
+	for(int row = 0; row < dim.y; row++) {
+		for(int col = 0; col < dim.x; col++) {
+			if (tiles[row][col].type == Tile::ROOM) room = room + 1.0f;
+		}
+	}
+
+	return room/total > ROOM_MAX_FULLNESS;
 }

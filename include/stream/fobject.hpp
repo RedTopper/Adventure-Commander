@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "object.hpp"
 #include "dice.hpp"
 #include "stream.hpp"
 
@@ -78,6 +79,7 @@ private:
 public:
 	static KeyWord toKeyWord(string word);
 	static Type toType(string word);
+	Object getObject(Dungeon* dungeon);
 	bool isEquipment() const;
 	bool isArtifact() {
 		return artifact;
