@@ -7,6 +7,7 @@
 #include "dice.hpp"
 #include "stream.hpp"
 #include "mob.hpp"
+#include "entity.hpp"
 
 using namespace std;
 
@@ -48,7 +49,7 @@ private:
 
 public:
 	static KeyWord toKeyWord(string word);
-	static Mob::Color toColor(string color);
+	static Entity::Color toColor(string color);
 	static Mob::Skills toSkill(string skill);
 	Mob getMob(Dungeon* dungeon, int turn);
 	int getRarity() {

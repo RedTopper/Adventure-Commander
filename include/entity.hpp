@@ -17,26 +17,38 @@ public:
 		STAIRS_DOWN
 	};
 
-	const string getSymbol() const;
-	const string getSymbolAlt() const {
-		return this->symbolAlt;
-	}
+	enum Color {
+		COLOR_BAD = 0,
+		RED     = (1 << 0),
+		GREEN   = (1 << 1),
+		BLUE    = (1 << 2),
+		CYAN    = (1 << 3),
+		YELLOW  = (1 << 4),
+		MAGENTA = (1 << 5),
+		WHITE   = (1 << 6),
+		BLACK   = (1 << 7)
+	};
 
 protected:
 	bool remembered;
 	Dungeon* dungeon;
 	Type type;
 	Point pos;
+	Color color;
+	string name;
 	string symbol;
 	string symbolAlt;
-	string name;
 	vector<string> description;
-	Color color;
 
 	Point getSpawn(bool halls) const;
 
 public:
-	Entity(Dungeon* dungeon, Type type, bool halls);
+	Entity(Dungeon* dungeon, Type type, Color color, bool halls);
+	const string getSymbol() const;
+
+	const string getSymbolAlt() const {
+		return this->symbolAlt;
+	}
 
 	const Type& getType() const {
 		return type;
@@ -56,6 +68,10 @@ public:
 
 	void setRemembered(bool r) {
 		remembered = r;
+	}
+
+	Color getColor() const {
+		return color;
 	}
 };
 

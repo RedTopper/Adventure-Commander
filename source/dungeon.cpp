@@ -211,12 +211,12 @@ void Dungeon::mobGenerate(vector<FMob> factoryMob, int total) {
 
 void Dungeon::entityGenerate(int floor) {
 	//Create up stairs always
-	Entity up(this, Entity::STAIRS_UP, false);
+	Entity up(this, Entity::STAIRS_UP, Entity::Color::WHITE, false);
 	entities.push_back(up);
 
 	if (floor) {
 		//Above the 0th floor, allow player to go down.
-		Entity down(this, Entity::STAIRS_DOWN, false);
+		Entity down(this, Entity::STAIRS_DOWN, Entity::Color::WHITE, false);
 		down.setPos(player->getPos());
 		entities.push_back(down);
 	}

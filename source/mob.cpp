@@ -1,6 +1,7 @@
 #include "path.hpp"
 #include "mob.hpp"
 #include "dungeon.hpp"
+#include "entity.hpp"
 
 const int MAX_KNOWN_TURNS = 5;
 
@@ -17,9 +18,8 @@ Mob::Mob(
 	const string& symbol,
 	const string& symbolAlt,
 	const vector<string>& description
-) : Entity(dungeon, Entity::OTHER, true) {
+) : Entity(dungeon, Entity::OTHER, color, true) {
 	this->known = 0;
-	this->color = color;
 	this->order = order;
 	this->skills = skills;
 	this->speed = speed;
@@ -30,6 +30,7 @@ Mob::Mob(
 	this->symbolAlt = symbolAlt;
 	this->description = description;
 	this->turn = 1000/speed;
+	this->factory = factory;
 }
 
 void Mob::statusString(const string& text, const string& type) {

@@ -2,12 +2,7 @@
 #include "entity.hpp"
 #include "dungeon.hpp"
 
-Entity::Entity(Dungeon* dungeon, Type type, bool halls) {
-	this->dungeon = dungeon;
-	this->type = type;
-	this->pos = getSpawn(halls);
-	this->remembered = false;
-
+Entity::Entity(Dungeon* dungeon, Type type, Color color, bool halls) {
 	const string ENT[] = {
 			"?", //Mob has it's own definition.
 			"\u25b2", //Up pointing triangle.
@@ -20,8 +15,14 @@ Entity::Entity(Dungeon* dungeon, Type type, bool halls) {
 			">",
 	};
 
+	this->dungeon = dungeon;
+	this->type = type;
+	this->pos = getSpawn(halls);
+	this->remembered = false;
+	this->color = color;
 	this->symbol = ENT[type];
 	this->symbolAlt = ENT_BORING[type];
+	this->name = symbol;
 }
 
 Point Entity::getSpawn(const bool halls) const {

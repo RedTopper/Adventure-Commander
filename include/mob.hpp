@@ -30,18 +30,6 @@ public:
 		BOSS         = (1 << 8),
 	};
 
-	enum Color {
-		COLOR_BAD = 0,
-		RED     = (1 << 0),
-		GREEN   = (1 << 1),
-		BLUE    = (1 << 2),
-		CYAN    = (1 << 3),
-		YELLOW  = (1 << 4),
-		MAGENTA = (1 << 5),
-		WHITE   = (1 << 6),
-		BLACK   = (1 << 7)
-	};
-
 	enum Action {
 		NONE,
 		UP,
@@ -61,7 +49,6 @@ protected:
 	int speed;
 	int hp;
 	Dice dam;
-
 
 	//For player inputs
 	Action action = NONE;
@@ -98,6 +85,7 @@ public:
 	Movement move(const Point& next);
 	bool isOn(Entity::Type type) const;
 	bool isBefore(const Mob& other) const;
+
 	bool isAlive() const {
 		return hp > 0;
 	}
@@ -116,10 +104,6 @@ public:
 
 	Action getAction() const {
 		return action;
-	}
-
-	Color getColor() const {
-		return color;
 	}
 };
 

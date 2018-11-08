@@ -6,15 +6,32 @@
 #include "entity.hpp"
 #include "mob.hpp"
 
+class FObject;
 class Object : public Entity {
+public:
+	Object(
+		Dungeon *dungeon,
+		FObject* factory,
+		Color color,
+		int types,
+		int hit,
+		int dodge,
+		int def,
+		int weight,
+		int speed,
+		int attribute,
+		int value,
+		const Dice& dam,
+		const string& name,
+		const string& symbol,
+		const string& symbolAlt,
+		const vector<string>& description
+	);
+
 private:
-	int types;
-	Mob::Color color;
-
+	FObject* factory;
 	Dice dam;
-	string name;
-	vector<string> description;
-
+	int types;
 	int hit;
 	int dodge;
 	int def;
@@ -24,7 +41,7 @@ private:
 	int value;
 
 public:
-	Object(Dungeon *dungeon, Entity::Type type, bool halls);
+
 };
 
 #endif

@@ -6,6 +6,7 @@
 #include "main.hpp"
 #include "mob.hpp"
 #include "stream/fmob.hpp"
+#include "entity.hpp"
 
 FMob::KeyWord FMob::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
@@ -24,16 +25,16 @@ FMob::KeyWord FMob::toKeyWord(string word) {
 	else return KWD_BAD;
 }
 
-Mob::Color FMob::toColor(string color) {
-	if     (color == "RED") return Mob::RED;
-	else if(color == "GREEN") return Mob::GREEN;
-	else if(color == "BLUE") return Mob::BLUE;
-	else if(color == "CYAN") return Mob::CYAN;
-	else if(color == "YELLOW") return Mob::YELLOW;
-	else if(color == "MAGENTA") return Mob::MAGENTA;
-	else if(color == "WHITE") return Mob::WHITE;
-	else if(color == "BLACK") return Mob::BLACK;
-	else return Mob::COLOR_BAD;
+Entity::Color FMob::toColor(string color) {
+	if     (color == "RED") return Entity::RED;
+	else if(color == "GREEN") return Entity::GREEN;
+	else if(color == "BLUE") return Entity::BLUE;
+	else if(color == "CYAN") return Entity::CYAN;
+	else if(color == "YELLOW") return Entity::YELLOW;
+	else if(color == "MAGENTA") return Entity::MAGENTA;
+	else if(color == "WHITE") return Entity::WHITE;
+	else if(color == "BLACK") return Entity::BLACK;
+	else return Entity::COLOR_BAD;
 }
 
 Mob::Skills FMob::toSkill(string skill) {
