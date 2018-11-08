@@ -143,8 +143,8 @@ int FMob::getRequired() const {
 	);
 }
 
-Mob FMob::getMob(Dungeon* dungeon, int turn) const {
-	return Mob(dungeon, getRandomColor(colors), turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
+Mob FMob::getMob(Dungeon* dungeon, int turn) {
+	return Mob(dungeon, this, getRandomColor(colors), turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
 }
 
 

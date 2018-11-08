@@ -59,7 +59,6 @@ private:
 	void entityGenerate(int floor);
 	void mobGenerate(vector<FMob> factoryMob, int total);
 	void printMob(WINDOW *win, const shared_ptr<Mob> &m);
-
 	void postProcess(vector<vector<Tile>>& tiles);
 	int isFull();
 

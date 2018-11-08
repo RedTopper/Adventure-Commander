@@ -49,7 +49,7 @@ public:
 	static KeyWord toKeyWord(string word);
 	static Mob::Color toColor(string color);
 	static Mob::Skills toSkill(string skill);
-	Mob getMob(Dungeon* dungeon, int turn) const;
+	Mob getMob(Dungeon* dungeon, int turn);
 	int getRarity() {
 		return rarity;
 	}
