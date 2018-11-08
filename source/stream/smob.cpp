@@ -144,7 +144,7 @@ int SMob::getRequired() const {
 }
 
 Mob SMob::getMob(Dungeon* dungeon, int turn) const {
-	return Mob(dungeon, Mob::Color::RED, turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
+	return Mob(dungeon, getRandomColor(colors), turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
 }
 
 

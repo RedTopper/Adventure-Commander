@@ -281,7 +281,7 @@ bool Mob::isOn(Entity::Type type) const {
 	return false;
 }
 
-bool Mob::isBefore(const Mob &other) const {
+bool Mob::isBefore(const Mob& other) const {
 	if (turn < other.getTurn()) {
 		return true;
 	} else if (turn == other.getTurn()) {

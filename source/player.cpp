@@ -15,6 +15,7 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 ) {
 	this->base = window;
 	this->action = NONE;
+	this->turn = 0;
 }
 
 string Player::relative(const Mob& other) {

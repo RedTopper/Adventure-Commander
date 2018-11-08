@@ -4,8 +4,6 @@
 #include <string>
 #include <stack>
 #include <fstream>
-#include <chrono>
-#include <thread>
 
 #include "main.hpp"
 #include "dungeon.hpp"
@@ -91,6 +89,34 @@ string &trim(string &str, const string &chars) {
 	return ltrim(rtrim(str, chars), chars);
 }
 
+Mob::Color getRandomColor(int colors) {
+	if (!colors) return Mob::Color::WHITE;
+
+	//Count the number of bits set in colors
+	int bits = colors;
+	int count = 0;
+	while (bits) {
+		count += bits & 1;
+		bits >>= 1;
+	}
+
+	//Get a random number from 1 - set bits
+	count = (rand() % count) + 1;
+	int color = 1;
+
+	//Check if we hit a bit
+	while (count) {
+		if (color & colors) {
+			count--;
+			continue;
+		}
+
+		color <<= 1;
+	}
+
+	return static_cast<Mob::Color>(color);
+}
+
 template <class T>
 vector<T> createClass(const string& filename, const string& header, bool home){
 	string line;
@@ -167,6 +193,19 @@ int main(int argc, char** argv) {
 
 	//Business executed
 	WINDOW* base = initscr();
+	if (has_colors()) {
+		use_default_colors();
+		start_color();
+		init_pair(Mob::RED, COLOR_RED, -1);
+		init_pair(Mob::GREEN, COLOR_GREEN, -1);
+		init_pair(Mob::BLUE, COLOR_BLUE, -1);
+		init_pair(Mob::CYAN, COLOR_CYAN, -1);
+		init_pair(Mob::YELLOW, COLOR_YELLOW, -1);
+		init_pair(Mob::MAGENTA, COLOR_MAGENTA, -1);
+		init_pair(Mob::WHITE, COLOR_WHITE, -1);
+		init_pair(Mob::BLACK, 238, -1);
+	}
+
 	keypad(base, TRUE);
 	cbreak();
 	noecho();
@@ -213,7 +252,7 @@ int main(int argc, char** argv) {
 
 		if (all) {
 			dungeon->print(base);
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			getch();
 		}
 	}
 

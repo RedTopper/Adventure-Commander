@@ -100,17 +100,25 @@ public:
 	bool isAlive() const {
 		return hp > 0;
 	}
+
 	int getTurn() const {
 		return turn;
 	}
+
 	int getOrder() const {
 		return order;
 	}
+
 	void nextTurn() {
-		turn += speed;
+		turn += 1000/speed;
 	}
+
 	Action getAction() const {
 		return action;
+	}
+
+	Color getColor() const {
+		return color;
 	}
 };
 

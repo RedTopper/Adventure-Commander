@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "mob.hpp"
+
 using namespace std;
 
 enum Error {
@@ -27,5 +29,6 @@ int skewBetweenRange(int skew, int low, int high);
 string& ltrim(string& str, const string& chars = "\t\r\n ");
 string& rtrim(string& str, const string& chars = "\t\r\n ");
 string& trim(string& str, const string& chars = "\t\r\n ");
+Mob::Color getRandomColor(int colors);
 
 #endif

@@ -193,8 +193,14 @@ int Dungeon::isFull() {
 
 void Dungeon::mobGenerate(vector<SMob> factoryMob, int total) {
 	int generated = 0;
-	while(generated < total) {
+	bool running = true;
+	while(running) {
 		for (auto m : factoryMob) {
+			if (generated == total) {
+				running = false;
+				break;
+			}
+
 			int chance = rand() % 100;
 			if (chance > m.getRarity()) continue;
 			mobs.push_back(make_shared<Mob>(m.getMob(this, generated + 1)));
@@ -514,6 +520,32 @@ void Dungeon::save(fstream& file) {
 	}
 }
 
+void Dungeon::renderMob(WINDOW* win, const shared_ptr<Mob>& m) {
+	if (!m->isAlive()) return;
+	if (isOutOfRange(*m)) return;
+
+	//check if the mob is directly to the left of another mob.
+	//An emoji takes two characters on some terminals, so they can't overlap
+	bool isLeft = false;
+	for (const auto& mo : mobs) {
+		if (m->getPos().x == mo->getPos().x - 1 && m->getPos().y == mo->getPos().y) {
+			isLeft = true;
+			break;
+		}
+	}
+
+	//Render only if the player is near
+	attron(COLOR_PAIR(m->getColor()));
+	mvwaddstr(win,
+		m->getPos().y + 1,
+		m->getPos().x,
+		isLeft ? m->getSymbolAlt().c_str() : m->getSymbol().c_str()
+	);
+
+	//Stop rendering colors so the rest of the dungeon looks ok
+	attroff(COLOR_PAIR(m->getColor()));
+}
+
 void Dungeon::print(WINDOW* win) {
 	vector<vector<Tile>>& tiles = foggy ? this->fog : this->tiles;
 
@@ -544,30 +576,13 @@ void Dungeon::print(WINDOW* win) {
 	}
 
 	//Write players
-	if(player && player->isAlive()) {
-		mvwaddstr(win, player->getPos().y + 1, player->getPos().x, player->getSymbol().c_str());
+	if(player) {
+		renderMob(win, player);
 	}
 
 	//Write mobs
 	for (const auto& m : mobs) {
-		if (!m->isAlive()) continue;
-		if (isOutOfRange(*m)) continue;
-
-		//check if the mob is directly to the left of another mob.
-		bool isLeft = false;
-		for (const auto& mo : mobs) {
-			if (m->getPos().x == mo->getPos().x - 1 && m->getPos().y == mo->getPos().y) {
-				isLeft = true;
-				break;
-			}
-		}
-
-		//Render only if the player is near
-		mvwaddstr(win,
-			m->getPos().y + 1,
-			m->getPos().x,
-			isLeft ? m->getSymbolAlt().c_str() : m->getSymbol().c_str()
-		);
+		renderMob(win, m);
 	}
 
 	//Write other statuses

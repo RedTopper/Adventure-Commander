@@ -90,7 +90,7 @@ doesn't look happy.
 Off the top of your head, you seem to recall reading about one in a book of
 four nations...
 .
-COLOR RED
+COLOR BLACK
 ABIL TUNNEL
 SPEED 5+1d3
 HP 60+1d10
@@ -154,7 +154,7 @@ of Kings, ancient shadow unbound, With a hunger to
 swallow the world!" 
     ―Song of the Dragonborn
 .
-COLOR WHITE
+COLOR BLACK
 ABIL SMART TELE TUNNEL UNIQ DESTROY
 SPEED 80+0d1
 HP 6666+0d666
@@ -210,7 +210,7 @@ It's a pretty standard goblin. Sort, angry, and packs a punch.
 And the punch is coming right at you! Duck! 
 Wait, that's a bad idea!
 .
-COLOR GREEN
+COLOR YELLOW
 ABIL SMART TELE ERRATIC DESTROY
 SPEED 2+0d1
 HP 300+5d100
