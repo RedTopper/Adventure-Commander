@@ -102,20 +102,16 @@ Mob::Color getRandomColor(int colors) {
 	}
 
 	//Get a random number from 1 - set bits
-	count = (rand() % count) + 1;
+	int out = (rand() % count) + 1;
 	int color = 1;
 
 	//Check if we hit a bit
-	while (count) {
-		if (color & colors) {
-			count--;
-			continue;
-		}
-
+	while (out) {
+		if (color & colors) out--;
 		color <<= 1;
 	}
 
-	return static_cast<Mob::Color>(color);
+	return static_cast<Mob::Color>(color >> 1);
 }
 
 template <class T>
