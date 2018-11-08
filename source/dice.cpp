@@ -1,6 +1,6 @@
 #include <string>
 
-#include "stream/dice.hpp"
+#include "dice.hpp"
 
 Dice::Dice(int base, int count, int sides) {
 	this->base = base;

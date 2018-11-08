@@ -1,5 +1,4 @@
 #include "path.hpp"
-#include "point.hpp"
 #include "dungeon.hpp"
 
 const Point Path::ADJACENT[8] = { // NOLINT(cert-err58-cpp)

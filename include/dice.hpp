@@ -1,7 +1,6 @@
 #ifndef ADVENTURE_COMMANDER_STREAM_DICE_HPP
 #define ADVENTURE_COMMANDER_STREAM_DICE_HPP
 
-#include <cstdlib>
 #include <sstream>
 
 #include "stream.hpp"

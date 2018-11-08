@@ -4,7 +4,6 @@
 #include <string>
 
 #include "mob.hpp"
-#include "entity.hpp"
 
 using namespace std;
 

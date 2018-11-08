@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "stream/dice.hpp"
+#include "dice.hpp"
 #include "entity.hpp"
 
 class FMob;

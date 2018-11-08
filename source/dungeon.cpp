@@ -1,13 +1,8 @@
 #include <algorithm>
 #include <fstream>
-#include <cstring>
-#include <dungeon.hpp>
-
 
 #include "dungeon.hpp"
 #include "perlin.hpp"
-#include "dungeon.hpp"
-#include "point.hpp"
 #include "main.hpp"
 
 //default size

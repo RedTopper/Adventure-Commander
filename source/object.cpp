@@ -1,5 +1,5 @@
 #include "object.hpp"
-#include "stream/fobject.hpp"
+#include "fobject.hpp"
 
 Object::Object(
 	Dungeon *dungeon,

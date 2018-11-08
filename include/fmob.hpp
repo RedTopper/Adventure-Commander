@@ -5,10 +5,8 @@
 #include <vector>
 
 #include "dice.hpp"
-#include "stream.hpp"
-#include "mob.hpp"
-#include "entity.hpp"
 #include "factory.hpp"
+#include "mob.hpp"
 
 using namespace std;
 

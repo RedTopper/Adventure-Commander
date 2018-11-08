@@ -1,7 +1,6 @@
 #ifndef ADVENTURE_COMMANDER_FACTORY_HPP
 #define ADVENTURE_COMMANDER_FACTORY_HPP
 
-#include "mob.hpp"
 #include "stream.hpp"
 
 class Factory : public Stream {

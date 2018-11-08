@@ -1,7 +1,6 @@
 #include "path.hpp"
 #include "mob.hpp"
 #include "dungeon.hpp"
-#include "entity.hpp"
 
 const int MAX_KNOWN_TURNS = 5;
 

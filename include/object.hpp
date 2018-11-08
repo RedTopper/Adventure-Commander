@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "entity.hpp"
-#include "mob.hpp"
+#include "dice.hpp"
 
 class FObject;
 class Object : public Entity {

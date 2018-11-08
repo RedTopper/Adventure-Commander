@@ -1,16 +1,10 @@
 #include <iostream>
-#include <cstring>
 #include <locale>
-#include <string>
 #include <stack>
 #include <fstream>
 
 #include "main.hpp"
 #include "dungeon.hpp"
-#include "stream/fmob.hpp"
-#include "stream/fobject.hpp"
-#include "stream/dice.hpp"
-#include "entity.hpp"
 
 using namespace std;
 

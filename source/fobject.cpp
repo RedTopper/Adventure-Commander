@@ -1,11 +1,10 @@
 #include <iostream>
 #include <bitset>
-#include <stream/fobject.hpp>
-
+#include <array>
 
 #include "main.hpp"
-#include "stream/fmob.hpp"
-#include "stream/fobject.hpp"
+#include "fmob.hpp"
+#include "fobject.hpp"
 
 FObject::KeyWord FObject::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;

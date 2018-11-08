@@ -1,9 +1,8 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include <array>
-#include <memory>
 #include <vector>
+
 #include "point.hpp"
 
 using namespace std;

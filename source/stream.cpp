@@ -1,4 +1,4 @@
-#include "stream/stream.hpp"
+#include "stream.hpp"
 
 ostream& operator<<(ostream& out, const Stream& d) {
 	return d.dump(out);

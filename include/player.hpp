@@ -2,8 +2,8 @@
 #define PLAYER_H
 
 #include <ncursesw/curses.h>
+
 #include "mob.hpp"
-#include "entity.hpp"
 
 class Player: public Mob {
 private:

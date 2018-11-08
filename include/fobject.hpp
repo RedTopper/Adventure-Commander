@@ -4,10 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "object.hpp"
 #include "dice.hpp"
-#include "stream.hpp"
 #include "factory.hpp"
+#include "object.hpp"
 
 using namespace std;
 

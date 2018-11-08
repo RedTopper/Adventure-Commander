@@ -1,5 +1,4 @@
 #include "point.hpp"
-#include "perlin.hpp"
 
 float noise2D(Point dim, Point pos, const float* seed, int octaves, float bias) {
 	float noise = 0.0f;

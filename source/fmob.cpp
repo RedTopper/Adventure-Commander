@@ -4,9 +4,7 @@
 #include <bitset>
 
 #include "main.hpp"
-#include "mob.hpp"
-#include "stream/fmob.hpp"
-#include "entity.hpp"
+#include "fmob.hpp"
 
 FMob::KeyWord FMob::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;

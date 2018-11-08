@@ -1,7 +1,6 @@
 #ifndef TILE_HPP
 #define TILE_HPP
 
-#include <cstdint>
 #include <string>
 
 class Tile {

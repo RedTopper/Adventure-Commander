@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <queue>
-#include <array>
 #include <memory>
 
 #include "point.hpp"
@@ -15,8 +14,8 @@
 #include "mob.hpp"
 #include "player.hpp"
 #include "path.hpp"
-#include "stream/fmob.hpp"
-#include "stream/fobject.hpp"
+#include "fmob.hpp"
+#include "fobject.hpp"
 
 extern const Point DUNGEON_DIM;
 
