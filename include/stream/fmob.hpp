@@ -8,10 +8,11 @@
 #include "stream.hpp"
 #include "mob.hpp"
 #include "entity.hpp"
+#include "factory.hpp"
 
 using namespace std;
 
-class FMob : public Stream {
+class FMob : public Factory {
 public:
 	enum KeyWord {
 		KWD_BAD   = 0,
@@ -31,10 +32,6 @@ public:
 	};
 
 private:
-	bool creatable = true;
-	bool spawned = false;
-
-	int rarity = 0;
 	int colors = 0;
 	int abilities = 0;
 
@@ -51,31 +48,7 @@ public:
 	static KeyWord toKeyWord(string word);
 	static Entity::Color toColor(string color);
 	static Mob::Skills toSkill(string skill);
-	Mob getMob(Dungeon* dungeon, int turn);
-	int getRarity() {
-		return rarity;
-	}
-
-	bool isCreatable() const {
-		return creatable;
-	}
-
-	//Sets if a monster can be recreated ever again.
-	//Can only change this bit if the mob is unique.
-	void notCreatable() {
-		if (abilities & Mob::UNIQUE) creatable = false;
-	}
-
-	//Checks if the monster has been spawned in the dungeon.
-	bool isSpawned() const {
-		return spawned;
-	}
-
-	//Sets if this factory can produce another unique monster in this instance.
-	//Can only change this bit if the mob is unique.
-	void setSpawned(bool spawned) {
-		if (abilities & Mob::UNIQUE) this->spawned = spawned;
-	}
+	Mob get(Dungeon* dungeon, int turn);
 
 private:
 	ostream& dump(ostream& out) const override;

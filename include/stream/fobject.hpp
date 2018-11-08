@@ -7,10 +7,11 @@
 #include "object.hpp"
 #include "dice.hpp"
 #include "stream.hpp"
+#include "factory.hpp"
 
 using namespace std;
 
-class FObject : public Stream {
+class FObject : public Factory {
 public:
 	enum KeyWord {
 		KWD_BAD   = 0,
@@ -58,9 +59,6 @@ public:
 	};
 
 private:
-	bool artifact = false;
-	int rarity = 0;
-
 	int types = 0;
 	int colors = 0;
 
@@ -77,13 +75,10 @@ private:
 	Dice value;
 
 public:
+	bool isEquipment() const;
 	static KeyWord toKeyWord(string word);
 	static Type toType(string word);
-	Object getObject(Dungeon* dungeon);
-	bool isEquipment() const;
-	bool isArtifact() {
-		return artifact;
-	}
+	Object get(Dungeon* dungeon, ...);
 
 private:
 	ostream& dump(ostream& out) const override;

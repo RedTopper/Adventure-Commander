@@ -138,7 +138,7 @@ bool Player::tickTarget(const int ch, Point& dest) {
 	dungeon->print(base);
 
 	//Move the destination down one because of the first status line
-	mvwaddstr(base, dest.y + 1, dest.x, "\x00D7");
+	mvwaddstr(base, dest.y + 1, dest.x, "\u00D7");
 
 	return true;
 }

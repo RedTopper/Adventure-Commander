@@ -180,27 +180,24 @@ void Dungeon::generateRooms() {
 	placeRoom(room);
 }
 
-void Dungeon::generateMobs(vector<FMob> factoryMob, int total) {
+template <class F, class T>
+void Dungeon::generateFactory(vector<F>& factories, vector<shared_ptr<T>>& out, int total) {
 	int generated = 0;
 	bool running = true;
 	while(running) {
-		for (auto m : factoryMob) {
+		for (auto factory : factories) {
 			if (generated == total) {
 				running = false;
 				break;
 			}
 
 			int chance = rand() % 100;
-			if (!(m.isCreatable() && !m.isSpawned() && chance <= m.getRarity())) continue;
-			mobs.push_back(make_shared<Mob>(m.getMob(this, generated + 1)));
-			m.setSpawned(true);
+			if (!(factory.isCreatable() && !factory.isSpawned() && chance <= factory.getRarity())) continue;
+			out.push_back(make_shared<T>(factory.get(this, generated + 1)));
+			factory.setSpawned(true);
 			generated++;
 		}
 	}
-}
-
-void Dungeon::generateObjects() {
-	
 }
 
 void Dungeon::generateEntities(int floor) {
@@ -318,7 +315,8 @@ void Dungeon::finalize(vector<FMob>& fMob, vector<FObject>& fObject, int count, 
 	for(auto& m : fMob) m.setSpawned(false);
 
 	//Create mobs
-	generateMobs(fMob, count + floor > 100 ? 100 : count + floor);
+	generateFactory<FMob, Mob>(fMob, mobs, count + floor > 100 ? 100 : count + floor);
+	generateFactory<FObject, Object>(fObject, objects, 10);
 	generateEntities(floor);
 	recalculate();
 
@@ -517,87 +515,6 @@ void Dungeon::save(fstream& file) {
 	}
 }
 
-void Dungeon::printMob(WINDOW* win, const shared_ptr<Mob>& m) {
-	if (!m->isAlive()) return;
-	if (isOutOfRange(*m)) return;
-
-	//check if the mob is directly to the left of another mob.
-	//An emoji takes two characters on some terminals, so they can't overlap
-	bool isLeft = false;
-	for (const auto& mo : mobs) {
-		if (m->getPos().x == mo->getPos().x - 1 && m->getPos().y == mo->getPos().y) {
-			isLeft = true;
-			break;
-		}
-	}
-
-	//Render only if the player is near
-	attron(COLOR_PAIR(m->getColor()));
-	mvwaddstr(win,
-		m->getPos().y + 1,
-		m->getPos().x,
-		isLeft ? m->getSymbolAlt().c_str() : m->getSymbol().c_str()
-	);
-
-	//Stop rendering colors so the rest of the dungeon looks ok
-	attroff(COLOR_PAIR(m->getColor()));
-}
-
-void Dungeon::print(WINDOW* win) {
-	vector<vector<Tile>>& tiles = foggy ? this->fog : this->tiles;
-
-	//Make the dungeon look nice
-	postProcess(tiles);
-
-	//clean window
-	werase(win);
-
-	//Write status
-	mvwaddstr(win, 0, 0, status.c_str());
-
-	//Write tiles
-	for (int row = 0; row < dim.y; row++) {
-		string line;
-		for (int col = 0; col < dim.x; col++) {
-			line += Tile::getStr(tiles[row][col].symbol);
-		}
-
-		mvwaddstr(win, row + 1, 0, line.c_str());
-	}
-
-	//Write entities
-	for (auto& e : entities) {
-		if (isOutOfRange(e)) continue;
-		e.setRemembered(true);
-		mvwaddstr(win, e.getPos().y + 1, e.getPos().x, e.getSymbol().c_str());
-	}
-
-	//Write players
-	if(player) {
-		printMob(win, player);
-	}
-
-	//Write mobs
-	for (const auto& m : mobs) {
-		printMob(win, m);
-	}
-
-	//Write other statuses
-	mvwaddstr(win, dim.y + 1, 0, line1.c_str());
-	mvwaddstr(win, dim.y + 2, 0, line2.c_str());
-
-	//Some terminals have trouble with emoji, so help them out
-	//by redrawing the whole window every few frames.
-	static int refresh = 0;
-	if (emoji && refresh == 5) {
-		redrawwin(win);
-		refresh = 0;
-	}
-
-	wrefresh(win);
-	refresh++;
-}
-
 int Dungeon::alive() const {
 	int alive = 0;
 	for (const auto& m : mobs) {
@@ -636,3 +553,98 @@ int Dungeon::isFull() {
 
 	return room/total > ROOM_MAX_FULLNESS;
 }
+
+void Dungeon::printEntity(WINDOW *win, const shared_ptr<Entity> &e) {
+	if (isOutOfRange(*e)) return;
+
+	//check if the mob is directly to the left of another mob.
+	//An emoji takes two characters on some terminals, so they can't overlap
+	bool isLeft = false;
+	for (const auto& mo : mobs) {
+		if (e->getPos().x == mo->getPos().x - 1 && e->getPos().y == mo->getPos().y) {
+			isLeft = true;
+			break;
+		}
+	}
+
+	//Also check for objects since they can use emoji too.
+	for (const auto& ob : objects) {
+		if (e->getPos().x == ob->getPos().x - 1 && e->getPos().y == ob->getPos().y) {
+			isLeft = true;
+			break;
+		}
+	}
+
+	//Render only if the player is near
+	attron(COLOR_PAIR(e->getColor()));
+	mvwaddstr(win,
+		e->getPos().y + 1,
+		e->getPos().x,
+		isLeft ? e->getSymbolAlt().c_str() : e->getSymbol().c_str()
+	);
+
+	//Stop rendering colors so the rest of the dungeon looks ok
+	attroff(COLOR_PAIR(e->getColor()));
+}
+
+void Dungeon::print(WINDOW* win) {
+	//Render fog or tiles
+	vector<vector<Tile>>& tiles = foggy ? this->fog : this->tiles;
+
+	//Make the dungeon look nice
+	postProcess(tiles);
+
+	//clean window
+	werase(win);
+
+	//Write status
+	mvwaddstr(win, 0, 0, status.c_str());
+
+	//Write tiles
+	for (int row = 0; row < dim.y; row++) {
+		string line;
+		for (int col = 0; col < dim.x; col++) {
+			line += Tile::getStr(tiles[row][col].symbol);
+		}
+
+		mvwaddstr(win, row + 1, 0, line.c_str());
+	}
+
+	//Output objects
+	for (auto& o : objects) {
+		printEntity(win, o);
+	}
+
+	//Write entities
+	for (auto& e : entities) {
+		if (isOutOfRange(e)) continue;
+		e.setRemembered(true);
+		mvwaddstr(win, e.getPos().y + 1, e.getPos().x, e.getSymbol().c_str());
+	}
+
+	//Write players
+	if(player) {
+		printEntity(win, player);
+	}
+
+	//Write mobs
+	for (const auto& m : mobs) {
+		if (m->isAlive()) printEntity(win, m);
+	}
+
+	//Write other statuses
+	mvwaddstr(win, dim.y + 1, 0, line1.c_str());
+	mvwaddstr(win, dim.y + 2, 0, line2.c_str());
+
+	//Some terminals have trouble with emoji, so help them out
+	//by redrawing the whole window every few frames.
+	static int refresh = 0;
+	if (emoji && refresh == 5) {
+		redrawwin(win);
+		refresh = 0;
+	}
+
+	wrefresh(win);
+	refresh++;
+}
+

@@ -34,10 +34,10 @@ private:
 	Point dim;
 	shared_ptr<Player> player;
 	vector<shared_ptr<Mob>> mobs;
+	vector<shared_ptr<Object>> objects;
 	priority_queue<shared_ptr<Mob>, vector<shared_ptr<Mob>>, TurnOrder> turn;
 	vector<Room> rooms;
 	vector<Entity> entities;
-	vector<Object> objects;
 	vector<vector<Tile>> tiles;
 	vector<vector<Tile>> fog;
 	Path map;
@@ -50,6 +50,8 @@ public:
 	static const int FOG_Y = 2;
 
 private:
+	template <class F, class T>
+	void generateFactory(vector<F>& factories, vector<shared_ptr<T>>& out, int total);
 	void connectRoomRasterize(const Point &from, const Point &to);
 	void connectRoom(const Room &first, const Room &second);
 	bool placeRoomAttempt(const Room &room);
@@ -58,9 +60,7 @@ private:
 	void placeTile(const Point &pos, uint8_t hardness, const float *seed);
 	void generateRooms();
 	void generateEntities(int floor);
-	void generateObjects();
-	void generateMobs(vector<FMob> factoryMob, int total);
-	void printMob(WINDOW *win, const shared_ptr<Mob> &m);
+	void printEntity(WINDOW *win, const shared_ptr<Entity> &e);
 	void postProcess(vector<vector<Tile>>& tiles);
 	int isFull();
 

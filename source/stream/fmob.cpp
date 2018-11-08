@@ -111,7 +111,11 @@ istream& FMob::read(istream& in) {
 				while(!!(line >> word)) colors |= toColor(word);
 				break;
 			case ABIL:
-				while(!!(line >> word)) abilities |= toSkill(word);
+				while(!!(line >> word)) {
+					Mob::Skills skill = toSkill(word);
+					abilities |= skill;
+					if (Mob::Skills::UNIQUE & skill) unique = true;
+				}
 				break;
 			case DESC:
 				while(!!(getline(in, buff)) && trim(word = buff) != ".") description.push_back(buff);
@@ -144,7 +148,7 @@ int FMob::getRequired() const {
 	);
 }
 
-Mob FMob::getMob(Dungeon* dungeon, int turn) {
+Mob FMob::get(Dungeon* dungeon, int turn) {
 	return Mob(dungeon, this, getRandomColor(colors), turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
 }
 

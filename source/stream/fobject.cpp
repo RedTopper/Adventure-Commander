@@ -67,7 +67,7 @@ ostream &FObject::dump(ostream &out) const {
 	out << "SPEED: '" << speed << "'" << endl;
 	out << "ATTR:  '" << attribute << "'" << endl;
 	out << "VAL:   '" << value << "'" << endl;
-	out << "ART:   '" << (artifact ? "yeah" : "nah") << "'" << endl;
+	out << "ART:   '" << (unique ? "yeah" : "nah") << "'" << endl;
 	out << "RRTY:  '" << rarity << "'" << endl;
 	out << "END" << endl << endl;
 	return out;
@@ -132,7 +132,7 @@ istream &FObject::read(istream &in) {
 				break;
 			case ART:
 				line >> word;
-				artifact = word == "TRUE";
+				unique = word == "TRUE";
 				break;
 			case RRTY:
 				line >> rarity;
@@ -189,7 +189,7 @@ bool FObject::isEquipment() const {
 	return (types | equipment) == equipment;
 }
 
-Object FObject::getObject(Dungeon *dungeon) {
+Object FObject::get(Dungeon *dungeon, ...) {
 	return Object(
 		dungeon,
 		this,
