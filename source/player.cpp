@@ -2,6 +2,7 @@
 
 Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	dungeon,
+	nullptr,
 	DEF_COLOR,
 	DEF_ORDER,
 	DEF_SKILLS,

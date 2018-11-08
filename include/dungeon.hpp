@@ -58,7 +58,7 @@ private:
 	void tilePlace(const Point &pos, uint8_t hardness, const float* seed);
 	void entityGenerate(int floor);
 	void mobGenerate(vector<FMob> factoryMob, int total);
-	void renderMob(WINDOW* win, const shared_ptr<Mob>& m);
+	void printMob(WINDOW *win, const shared_ptr<Mob> &m);
 
 	void postProcess(vector<vector<Tile>>& tiles);
 	int isFull();

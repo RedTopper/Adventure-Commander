@@ -2,7 +2,6 @@
 #include <fstream>
 #include <cstring>
 
-
 #include "dungeon.hpp"
 #include "perlin.hpp"
 #include "dungeon.hpp"
@@ -202,7 +201,7 @@ void Dungeon::mobGenerate(vector<FMob> factoryMob, int total) {
 			}
 
 			int chance = rand() % 100;
-			if (chance > m.getRarity()) continue;
+			if (!m.isCreatable() || chance > m.getRarity()) continue;
 			mobs.push_back(make_shared<Mob>(m.getMob(this, generated + 1)));
 			generated++;
 		}
@@ -520,7 +519,7 @@ void Dungeon::save(fstream& file) {
 	}
 }
 
-void Dungeon::renderMob(WINDOW* win, const shared_ptr<Mob>& m) {
+void Dungeon::printMob(WINDOW* win, const shared_ptr<Mob>& m) {
 	if (!m->isAlive()) return;
 	if (isOutOfRange(*m)) return;
 
@@ -577,12 +576,12 @@ void Dungeon::print(WINDOW* win) {
 
 	//Write players
 	if(player) {
-		renderMob(win, player);
+		printMob(win, player);
 	}
 
 	//Write mobs
 	for (const auto& m : mobs) {
-		renderMob(win, m);
+		printMob(win, m);
 	}
 
 	//Write other statuses

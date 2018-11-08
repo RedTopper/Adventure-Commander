@@ -6,6 +6,7 @@ const int MAX_KNOWN_TURNS = 5;
 
 Mob::Mob(
 	Dungeon* dungeon,
+	FMob* factory,
 	Color color,
 	int order,
 	int skills,
@@ -266,7 +267,12 @@ void Mob::attack() {
 		if (order == other->order || other->hp == 0 || pos != other->pos) continue;
 
 		other->hp--;
-		string text = (other->hp == 0) ? "It killed it brutally!" : "Looks like it hurt!";
+		string text = "Looks like it hurt!";
+		if (hp == 0) {
+			text = "It killed it brutally!";
+			if (factory) factory->notCreatable();
+		}
+
 		stringstream status;
 		status << getSymbol() << " at (" << pos.x << ", " << pos.y << ") attacked " << other->getSymbol() << " at (" << other->pos.x << ", " << other->pos.y << ")! " << text;
 		dungeon->status = status.str();

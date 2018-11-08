@@ -118,7 +118,7 @@ Mob::Color getRandomColor(int colors) {
 }
 
 template <class T>
-vector<T> createClass(const string& filename, const string& header, bool home){
+vector<T> loadFactory(const string &filename, const string &header, bool home){
 	string line;
 	vector<T> factory;
 	fstream desc = get(fstream::in, filename, home);
@@ -175,8 +175,8 @@ int main(int argc, char** argv) {
 	}
 
 	//Load both factory files
-	vector<FMob> factoryMobs = createClass<FMob>("monster_desc.txt", "RLG327 MONSTER DESCRIPTION 1", home);
-	vector<FObject> factoryObjects = createClass<FObject>("object_desc.txt", "RLG327 OBJECT DESCRIPTION 1", home);
+	vector<FMob> factoryMobs = loadFactory<FMob>("monster_desc.txt", "RLG327 MONSTER DESCRIPTION 1", home);
+	vector<FObject> factoryObjects = loadFactory<FObject>("object_desc.txt", "RLG327 OBJECT DESCRIPTION 1", home);
 
 	//Still output the files loaded if needed
 	if (parse) {

@@ -6,6 +6,7 @@
 #include "stream/dice.hpp"
 #include "entity.hpp"
 
+class FMob;
 class Mob:  public Entity {
 public:
 	enum Movement {
@@ -66,6 +67,7 @@ protected:
 
 	//For player inputs
 	Action action = NONE;
+	FMob* factory;
 
 private:
 	Point nextPoint(Point end);
@@ -81,6 +83,7 @@ protected:
 public:
 	Mob(
 		Dungeon* dungeon,
+		FMob* factory,
 		Color color,
 		int order,
 		int skills,

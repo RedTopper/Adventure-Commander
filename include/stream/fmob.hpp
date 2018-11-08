@@ -30,6 +30,8 @@ public:
 	};
 
 private:
+	bool creatable = true;
+
 	int rarity = 0;
 	int colors = 0;
 	int abilities = 0;
@@ -50,6 +52,14 @@ public:
 	Mob getMob(Dungeon* dungeon, int turn) const;
 	int getRarity() {
 		return rarity;
+	}
+
+	bool isCreatable() const {
+		return creatable;
+	}
+
+	void notCreatable() {
+		if (abilities & Mob::UNIQUE) creatable = false;
 	}
 
 private:
