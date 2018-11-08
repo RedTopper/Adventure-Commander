@@ -238,7 +238,7 @@ Object FObject::get(Dungeon *dungeon, ...) {
 
 	int symbol = types;
 	int index = 0;
-	while (!(symbol & 1) && index < SYMBOL.size() - 1) {
+	while (!(symbol & 1) && index < static_cast<int>(SYMBOL.size()) - 1) {
 		symbol >>= 1;
 		index++;
 	}
