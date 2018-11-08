@@ -179,6 +179,9 @@ int main(int argc, char** argv) {
 	vector<FMob> factoryMobs = loadFactory<FMob>("monster_desc.txt", "RLG327 MONSTER DESCRIPTION 1", home);
 	vector<FObject> factoryObjects = loadFactory<FObject>("object_desc.txt", "RLG327 OBJECT DESCRIPTION 1", home);
 
+	if (factoryMobs.empty()) help("Parsed file was empty. Try using --parse to debug.", "Mobs", FILE_READ_BAD);
+	if (factoryObjects.empty()) help("Parsed file was empty. Try using --parse to debug.", "Objects", FILE_READ_BAD);
+
 	//Still output the files loaded if needed
 	if (parse) {
 		for(auto& o : factoryMobs) cout << o;

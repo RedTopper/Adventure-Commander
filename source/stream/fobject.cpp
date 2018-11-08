@@ -190,6 +190,59 @@ bool FObject::isEquipment() const {
 }
 
 Object FObject::get(Dungeon *dungeon, ...) {
+	const array<string, 20> SYMBOL = {
+		"\U0001F531", //Trident
+		"\U0001F52A", //Knife
+		"\U0001F3F9", //Bow
+		"\U0001F530", //Shield
+		"\U0001F3A9", //Tophat
+		"\U0001F455", //Shirt
+		"\U0001F9E4", //Gloves
+		"\U0001F45E", //Shoes
+		"\U0001F48D", //Ring
+		"\U0001F4FF", //Prayer Beads
+		"\U0001F526", //Flashlight
+		"\U0001F4DC", //Scroll
+		"\U0001F4D5", //Book
+		"\U0001F378", //Cocktail
+		"\U0001F4B0", //Money Bag
+		".",          //Ammo
+		"\U0001F372", //Food
+		"\U0001F31F", //Star
+		"\U0001F4E6", //Package
+		"*"
+	};
+
+	const array<string, 20> SYMBOL_BORING = {
+		"|", //WEAPON
+		")", //OFFHAND
+		"}", //RANGED
+		"[", //ARMOR
+		"]", //HELMET
+		"(", //CLOAK
+		"{", //GLOVES
+		"\\",//BOOTS
+		"=", //RING
+		"\"",//AMULET
+		"_", //LIGHT
+		"~", //SCROLL
+		"?", //BOOK
+		"!", //FLASK
+		"$", //GOLD
+		"/", //AMMUNITION
+		",", //FOOD
+		"-", //WAND
+		"%", //CONTAINER
+		"*"
+	};
+
+	int symbol = types;
+	int index = 0;
+	while (!(symbol & 1) && index < SYMBOL.size() - 1) {
+		symbol >>= 1;
+		index++;
+	}
+
 	return Object(
 		dungeon,
 		this,
@@ -204,8 +257,8 @@ Object FObject::get(Dungeon *dungeon, ...) {
 		value.roll(),
 		dam,
 		name,
-		"*",
-		"*",
+		SYMBOL[index],
+		SYMBOL_BORING[index],
 		description
 	);
 }
