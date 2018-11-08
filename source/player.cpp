@@ -1,11 +1,20 @@
 #include "dungeon.hpp"
 
-Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(dungeon, 0, 0, 10, 100, WHITE, "Player", "@", vector<string>()) {
+Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
+	dungeon,
+	DEF_COLOR,
+	DEF_ORDER,
+	DEF_SKILLS,
+	DEF_SPEED,
+	DEF_HP,
+	Dice(1, 1, 1),
+	"Player",
+	"\U0001F464",
+	"@",
+	vector<string>()
+) {
 	this->base = window;
 	this->action = NONE;
-	if (dungeon->isFancy()) {
-		this->symbol = "\U0001F464";
-	}
 }
 
 string Player::relative(const Mob& other) {
@@ -132,7 +141,7 @@ bool Player::tickTarget(const int ch, Point& dest) {
 	return true;
 }
 
-void Player::tick() {
+void Player::tickInput() {
 	dungeon->updateFoggy();
 	dungeon->print(base);
 	action = NONE;
@@ -222,4 +231,12 @@ void Player::tick() {
 	}
 
 	attack();
+}
+
+void Player::tick() {
+	action = NONE;
+	dungeon->status = "It's your turn!";
+	while (action == NONE) {
+		tickInput();
+	}
 }

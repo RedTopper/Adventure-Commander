@@ -89,7 +89,10 @@ istream& SMob::read(istream& in) {
 				trim(name);
 				break;
 			case SYMB:
-				line >> symbol;
+				line >> word;
+				symbolAlt = word.substr(0, 1);
+				symbol = word.substr(1);
+				if (symbol.empty()) symbol = symbolAlt;
 				break;
 			case HP:
 				line >> hp;
@@ -141,7 +144,7 @@ int SMob::getRequired() const {
 }
 
 Mob SMob::getMob(Dungeon* dungeon, int turn) const {
-	return Mob(dungeon, turn, abilities, speed.roll(), hp.roll(), Mob::Color::RED, name, symbol, description);
+	return Mob(dungeon, Mob::Color::RED, turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
 }
 
 

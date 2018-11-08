@@ -15,6 +15,8 @@
 #include "mob.hpp"
 #include "player.hpp"
 #include "path.hpp"
+#include "stream/smob.hpp"
+#include "stream/sentity.hpp"
 
 extern const Point DUNGEON_DIM;
 
@@ -41,7 +43,6 @@ private:
 	Path dig;
 	bool emoji;
 	bool foggy;
-	int floor;
 
 public:
 	static const int FOG_X = 3;
@@ -55,9 +56,9 @@ private:
 	void roomGenerate();
 	void hallPlace(const Point& point);
 	void tilePlace(const Point &pos, uint8_t hardness, const float* seed);
-	void entityGenerate();
-	void mobGenerate(int total);
-	void finalize(int mobs);
+	void entityGenerate(int floor);
+	void mobGenerate(vector<SMob> factoryMob, int total);
+
 	void postProcess(vector<vector<Tile>>& tiles);
 	int isFull();
 
@@ -66,8 +67,9 @@ public:
 	string line1;
 	string line2;
 
-	Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji);
-	Dungeon(WINDOW* base, fstream& file, int mobs, bool emoji);
+	Dungeon(WINDOW* base, const Point& dim);
+	Dungeon(WINDOW* base, fstream& file);
+	void finalize(const vector<SMob>& mobFactory, const vector<SEntity>& objectFactory, int count,  int floor, bool emoji);
 	void save(fstream& file);
 	int alive() const;
 	void rotate();
@@ -78,27 +80,34 @@ public:
 	const vector<Entity>& getEntities() const {
 		return entities;
 	}
+
 	const vector<shared_ptr<Mob>>& getMobs() const {
 		return mobs;
 	}
+
 	const shared_ptr<Player>& getPlayer() const {
 		return player;
 	}
+
 	const shared_ptr<Mob>& getCurrentTurn() const {
 		return turn.top();
 	}
+
 	const Point& getDim() const {
 		return dim;
 	}
+
 	Tile& getTile(Point p) {
 		return tiles[p.y][p.x];
 	}
 	bool isFancy() const {
 		return emoji;
 	}
+
 	bool isFoggy() const {
 		return foggy;
 	}
+
 	bool isOutOfRange(const Entity& e) {
 		return foggy && !e.isRemembered() && player
 			&& (e.getPos().x - player->getPos().x < -FOG_X
@@ -106,19 +115,24 @@ public:
 			|| e.getPos().y - player->getPos().y < -FOG_Y
 			|| e.getPos().y - player->getPos().y > FOG_Y);
 	}
+
 	int getPathMap(const Point& p) const {
 		return map.getDist(p);
 	}
+
 	int getPathDig(const Point& p) const {
 		return dig.getDist(p);
 	}
+
 	void recalculate() {
 		dig.recalculate();
 		map.recalculate();
 	}
+
 	void setFoggy(const bool foggy) {
 		this->foggy = foggy;
 	}
+
 
 };
 

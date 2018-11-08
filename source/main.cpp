@@ -176,45 +176,39 @@ int main(int argc, char** argv) {
 	//Load dungeon from file
 	if (load) {
 		fstream file = get(fstream::in, "dungeon", home);
-		dungeon = make_shared<Dungeon>(base, file, mobs, emoji);
+		dungeon = make_shared<Dungeon>(base, file);
+		dungeon->finalize(factoryMobs, factoryObjects, mobs, 0, emoji);
 		file.close();
 	} else {
-		dungeon = make_shared<Dungeon>(base, DUNGEON_DIM, mobs, 0, emoji);
+		dungeon = make_shared<Dungeon>(base, DUNGEON_DIM);
+		dungeon->finalize(factoryMobs, factoryObjects, mobs, 0, emoji);
 	}
 
 	//Economics established
 	while (dungeon->getPlayer()->isAlive() > 0 && dungeon->alive()) {
 		shared_ptr<Mob> mob = dungeon->getCurrentTurn();
-		shared_ptr<Player> player;
-		if (player = dynamic_pointer_cast<Player>(mob)) {
-			//If it's a player, keep ticking until something interesting happens
-			dungeon->status = "It's your turn!";
-			Player::Action action = Player::NONE;
-			while(action == Player::NONE) {
-				player->tick();
-				action = player->getAction();
-			}
+		mob->tick();
 
-			if (action == Player::QUIT) break;
-			if (action == Player::DOWN && !history.empty()) {
-				future.push(dungeon);
-				dungeon = history.top();
-				history.pop();
-			}
-
-			if (action == Player::UP) {
-				history.push(dungeon);
-				if (future.empty()) {
-					dungeon = make_shared<Dungeon>(base, DUNGEON_DIM, mobs, ++floor, emoji);
-				} else {
-					dungeon = future.top();
-					future.pop();
-				}
-			}
-		} else {
-			mob->tick();
+		Mob::Action action = mob->getAction();
+		if (action == Player::QUIT) break;
+		if (action == Player::DOWN && !history.empty()) {
+			future.push(dungeon);
+			dungeon = history.top();
+			history.pop();
 		}
 
+		if (action == Player::UP) {
+			history.push(dungeon);
+			if (future.empty()) {
+				dungeon = make_shared<Dungeon>(base, DUNGEON_DIM);
+				dungeon->finalize(factoryMobs, factoryObjects, mobs, ++floor, emoji);
+			} else {
+				dungeon = future.top();
+				future.pop();
+			}
+		}
+
+		//Cycle to the next turn
 		dungeon->rotate();
 
 		if (all) {

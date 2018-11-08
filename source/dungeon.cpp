@@ -2,6 +2,7 @@
 #include <fstream>
 #include <cstring>
 
+
 #include "dungeon.hpp"
 #include "perlin.hpp"
 #include "dungeon.hpp"
@@ -190,14 +191,19 @@ int Dungeon::isFull() {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
-void Dungeon::mobGenerate(int total) {
-	for(int i = 0; i < total; i++) {
-		//TODO: update this
-		//mobs.push_back(make_shared<Mob>(this, i + 1));
+void Dungeon::mobGenerate(vector<SMob> factoryMob, int total) {
+	int generated = 0;
+	while(generated < total) {
+		for (auto m : factoryMob) {
+			int chance = rand() % 100;
+			if (chance > m.getRarity()) continue;
+			mobs.push_back(make_shared<Mob>(m.getMob(this, generated + 1)));
+			generated++;
+		}
 	}
 }
 
-void Dungeon::entityGenerate() {
+void Dungeon::entityGenerate(int floor) {
 	//Create up stairs always
 	Entity up(this, Entity::STAIRS_UP, false);
 	entities.push_back(up);
@@ -305,10 +311,12 @@ void Dungeon::postProcess(vector<vector<Tile>>& tiles) {
 	}
 }
 
-void Dungeon::finalize(const int count) {
+void Dungeon::finalize(const vector<SMob>& mobFactory, const vector<SEntity>& objectFactory, int count, int floor, bool emoji) {
+	this->emoji = emoji;
+
 	//Create mobs
-	mobGenerate(count + floor > 100 ? 100 : count + floor);
-	entityGenerate();
+	mobGenerate(mobFactory, count + floor > 100 ? 100 : count + floor);
+	entityGenerate(floor);
 	recalculate();
 
 	//Create the turn queue
@@ -334,12 +342,10 @@ void Dungeon::finalize(const int count) {
 	}
 }
 
-Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji)
+Dungeon::Dungeon(WINDOW* base, const Point& dim)
 		: map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	if (dim < Point(1,1)) return;
 	this->dim = dim;
-	this->emoji = emoji;
-	this->floor = floor;
 	
 	//Get seed for noise
 	float seed[dim.y * dim.x];
@@ -378,18 +384,13 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim, int mobs, int floor, bool emoji
 	for(uint first = 0; first < rooms.size() - 1; first++) {
 		roomConnect(rooms[first], rooms[first + 1]);
 	}
-
-	//Finalize dungeon
-	finalize(mobs);
 }
 
-Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji)
+Dungeon::Dungeon(WINDOW* base, fstream& file)
 		: map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	size_t length = HEADER.length();
 	char head[length + 1];
 	this->dim = DUNGEON_DIM;
-	this->emoji = emoji;
-	this->floor = 0;
 	
 	//Read magic header
 	file.read(head, length);
@@ -474,9 +475,6 @@ Dungeon::Dungeon(WINDOW* base, fstream& file, const int mobs, const bool emoji)
 
 	player = make_shared<Player>(this, base);
 	player->move(Point(pos[0], pos[1]));
-
-	//Finalize dungeon
-	finalize(mobs);
 }
 
 void Dungeon::save(fstream& file) {
@@ -551,12 +549,25 @@ void Dungeon::print(WINDOW* win) {
 	}
 
 	//Write mobs
-	for (auto& m : mobs) {
+	for (const auto& m : mobs) {
 		if (!m->isAlive()) continue;
 		if (isOutOfRange(*m)) continue;
 
+		//check if the mob is directly to the left of another mob.
+		bool isLeft = false;
+		for (const auto& mo : mobs) {
+			if (m->getPos().x == mo->getPos().x - 1 && m->getPos().y == mo->getPos().y) {
+				isLeft = true;
+				break;
+			}
+		}
+
 		//Render only if the player is near
-		mvwaddstr(win, m->getPos().y + 1, m->getPos().x, m->getSymbol().c_str());
+		mvwaddstr(win,
+			m->getPos().y + 1,
+			m->getPos().x,
+			isLeft ? m->getSymbolAlt().c_str() : m->getSymbol().c_str()
+		);
 	}
 
 	//Write other statuses

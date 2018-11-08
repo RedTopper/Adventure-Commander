@@ -41,6 +41,15 @@ public:
 		BLACK   = (1 << 7)
 	};
 
+	enum Action {
+		NONE,
+		UP,
+		DOWN,
+		MOVE,
+		QUIT,
+		STALL
+	};
+
 protected:
 	int known;  //How many turns the player is known for
 	int order;
@@ -50,11 +59,13 @@ protected:
 	int skills; //Array of Mob::Skills bits
 	int speed;
 	int hp;
+	Dice dam;
 	string name;
-	string symbol;
 	vector<string> description;
 	Color color;
-	Dice dam;
+
+	//For player inputs
+	Action action = NONE;
 
 private:
 	Point nextPoint(Point end);
@@ -70,13 +81,15 @@ protected:
 public:
 	Mob(
 		Dungeon* dungeon,
-		int turn,
+		Color color,
+		int order,
 		int skills,
 		int speed,
 		int hp,
-		Color color,
+		const Dice& dam,
 		const string& name,
 		const string& symbol,
+		const string& symbolAlt,
 		const vector<string>& description
 	);
 
@@ -96,9 +109,9 @@ public:
 	void nextTurn() {
 		turn += speed;
 	}
-	const string getSymbol() const override {
-		return symbol;
-	};
+	Action getAction() const {
+		return action;
+	}
 };
 
 #endif

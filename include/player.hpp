@@ -5,31 +5,24 @@
 #include "mob.hpp"
 
 class Player: public Mob {
-public:
-	enum Action {
-		NONE,
-		UP,
-		DOWN,
-		MOVE,
-		QUIT,
-		STALL
-	};
-
 private:
 	WINDOW* base;
-	Action action;
+	const static Color DEF_COLOR = WHITE;
+	const static int DEF_ORDER = 0;
+	const static int DEF_SKILLS = 0; //PC has no skills
+	const static int DEF_SPEED = 10; //PC has no skills
+	const static int DEF_HP = 100;
 
 private:
 	string relative(const Mob& other);
 	bool tickMap(int ch, uint& offset);
 	bool tickTarget(int ch, Point& dest);
+	void tickInput();
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
 	void tick() override;
-	Action getAction() const {
-		return action;
-	}
+
 };
 
 #endif

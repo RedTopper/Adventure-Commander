@@ -7,26 +7,21 @@ Entity::Entity(Dungeon* dungeon, Type type, bool halls) {
 	this->type = type;
 	this->pos = getSpawn(halls);
 	this->remembered = false;
-}
 
-const string Entity::getSymbol() const {
 	const string ENT[] = {
-		"?", //Mob has it's own definition.
-		"\u25b2", //Up pointing triangle.
-		"\u25bc", //Down pointing triangle.
+			"?", //Mob has it's own definition.
+			"\u25b2", //Up pointing triangle.
+			"\u25bc", //Down pointing triangle.
 	};
 
 	const string ENT_BORING[] = {
-		"?",
-		"<",
-		">",
+			"?",
+			"<",
+			">",
 	};
 
-	if (dungeon->isFancy()) {
-		return ENT[type];
-	} else {
-		return ENT_BORING[type];
-	}
+	this->symbol = ENT[type];
+	this->symbolAlt = ENT_BORING[type];
 }
 
 Point Entity::getSpawn(const bool halls) const {
@@ -54,4 +49,12 @@ Point Entity::getSpawn(const bool halls) const {
 	}
 
 	return point;
+}
+
+const string Entity::getSymbol() const {
+	if (dungeon->isFancy()) {
+		return this->symbol;
+	} else {
+		return this->symbolAlt;
+	}
 }

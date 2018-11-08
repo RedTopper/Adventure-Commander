@@ -16,29 +16,39 @@ public:
 		STAIRS_DOWN
 	};
 
-	virtual const string getSymbol() const;
+	const string getSymbol() const;
+	const string getSymbolAlt() const {
+		return this->symbolAlt;
+	}
 
 protected:
+	bool remembered;
 	Dungeon* dungeon;
 	Type type;
 	Point pos;
-	bool remembered;
+	string symbol;
+	string symbolAlt;
 	Point getSpawn(bool halls) const;
 
 public:
 	Entity(Dungeon* dungeon, Type type, bool halls);
+
 	const Type& getType() const {
 		return type;
 	}
+
 	const Point& getPos() const {
 		return pos;
 	}
+
 	void setPos(const Point& p) {
 		pos = p;
 	}
+
 	bool isRemembered() const {
 		return remembered;
 	}
+
 	void setRemembered(bool r) {
 		remembered = r;
 	}

@@ -6,23 +6,27 @@ const int MAX_KNOWN_TURNS = 5;
 
 Mob::Mob(
 	Dungeon* dungeon,
-	int turn,
+	Color color,
+	int order,
 	int skills,
 	int speed,
 	int hp,
-	Color color,
+	const Dice& dam,
 	const string& name,
 	const string& symbol,
+	const string& symbolAlt,
 	const vector<string>& description
 ) : Entity(dungeon, Entity::MOB, true) {
 	this->known = 0;
-	this->order = turn;
+	this->color = color;
+	this->order = order;
 	this->skills = skills;
 	this->speed = speed;
 	this->hp = hp;
-	this->color = color;
+	this->dam = dam;
 	this->name = name;
 	this->symbol = symbol;
+	this->symbolAlt = symbolAlt;
 	this->description = description;
 	this->turn = 1000/speed;
 }
@@ -258,11 +262,8 @@ void Mob::attack() {
 		//Make sure to include the player in the attack phase
 		const shared_ptr<Mob> other = (i < dungeon->getMobs().size()) ? dungeon->getMobs()[i] : dungeon->getPlayer();
 
-		//Collision detection. Monsters are 2 wide when emoji is enabled on most systems
-		if (!(order != other->order
-		      && other->hp != 0
-		      && (pos.x == other->pos.x || (dungeon->isFancy() && (pos.x + 1 == other->pos.x || pos.x - 1 == other->pos.x)))
-		      && pos.y == other->pos.y)) continue;
+		//Collision detection.
+		if (order == other->order || other->hp == 0 || pos != other->pos) continue;
 
 		other->hp--;
 		string text = (other->hp == 0) ? "It killed it brutally!" : "Looks like it hurt!";

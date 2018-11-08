@@ -36,6 +36,7 @@ private:
 
 	string name;
 	string symbol;
+	string symbolAlt;
 	vector<string> description;
 
 	Dice hp;
