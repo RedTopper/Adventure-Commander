@@ -61,9 +61,7 @@ protected:
 	int speed;
 	int hp;
 	Dice dam;
-	string name;
-	vector<string> description;
-	Color color;
+
 
 	//For player inputs
 	Action action = NONE;

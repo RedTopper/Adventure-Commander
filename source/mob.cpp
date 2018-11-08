@@ -17,7 +17,7 @@ Mob::Mob(
 	const string& symbol,
 	const string& symbolAlt,
 	const vector<string>& description
-) : Entity(dungeon, Entity::MOB, true) {
+) : Entity(dungeon, Entity::OTHER, true) {
 	this->known = 0;
 	this->color = color;
 	this->order = order;

@@ -69,7 +69,7 @@ public:
 
 	Dungeon(WINDOW* base, const Point& dim);
 	Dungeon(WINDOW* base, fstream& file);
-	void finalize(const vector<FMob>& fMob, const vector<FObject>& fObject, int count,  int floor, bool emoji);
+	void finalize(vector<FMob>& fMob, vector<FObject>& fObject, int count,  int floor, bool emoji);
 	void save(fstream& file);
 	int alive() const;
 	void rotate();

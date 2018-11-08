@@ -201,8 +201,9 @@ void Dungeon::mobGenerate(vector<FMob> factoryMob, int total) {
 			}
 
 			int chance = rand() % 100;
-			if (!m.isCreatable() || chance > m.getRarity()) continue;
+			if (!(m.isCreatable() && !m.isSpawned() && chance <= m.getRarity())) continue;
 			mobs.push_back(make_shared<Mob>(m.getMob(this, generated + 1)));
+			m.setSpawned(true);
 			generated++;
 		}
 	}
@@ -316,8 +317,11 @@ void Dungeon::postProcess(vector<vector<Tile>>& tiles) {
 	}
 }
 
-void Dungeon::finalize(const vector<FMob>& fMob, const vector<FObject>& fObject, int count, int floor, bool emoji) {
+void Dungeon::finalize(vector<FMob>& fMob, vector<FObject>& fObject, int count, int floor, bool emoji) {
 	this->emoji = emoji;
+
+	//Reset factories
+	for(auto& m : fMob) m.setSpawned(false);
 
 	//Create mobs
 	mobGenerate(fMob, count + floor > 100 ? 100 : count + floor);

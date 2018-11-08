@@ -3,6 +3,7 @@
 
 #include <array>
 #include <memory>
+#include <vector>
 #include "point.hpp"
 
 using namespace std;
@@ -11,7 +12,7 @@ class Dungeon;
 class Entity {
 public:
 	enum Type {
-		MOB,
+		OTHER,
 		STAIRS_UP,
 		STAIRS_DOWN
 	};
@@ -28,6 +29,10 @@ protected:
 	Point pos;
 	string symbol;
 	string symbolAlt;
+	string name;
+	vector<string> description;
+	Color color;
+
 	Point getSpawn(bool halls) const;
 
 public:

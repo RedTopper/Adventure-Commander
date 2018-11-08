@@ -31,6 +31,7 @@ public:
 
 private:
 	bool creatable = true;
+	bool spawned = false;
 
 	int rarity = 0;
 	int colors = 0;
@@ -58,8 +59,21 @@ public:
 		return creatable;
 	}
 
+	//Sets if a monster can be recreated ever again.
+	//Can only change this bit if the mob is unique.
 	void notCreatable() {
 		if (abilities & Mob::UNIQUE) creatable = false;
+	}
+
+	//Checks if the monster has been spawned in the dungeon.
+	bool isSpawned() const {
+		return spawned;
+	}
+
+	//Sets if this factory can produce another unique monster in this instance.
+	//Can only change this bit if the mob is unique.
+	void setSpawned(bool spawned) {
+		if (abilities & Mob::UNIQUE) this->spawned = spawned;
 	}
 
 private:
