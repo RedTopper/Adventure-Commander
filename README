@@ -1,5 +1,5 @@
 # Adventure Commander
-A text base adventure game written in C
+A text base adventure game written in C++
 
 # Author
 Aaron Walter
@@ -14,19 +14,18 @@ Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- IMPORTANT
 3. Run `./game` with wanted options
 
 # Notable features for this version
-- Parsing monster definitions, use --parse to launch the parser
-- COLOR is stored as a bit-field for later use
-- ABIL is stored as a bit-field for later use
-- Dice are stored as "streamable" objects (ie: can be read and output)
-- To see values for COLOR and ABIL, see `mob.hpp`
-- To see internal parsed structure for mobs, see `protomob.hpp`
-- To see internal parsed structure for dice, see `dice.hpp`
-
-# Stuff below is unchanged from last version
+- Parsing object definitions, use --parse to launch the parser
+- You can load in files from the resources folder and home directory (--home)
+- Made my own monster definition file v1.1 that contains UTF8 encoded emoji
+  (parser can still read v1 files, so feel free to load your own with --home)
+- Mobs have more than 1 health. Monsters still do 1 dmg to eachother, however.
+- Still uses emoji! Use --lame to disable. Works on fedora and pyrite over ssh.
 
 # Changes from specifications
-- I made the visible area slightly bigger.
+- I made the fog visible area slightly bigger.
 - Mobs use emoji if not disabled
+- Uses emoji for all items
+- Has own monster definition with emoji support
 - In order to support this, mobs are 2 characters wide
 - Intelligent monsters follow the player with path finding for up to 5 turns
 - Immutable dungeon walls are LOWER HALF BLOCK, UPPER HALF BLOCK and FULL BLOCK
