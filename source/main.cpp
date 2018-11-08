@@ -7,8 +7,8 @@
 
 #include "main.hpp"
 #include "dungeon.hpp"
-#include "stream/smob.hpp"
-#include "stream/sentity.hpp"
+#include "stream/fmob.hpp"
+#include "stream/fobject.hpp"
 #include "stream/dice.hpp"
 
 using namespace std;
@@ -175,8 +175,8 @@ int main(int argc, char** argv) {
 	}
 
 	//Load both factory files
-	vector<SMob> factoryMobs = createClass<SMob>("monster_desc.txt", "RLG327 MONSTER DESCRIPTION 1", home);
-	vector<SEntity> factoryObjects = createClass<SEntity>("object_desc.txt", "RLG327 OBJECT DESCRIPTION 1", home);
+	vector<FMob> factoryMobs = createClass<FMob>("monster_desc.txt", "RLG327 MONSTER DESCRIPTION 1", home);
+	vector<FObject> factoryObjects = createClass<FObject>("object_desc.txt", "RLG327 OBJECT DESCRIPTION 1", home);
 
 	//Still output the files loaded if needed
 	if (parse) {

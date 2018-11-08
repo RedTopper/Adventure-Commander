@@ -15,8 +15,8 @@
 #include "mob.hpp"
 #include "player.hpp"
 #include "path.hpp"
-#include "stream/smob.hpp"
-#include "stream/sentity.hpp"
+#include "stream/fmob.hpp"
+#include "stream/fobject.hpp"
 
 extern const Point DUNGEON_DIM;
 
@@ -57,7 +57,7 @@ private:
 	void hallPlace(const Point& point);
 	void tilePlace(const Point &pos, uint8_t hardness, const float* seed);
 	void entityGenerate(int floor);
-	void mobGenerate(vector<SMob> factoryMob, int total);
+	void mobGenerate(vector<FMob> factoryMob, int total);
 	void renderMob(WINDOW* win, const shared_ptr<Mob>& m);
 
 	void postProcess(vector<vector<Tile>>& tiles);
@@ -70,7 +70,7 @@ public:
 
 	Dungeon(WINDOW* base, const Point& dim);
 	Dungeon(WINDOW* base, fstream& file);
-	void finalize(const vector<SMob>& mobFactory, const vector<SEntity>& objectFactory, int count,  int floor, bool emoji);
+	void finalize(const vector<FMob>& fMob, const vector<FObject>& fObject, int count,  int floor, bool emoji);
 	void save(fstream& file);
 	int alive() const;
 	void rotate();

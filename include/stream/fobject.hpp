@@ -9,7 +9,7 @@
 
 using namespace std;
 
-class SEntity : public Stream {
+class FObject : public Stream {
 public:
 	enum KeyWord {
 		KWD_BAD   = 0,

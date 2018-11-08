@@ -5,9 +5,9 @@
 
 #include "main.hpp"
 #include "mob.hpp"
-#include "stream/smob.hpp"
+#include "stream/fmob.hpp"
 
-SMob::KeyWord SMob::toKeyWord(string word) {
+FMob::KeyWord FMob::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
 	else if(word == "BEGIN") return BEGIN;
 	else if(word == "MONSTER") return MONSTER;
@@ -24,7 +24,7 @@ SMob::KeyWord SMob::toKeyWord(string word) {
 	else return KWD_BAD;
 }
 
-Mob::Color SMob::toColor(string color) {
+Mob::Color FMob::toColor(string color) {
 	if     (color == "RED") return Mob::RED;
 	else if(color == "GREEN") return Mob::GREEN;
 	else if(color == "BLUE") return Mob::BLUE;
@@ -36,7 +36,7 @@ Mob::Color SMob::toColor(string color) {
 	else return Mob::COLOR_BAD;
 }
 
-Mob::Skills SMob::toSkill(string skill) {
+Mob::Skills FMob::toSkill(string skill) {
 	if     (skill == "SMART") return Mob::INTELLIGENCE;
 	else if(skill == "TELE") return Mob::TELEPATHY;
 	else if(skill == "TUNNEL") return Mob::TUNNELING;
@@ -49,7 +49,7 @@ Mob::Skills SMob::toSkill(string skill) {
 	else return Mob::SKILL_BAD;
 }
 
-ostream& SMob::dump(ostream& out) const {
+ostream& FMob::dump(ostream& out) const {
 	out << "BEGIN PARSED MONSTER" << endl;
 	out << "NAME:  '" << name << "'" << endl;
 	out << "DESC:" << endl;
@@ -64,7 +64,7 @@ ostream& SMob::dump(ostream& out) const {
 	return out;
 }
 
-istream& SMob::read(istream& in) {
+istream& FMob::read(istream& in) {
 	string header;
 	in >> header;
 	if (toKeyWord(header) != BEGIN) return in;
@@ -128,7 +128,7 @@ istream& SMob::read(istream& in) {
 	return in;
 }
 
-int SMob::getRequired() const {
+int FMob::getRequired() const {
 	return (
 		  NAME
 		| DESC
@@ -143,7 +143,7 @@ int SMob::getRequired() const {
 	);
 }
 
-Mob SMob::getMob(Dungeon* dungeon, int turn) const {
+Mob FMob::getMob(Dungeon* dungeon, int turn) const {
 	return Mob(dungeon, getRandomColor(colors), turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
 }
 

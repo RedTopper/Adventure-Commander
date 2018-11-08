@@ -10,7 +10,7 @@
 
 using namespace std;
 
-class SMob : public Stream {
+class FMob : public Stream {
 public:
 	enum KeyWord {
 		KWD_BAD   = 0,

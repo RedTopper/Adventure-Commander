@@ -191,7 +191,7 @@ int Dungeon::isFull() {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
-void Dungeon::mobGenerate(vector<SMob> factoryMob, int total) {
+void Dungeon::mobGenerate(vector<FMob> factoryMob, int total) {
 	int generated = 0;
 	bool running = true;
 	while(running) {
@@ -317,11 +317,11 @@ void Dungeon::postProcess(vector<vector<Tile>>& tiles) {
 	}
 }
 
-void Dungeon::finalize(const vector<SMob>& mobFactory, const vector<SEntity>& objectFactory, int count, int floor, bool emoji) {
+void Dungeon::finalize(const vector<FMob>& fMob, const vector<FObject>& fObject, int count, int floor, bool emoji) {
 	this->emoji = emoji;
 
 	//Create mobs
-	mobGenerate(mobFactory, count + floor > 100 ? 100 : count + floor);
+	mobGenerate(fMob, count + floor > 100 ? 100 : count + floor);
 	entityGenerate(floor);
 	recalculate();
 

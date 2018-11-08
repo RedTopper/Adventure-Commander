@@ -2,10 +2,10 @@
 #include <bitset>
 
 #include "main.hpp"
-#include "stream/smob.hpp"
-#include "stream/sentity.hpp"
+#include "stream/fmob.hpp"
+#include "stream/fobject.hpp"
 
-SEntity::KeyWord SEntity::toKeyWord(string word) {
+FObject::KeyWord FObject::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
 	else if(word == "BEGIN") return BEGIN;
 	else if(word == "OBJECT") return OBJECT;
@@ -27,7 +27,7 @@ SEntity::KeyWord SEntity::toKeyWord(string word) {
 	else return KWD_BAD;
 }
 
-SEntity::Type SEntity::toType(string word) {
+FObject::Type FObject::toType(string word) {
 	if     (word == "WEAPON") return WEAPON;
 	else if(word == "OFFHAND") return OFFHAND;
 	else if(word == "RANGED") return RANGED;
@@ -50,7 +50,7 @@ SEntity::Type SEntity::toType(string word) {
 	else return TYPE_BAD;
 }
 
-ostream &SEntity::dump(ostream &out) const {
+ostream &FObject::dump(ostream &out) const {
 	out << "BEGIN PARSED OBJECT" << endl;
 	out << "NAME:  '" << name << "'" << endl;
 	out << "DESC:" << endl;
@@ -71,7 +71,7 @@ ostream &SEntity::dump(ostream &out) const {
 	return out;
 }
 
-istream &SEntity::read(istream &in) {
+istream &FObject::read(istream &in) {
 	string header;
 	in >> header;
 	if (toKeyWord(header) != BEGIN) return in;
@@ -102,7 +102,7 @@ istream &SEntity::read(istream &in) {
 				while(!!(line >> word)) types |= toType(word);
 				break;
 			case COLOR:
-				while(!!(line >> word)) colors |= SMob::toColor(word);
+				while(!!(line >> word)) colors |= FMob::toColor(word);
 				break;
 			case HIT:
 				line >> hit;
@@ -148,7 +148,7 @@ istream &SEntity::read(istream &in) {
 	return in;
 }
 
-int SEntity::getRequired() const {
+int FObject::getRequired() const {
 	return (
 		  NAME
 		| DESC
@@ -168,7 +168,7 @@ int SEntity::getRequired() const {
 	);
 }
 
-bool SEntity::isEquipment() const {
+bool FObject::isEquipment() const {
 	int equipment = (
 		  WEAPON
 		| OFFHAND
