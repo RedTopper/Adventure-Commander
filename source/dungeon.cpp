@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <fstream>
+#include <limits>
 
 #include "dungeon.hpp"
 #include "perlin.hpp"
@@ -328,7 +329,7 @@ void Dungeon::finalize(vector<FMob>& fMob, vector<FObject>& fObject, int count, 
 	line2 = "Status Text";
 
 	//slap in some fog
-	foggy = true;
+	display = FOGGY;
 	for (auto& row : fog) {
 		for (auto& tile : row) {
 			tile.type = Tile::VOID;
@@ -550,8 +551,6 @@ int Dungeon::isFull() {
 }
 
 void Dungeon::printEntity(WINDOW *win, const shared_ptr<Entity> &e) {
-	if (isOutOfRange(*e)) return;
-
 	//check if the mob is directly to the left of another mob.
 	//An emoji takes two characters on some terminals, so they can't overlap
 	bool isLeft = false;
@@ -583,30 +582,43 @@ void Dungeon::printEntity(WINDOW *win, const shared_ptr<Entity> &e) {
 }
 
 void Dungeon::print(WINDOW* win) {
+	//clean window
+	werase(win);
+
 	//Render fog or tiles
-	vector<vector<Tile>>& tiles = foggy ? this->fog : this->tiles;
+	vector<vector<Tile>> &tiles = display == FOGGY ? this->fog : this->tiles;
 
 	//Make the dungeon look nice
 	postProcess(tiles);
 
-	//clean window
-	werase(win);
-
-	//Write status
-	mvwaddstr(win, 0, 0, status.c_str());
-
 	//Write tiles
 	for (int row = 0; row < dim.y; row++) {
-		string line;
+		stringstream line;
 		for (int col = 0; col < dim.x; col++) {
-			line += Tile::getStr(tiles[row][col].symbol);
+			int dist = 0;
+			if (display == DISTANCE) {
+				dist = map.getDist(Point(col, row));
+			} else if (display == TUNNEL) {
+				dist = dig.getDist(Point(col, row)) % 10;
+			} else {
+				line << Tile::getStr(tiles[row][col].symbol);
+				continue;
+			}
+
+			if (dist == INT32_MAX) {
+				line << " ";
+			} else {
+				line << dist % 10;
+			}
 		}
 
-		mvwaddstr(win, row + 1, 0, line.c_str());
+		mvwaddstr(win, row + 1, 0, line.str().c_str());
 	}
 
 	//Output objects
 	for (auto& o : objects) {
+		if (isOutOfRange(*o)) continue;
+		o->setRemembered(true);
 		printEntity(win, o);
 	}
 
@@ -624,10 +636,14 @@ void Dungeon::print(WINDOW* win) {
 
 	//Write mobs
 	for (const auto& m : mobs) {
-		if (m->isAlive()) printEntity(win, m);
+		if (m->isAlive() && !isOutOfRange(*m)) printEntity(win, m);
 	}
 
-	//Write other statuses
+	//Write status
+	stringstream str;
+	str << "Turn: " << player->getTurn() << " | HP: " << player->getHp() << " | Speed: " << player->getSpeed();
+	line1 = str.str();
+	mvwaddstr(win, 0, 0, status.c_str());
 	mvwaddstr(win, dim.y + 1, 0, line1.c_str());
 	mvwaddstr(win, dim.y + 2, 0, line2.c_str());
 

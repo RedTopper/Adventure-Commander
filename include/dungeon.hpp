@@ -22,6 +22,17 @@ extern const Point DUNGEON_DIM;
 using namespace std;
 
 class Dungeon {
+public:
+	enum Display {
+		NORMAL,
+		FOGGY,
+		TUNNEL,
+		DISTANCE
+	};
+
+	static const int FOG_X = 3;
+	static const int FOG_Y = 2;
+
 private:
 	struct TurnOrder {
 		//Should return true if lhs is considered to go before rhs
@@ -42,13 +53,8 @@ private:
 	Path map;
 	Path dig;
 	bool emoji;
-	bool foggy;
+	Display display;
 
-public:
-	static const int FOG_X = 3;
-	static const int FOG_Y = 2;
-
-private:
 	template <class F, class T>
 	void generateFactory(vector<F>& factories, vector<shared_ptr<T>>& out, int total);
 	void connectRoomRasterize(const Point &from, const Point &to);
@@ -101,16 +107,17 @@ public:
 	Tile& getTile(Point p) {
 		return tiles[p.y][p.x];
 	}
+
+	Display getDisplay() const {
+		return display;
+	}
+
 	bool isFancy() const {
 		return emoji;
 	}
 
-	bool isFoggy() const {
-		return foggy;
-	}
-
 	bool isOutOfRange(const Entity& e) {
-		return foggy && !e.isRemembered() && player
+		return display == FOGGY && !e.isRemembered() && player
 			&& (e.getPos().x - player->getPos().x < -FOG_X
 			|| e.getPos().x - player->getPos().x > FOG_X
 			|| e.getPos().y - player->getPos().y < -FOG_Y
@@ -130,8 +137,8 @@ public:
 		map.recalculate();
 	}
 
-	void setFoggy(const bool foggy) {
-		this->foggy = foggy;
+	void setDisplay(const Display display) {
+		this->display = display;
 	}
 };
 

@@ -152,38 +152,48 @@ void Player::tickInput() {
 	uint offset = 0;
 	Point dest = pos;
 	switch (ch) {
+		case KEY_HOME:
 		case '7':
 		case 'y':
 			res = move(Point(pos) += Point(-1,-1));
 			break;
+		case KEY_UP:
 		case '8':
 		case 'k':
 			res = move(Point(pos) += Point(0,-1));
 			break;
+		case KEY_PPAGE:
 		case '9':
 		case 'u':
 			res = move(Point(pos) += Point(1,-1));
 			break;
+		case KEY_RIGHT:
 		case '6':
 		case 'l':
 			res = move(Point(pos) += Point(1,0));
 			break;
+		case KEY_NPAGE:
 		case '3':
 		case 'n':
 			res = move(Point(pos) += Point(1,1));
 			break;
+		case KEY_DOWN:
 		case '2':
 		case 'j':
 			res = move(Point(pos) += Point(0,1));
 			break;
+		case KEY_END:
 		case '1':
 		case 'b':
 			res = move(Point(pos) += Point(-1,1));
 			break;
+		case KEY_LEFT:
 		case '4':
 		case 'h':
 			res = move(Point(pos) += Point(-1,0));
 			break;
+		case KEY_B2:
+		case '.':
 		case '5':
 		case ' ':
 			action = STALL;
@@ -219,7 +229,15 @@ void Player::tickInput() {
 			break;
 		case 'f':
 			dungeon->status = "You cheater! You toggled the fog!";
-			dungeon->setFoggy(!dungeon->isFoggy());
+			dungeon->setDisplay(dungeon->getDisplay() == Dungeon::FOGGY ? Dungeon::NORMAL : Dungeon::FOGGY);
+			break;
+		case 'D':
+			dungeon->status = "You cheater! You switched to path-find distance!";
+			dungeon->setDisplay(Dungeon::DISTANCE);
+			break;
+		case 'T':
+			dungeon->status = "You cheater! You switched to path-find dig!";
+			dungeon->setDisplay(Dungeon::TUNNEL);
 			break;
 		default:
 			dungeon->status = to_string(ch) + " is invalid!";
@@ -231,8 +249,6 @@ void Player::tickInput() {
 		action = MOVE;
 		dungeon->recalculate();
 	}
-
-	attack();
 }
 
 void Player::tick() {
@@ -241,4 +257,6 @@ void Player::tick() {
 	while (action == NONE) {
 		tickInput();
 	}
+
+	attack();
 }

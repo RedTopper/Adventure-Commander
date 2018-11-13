@@ -99,11 +99,19 @@ public:
 	}
 
 	void nextTurn() {
-		turn += 1000/speed;
+		turn += 1000/getSpeed();
 	}
 
 	Action getAction() const {
 		return action;
+	}
+
+	int getHp() const {
+		return hp;
+	}
+
+	int getSpeed() const {
+		return speed;
 	}
 };
 

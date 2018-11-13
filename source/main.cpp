@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 
 	//Show the dungeon once more before exiting.
 	redrawwin(base);
-	dungeon->setFoggy(false);
+	dungeon->setDisplay(Dungeon::NORMAL);
 	dungeon->print(base);
 	getch();
 
