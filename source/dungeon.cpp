@@ -583,6 +583,11 @@ void Dungeon::printEntity(WINDOW *win, const shared_ptr<Entity> &e) {
 		}
 	}
 
+	//Also check the player
+	if (!isLeft) {
+		isLeft = e->getPos().x == player->getPos().x - 1 && e->getPos().y == player->getPos().y;
+	}
+
 	//Render only if the player is near
 	attron(COLOR_PAIR(e->getColor()));
 	mvwaddstr(win,

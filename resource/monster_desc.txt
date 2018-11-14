@@ -29,7 +29,7 @@ ABIL SMART
 SPEED 10+4d2
 HP 300+1d100
 DAM 10+2d30
-SYMB p🐺
+SYMB w🐺
 RRTY 40
 END
 
@@ -133,7 +133,7 @@ ABIL TELE TUNNEL
 SPEED 10+0d1
 HP 50+2d500
 DAM 10+3d5
-SYMB s👹
+SYMB O👹
 RRTY 30
 END
 
@@ -197,7 +197,7 @@ ABIL TUNNEL ERRATIC
 SPEED 50+0d1
 HP 10+1d10
 DAM 0+10d2
-SYMB s🐍
+SYMB S🐍
 RRTY 75
 END
 
@@ -232,7 +232,7 @@ get blasting!
 
                  
      \     /     
-  \ /MMMMMMM\ /   
+  \ /MMMMMMM\ /  
    |MM MMM MM|   
    \MMMMMMMMM/   
     /      \     
@@ -282,7 +282,7 @@ END
 
 
 BEGIN MONSTER
-NAME Alien (Xenomorph XX121)
+NAME Xenomorph XX121
 DESC
 You know, now would be a REALLY GOOD TIME for an airlock to the vacuum of
 outer space. Where are those when you need one anyway?

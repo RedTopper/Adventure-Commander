@@ -4,6 +4,7 @@
 #include <ncursesw/curses.h>
 
 #include "mob.hpp"
+#include "main.hpp"
 
 class Player: public Mob {
 private:
@@ -16,12 +17,14 @@ private:
 
 private:
 	string relative(const Mob& other);
-	bool tickMap(int ch, uint& offset);
+	string item(const Object& object, int index);
+	bool tickScroll(int ch, uint &offset, const string &title, const vector<string> &lines);
 	bool tickTarget(int ch, Point& dest);
 	void tickInput();
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
+	static const vector<string> getHelp();
 	Mob::Pickup pickUpObject() override;
 	void tick() override;
 
@@ -40,6 +43,8 @@ public:
 	void setDungeon(Dungeon *dungeon) {
 		this->dungeon = dungeon;
 	}
+
+
 };
 
 #endif

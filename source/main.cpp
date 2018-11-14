@@ -17,18 +17,26 @@ const char* HOME = "--home";
 const char* PARSE = "--parse";
 const char* ALL = "--all";
 
+vector<string> getOptions() {
+	vector<string> options = {
+		"[--help] Show this",
+		"[--lame] Disable emoji support (needed for older terms)",
+		"[--load] Load a file from /dungeon",
+		"[--save] Write a dungeon to /dungeon",
+		"[--all] Show all moves instead of just PC moves",
+		"[--parse] Attempt to parse /monster_desc.txt",
+		"[--home] Access files from the ~/.rlg327 directory instead of /resource",
+		"[--nummon] <count> Number of monsters to generate",
+	};
+
+	return options;
+}
+
 static void help(const string& message, const string& command, Error error) {
 	cout << command << ": " << message << endl;
 	cout << "Remember, please see the readme if anything looks weird!" << endl;
 	cout << "Adventure Commander Help:" << endl;
-	cout << "[--help] Show this" << endl;
-	cout << "[--lame] Disable emoji support (needed for older terms)" << endl;
-	cout << "[--load] Load a file from /dungeon" << endl;
-	cout << "[--save] Write a dungeon to /dungeon" << endl;
-	cout << "[--all] Show all moves instead of just PC moves" << endl;
-	cout << "[--parse] Attempt to parse /monster_desc.txt" << endl;
-	cout << "[--home] Access files from the ~/.rlg327 directory instead of /resource" << endl;
-	cout << "[--nummon] <count> Number of monsters to generate" << endl;
+	for(const auto& str : getOptions()) cout << str << endl;
 	exit(error);
 }
 

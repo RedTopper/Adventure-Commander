@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "dungeon.hpp"
 
 Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
@@ -17,12 +18,14 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	this->base = window;
 	this->action = NONE;
 	this->turn = 0;
+	this->dam = Dice(0, 1, 4);
 }
 
 string Player::relative(const Mob& other) {
 	stringstream str;
 	str
-		<< other.getSymbol()
+		<< setw(16) << other.getName()
+		<< " (" << other.getSymbolAlt() << "/" << other.getSymbol() << ")"
 		<< (other.isAlive() ? " is " : " was killed ")
 		<< abs(pos.y - other.getPos().y)
 		<< (other.getPos().y > pos.y ?  " south " : " north ")
@@ -32,7 +35,19 @@ string Player::relative(const Mob& other) {
 	return str.str();
 }
 
-bool Player::tickMap(const int ch, uint& offset) {
+string Player::item(const Object& object, int index) {
+	stringstream str;
+	str
+		<< index << ": "
+		<< "(" << object.getSymbolAlt() << "/" << object.getSymbol() << ") "
+		<< object.getName();
+	return str.str();
+}
+
+bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<string>& constLines) {
+	vector<string> lines = constLines;
+	if (lines.empty()) lines.emplace_back("We've come up empty!");
+
 	//Clear screen and figure out characters
 	int max = LINES - 2;
 	werase(base);
@@ -43,7 +58,7 @@ bool Player::tickMap(const int ch, uint& offset) {
 			if (offset > 0) offset--;
 			break;
 		case KEY_DOWN:
-			if (offset + max < dungeon->getMobs().size()) {
+			if (offset + max < lines.size()) {
 				offset++;
 			} else {
 				beep();
@@ -51,24 +66,21 @@ bool Player::tickMap(const int ch, uint& offset) {
 			break;
 		case 27: //ESC
 		case 'q':
+		case 'Q':
 			return false;
 		default:
 			break;
 	}
 
 	//Show screen
-	mvwaddstr(base, 0, 0, "Monster list. Press 'q' or 'ESC' to exit.");
+	mvwaddstr(base, 0, 0, (title + " Press 'q' or 'ESC' to exit.").c_str());
 	for (int line = 0; line < max; line++) {
-		const shared_ptr<Mob> mob = line + offset < dungeon->getMobs().size() ? dungeon->getMobs()[line + offset] : nullptr;
-		if (mob) {
-			mvwaddstr(base, line + 1, 0, relative(*mob).c_str());
-		} else {
-			mvwaddstr(base, line + 1, 0, "~");
-		}
+		string text = line + offset < lines.size() ? lines[line + offset] : "~";
+		mvwaddstr(base, line + 1, 0, text.c_str());
 	}
 
 	//Print end marker if needed
-	if (offset + max >= dungeon->getMobs().size()) {
+	if (offset + max >= lines.size()) {
 		wattron(base, WA_STANDOUT);
 		mvwaddstr(base, LINES - 1, 0, "(END)");
 		wattroff(base, WA_STANDOUT);
@@ -150,6 +162,7 @@ void Player::tickInput() {
 	Movement res = IDLE;
 	uint32_t offset = 0;
 	Point dest = pos;
+	vector<string> lines;
 	int ch = getch();
 	switch (ch) {
 		case KEY_HOME:
@@ -220,7 +233,16 @@ void Player::tickInput() {
 			break;
 		case 'm':
 			//keep ticking and getting characters until tick returns false
-			while(tickMap(ch, offset)) ch = getch();
+			for (const auto& m : dungeon->getMobs()) lines.push_back(relative(*m));
+			while(tickScroll(ch, offset, "Monster list.", lines)) ch = getch();
+			break;
+		case '\t':
+			while(tickScroll(ch, offset, "In game manual.", getHelp())) ch = getch();
+			break;
+		case 'i':
+			for (const auto& o : inventory) lines.push_back(item(*o, offset++));
+			offset = 0;
+			while(tickScroll(ch, offset, "Your Inventory.", lines)) ch = getch();
 			break;
 		case 'g':
 			ch = 0;
@@ -256,7 +278,7 @@ void Player::tickInput() {
 
 void Player::tick() {
 	action = NONE;
-	dungeon->status = "It's your turn!";
+	dungeon->status = "It's your turn! (TAB for help)";
 	while (action == NONE) {
 		tickInput();
 	}
@@ -282,4 +304,92 @@ Mob::Pickup Player::pickUpObject() {
 	}
 
 	return pickup;
+}
+
+const vector<string> Player::getHelp() {
+	vector<string> help = {
+		"ADVENTURE COMMANDER(6)",
+		"",
+		"NAME",
+		"\tAdventure Commander - A text based rogue-like game for COM S 327",
+		"",
+		"CONTROLS",
+		"\tCritical Controls:",
+		"\tQ",
+		"\t\tQuit the game gracefully",
+		"\t",
+		"\tMovement Controls:",
+		"\t7, y, KEY_HOME",
+		"\t\tMove/Attack up left",
+		"\t8, k, KEY_UP",
+		"\t\tMove/Attack up",
+		"\t9, u, KEY_PPAGE",
+		"\t\tMove/Attack up right",
+		"\t6, l, KEY_RIGHT",
+		"\t\tMove/Attack right",
+		"\t3, n, KEY_NPAGE",
+		"\t\tMove/Attack down right",
+		"\t2, j, KEY_DOWN",
+		"\t\tMove/Attack down",
+		"\t1, b, KEY_END",
+		"\t\tMove/Attack down left",
+		"\t4, h, KEY_LEFT",
+		"\t\tMove/Attack left",
+		"\t5, ., KEY_B2, SPACE BAR",
+		"\t\tWait a turn",
+		"\t",
+		"\tInteraction Controls:",
+		"\t>",
+		"\t\tGo down a staircase",
+		"\t<",
+		"\t\tGo up a staircase",
+		"\t,",
+		"\t\tPick up an item off the ground",
+		"\t",
+		"\tCharacter Controls:",
+		"\ti",
+		"\t\tShow your inventory",
+		"\t",
+		"\tDebug Controls:",
+		"\tg",
+		"\t\tGoto/Teleport - r for random, g for finish",
+		"\tT",
+		"\t\tShow the tunneling path-finding map",
+		"\tD",
+		"\t\tShow the distance path-finding map",
+		"\tf",
+		"\t\tToggle fog of war",
+		"\tm",
+		"\t\tShow a list of monsters on the map",
+		"",
+		"DESCRIPTION",
+		"\tThis text game uses NCurses and C++ to implement a rogue-like game.",
+		"\tYou can play the game via command line on most linux systems. To compile",
+		"\tfrom source, you can use the Makefile provided in the repository root.",
+		"\tThere is an additional CMakeLists.txt provided if you would like to use",
+		"\tCMake to build the program instead.",
+		"\t",
+		"\tThis game uses Emoji (if enabled, see OPTIONS) and wide characters to get",
+		"\tthe most out of your terminal emulator. This game will probably not work",
+		"\tin any non UTF-8 conforming terminal (such as real terminals, ironically).",
+		"\t",
+		"\tHave fun killing monsters and conquering dungeons in ADVENTURE COMMANDER!",
+		"",
+		"OPTIONS",
+	};
+
+	for(const auto& str : getOptions()) help.push_back("\t" + str);
+
+	vector<string> post = {
+		"",
+		"AUTHOR",
+		"\tMade with <3 by Aaron Walter <ajwalter@iastate.edu>",
+		"\t(Thanks for playing!)",
+		"",
+		"ADVENTURE COMMANDER(6)"
+	};
+
+	help.insert(help.end(), post.begin(), post.end());
+
+	return help;
 }

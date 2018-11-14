@@ -29,6 +29,7 @@ int skewBetweenRange(int skew, int low, int high);
 string& ltrim(string& str, const string& chars = "\t\r\n ");
 string& rtrim(string& str, const string& chars = "\t\r\n ");
 string& trim(string& str, const string& chars = "\t\r\n ");
+vector<string> getOptions();
 Mob::Color getRandomColor(int colors);
 
 #endif
