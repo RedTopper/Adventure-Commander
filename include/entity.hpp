@@ -2,6 +2,7 @@
 #define ENTITY_H
 
 #include <vector>
+#include <string>
 
 #include "point.hpp"
 

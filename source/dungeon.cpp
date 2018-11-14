@@ -383,15 +383,15 @@ Dungeon::Dungeon(const Point& dim)
 	
 	//Sort (for consistency)
 	sort(rooms.begin(), rooms.end(), [dim](const Room& lhs, const Room& rhs) {
-		const Point lhsCenter = (Point(lhs.pos) += Point(lhs.dim.x/2, lhs.dim.y/2)) -= Point(dim.x/2, dim.y/2);
-		const Point rhsCenter = (Point(rhs.pos) += Point(rhs.dim.x/2, rhs.dim.y/2)) -= Point(dim.x/2, dim.y/2);
-		return !lhsCenter.isClockwise(rhsCenter);
+		const Point lhsCenter = Point(lhs.pos) += Point(lhs.dim.x/2, lhs.dim.y/2);
+		const Point rhsCenter = Point(rhs.pos) += Point(rhs.dim.x/2, rhs.dim.y/2);
+		return lhsCenter.less(Point(dim.x/2, dim.y/2), rhsCenter);
 	});
 
 	//Create the paths.
 	connectRoom(rooms[0], rooms[rooms.size() - 1]);
-	for(uint first = 0; first < rooms.size() - 1; first++) {
-		connectRoom(rooms[first], rooms[first + 1]);
+	for(uint32_t i = 0; i < rooms.size() - 1; i++) {
+		connectRoom(rooms[i], rooms[i + 1]);
 	}
 
 	//No need to restore position later
@@ -535,7 +535,7 @@ int Dungeon::alive() const {
 	return alive;
 }
 
-void Dungeon::rotate() {
+void Dungeon:: rotate() {
 	shared_ptr<Mob> mob = turn.top();
 	mob->nextTurn();
 	turn.pop();
