@@ -2,9 +2,11 @@
 #define MOB_H
 
 #include <vector>
+#include <memory>
 
 #include "dice.hpp"
 #include "entity.hpp"
+#include "object.hpp"
 
 class FMob;
 class Mob:  public Entity {
@@ -39,6 +41,13 @@ public:
 		STALL
 	};
 
+	enum Pickup {
+		ADD,
+		WEIGHT,
+		SPACE,
+		NOTHING
+	};
+
 protected:
 	int known;  //How many turns the player is known for
 	int order;
@@ -53,6 +62,8 @@ protected:
 	//For player inputs
 	Action action = NONE;
 	FMob* factory;
+
+	vector<shared_ptr<Object>> inventory;
 
 private:
 	Point nextPoint(Point end);
@@ -82,9 +93,11 @@ public:
 	);
 
 	virtual void tick();
+	virtual Pickup pickUpObject();
 	Movement move(const Point& next);
-	bool isOn(Entity::Type type) const;
+	bool isOnEntity(Entity::Type type) const;
 	bool isBefore(const Mob& other) const;
+	int getCarryWeight() const;
 
 	bool isAlive() const {
 		return hp > 0;
@@ -112,6 +125,14 @@ public:
 
 	int getSpeed() const {
 		return speed;
+	}
+
+	virtual int getMaxInventory() const {
+		return 1;
+	}
+
+	virtual int getMaxCarryWeight() const {
+		return 10;
 	}
 };
 

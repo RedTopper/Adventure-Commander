@@ -1,3 +1,6 @@
+
+#include <mob.hpp>
+
 #include "path.hpp"
 #include "mob.hpp"
 #include "dungeon.hpp"
@@ -279,12 +282,37 @@ void Mob::attack() {
 	}
 }
 
-bool Mob::isOn(Entity::Type type) const {
+bool Mob::isOnEntity(Entity::Type type) const {
 	for (auto& e : dungeon->getEntities()) {
 		if (pos == e.getPos() && e.getType() == type) return true;
 	}
 
 	return false;
+}
+
+Mob::Pickup Mob::pickUpObject() {
+	//First check if we can pick up item
+	if (inventory.size() == getMaxInventory()) return SPACE;
+
+	auto& objects = dungeon->getObjects();
+	auto it = objects.begin();
+	while (it != objects.end()) {
+		auto& o = *it;
+		if (pos != o->getPos()) {
+			//Not on this item
+			it++;
+		} else if (o->getWeight() + getCarryWeight() > getMaxCarryWeight()) {
+			//Item we will pick up exceeds max capacity
+			return WEIGHT;
+		} else {
+			//Pick up item from floor
+			inventory.push_back(o);
+			it = objects.erase(it);
+			return ADD;
+		}
+	}
+
+	return NOTHING;
 }
 
 bool Mob::isBefore(const Mob& other) const {
@@ -296,4 +324,15 @@ bool Mob::isBefore(const Mob& other) const {
 		return false;
 	};
 }
+
+int Mob::getCarryWeight() const {
+	int weight = 0;
+	for (const auto& o : inventory) {
+		weight += o->getWeight();
+	}
+
+	return weight;
+}
+
+
 

@@ -148,9 +148,9 @@ void Player::tickInput() {
 	dungeon->print(base);
 	action = NONE;
 	Movement res = IDLE;
-	int ch = getch();
-	uint offset = 0;
+	uint32_t offset = 0;
 	Point dest = pos;
+	int ch = getch();
 	switch (ch) {
 		case KEY_HOME:
 		case '7':
@@ -199,14 +199,14 @@ void Player::tickInput() {
 			action = STALL;
 			break;
 		case '>':
-			if (isOn(STAIRS_DOWN)) {
+			if (isOnEntity(STAIRS_DOWN)) {
 				action = DOWN;
 			} else {
 				dungeon->status = "You are not on a down staircase!";
 			}
 			break;
 		case '<':
-			if (isOn(STAIRS_UP)) {
+			if (isOnEntity(STAIRS_UP)) {
 				action = UP;
 			} else {
 				dungeon->status = "You are not on an up staircase!";
@@ -239,6 +239,9 @@ void Player::tickInput() {
 			dungeon->status = "You cheater! You switched to path-find dig!";
 			dungeon->setDisplay(Dungeon::TUNNEL);
 			break;
+		case ',':
+			pickUpObject();
+			break;
 		default:
 			dungeon->status = to_string(ch) + " is invalid!";
 	}
@@ -259,4 +262,24 @@ void Player::tick() {
 	}
 
 	attack();
+}
+
+Mob::Pickup Player::pickUpObject() {
+	Pickup pickup = Mob::pickUpObject();
+	switch(pickup) {
+		case NOTHING:
+			dungeon->status = "Nothing to pick up";
+			break;
+		case SPACE:
+			dungeon->status = "You are holding too many items";
+			break;
+		case WEIGHT:
+			dungeon->status = "The item beneath you is too heavy to carry";
+			break;
+		case ADD:
+			dungeon->status = "You picked up " + inventory.back()->getName() + " (" + inventory.back()->getSymbol() + ")";
+			break;
+	}
+
+	return pickup;
 }

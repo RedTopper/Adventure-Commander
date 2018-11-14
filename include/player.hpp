@@ -22,8 +22,20 @@ private:
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
+	Mob::Pickup pickUpObject() override;
 	void tick() override;
 
+	const vector<shared_ptr<Object>>& getInventory() const {
+		return inventory;
+	}
+
+	int getMaxInventory() const override {
+		return 10;
+	}
+
+	int getMaxCarryWeight() const override {
+		return 40;
+	}
 };
 
 #endif

@@ -41,7 +41,9 @@ private:
 	int value;
 
 public:
-
+	int getWeight() const {
+		return weight;
+	}
 };
 
 #endif

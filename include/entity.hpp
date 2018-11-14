@@ -72,6 +72,10 @@ public:
 	Color getColor() const {
 		return color;
 	}
+
+	const string& getName() const {
+		return name;
+	}
 };
 
 #endif

@@ -92,6 +92,10 @@ public:
 		return mobs;
 	}
 
+	vector<shared_ptr<Object>>& getObjects() {
+		return objects;
+	}
+
 	const shared_ptr<Player>& getPlayer() const {
 		return player;
 	}
