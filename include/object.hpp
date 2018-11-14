@@ -41,6 +41,8 @@ private:
 	int value;
 
 public:
+	bool isEquipment() const;
+
 	int getWeight() const {
 		return weight;
 	}

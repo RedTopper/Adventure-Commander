@@ -194,25 +194,6 @@ int FObject::getRequired() const {
 	);
 }
 
-bool FObject::isEquipment() const {
-	int equipment = (
-		  WEAPON
-		| OFFHAND
-		| RANGED
-		| ARMOR
-		| HELMET
-		| CLOAK
-		| GLOVES
-		| BOOTS
-		| RING
-		| AMULET
-		| LIGHT
-	);
-
-	//Checks if all "types" bits are in "equipment" bits
-	return (types | equipment) == equipment;
-}
-
 Object FObject::get(Dungeon *dungeon, ...) {
 	const array<string, 20> SYMBOL = {
 		"\U0001F531", //Trident

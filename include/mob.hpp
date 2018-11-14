@@ -12,40 +12,40 @@ class FMob;
 class Mob:  public Entity {
 public:
 	enum Movement {
-		IDLE,
-		FAILURE,
-		SUCCESS,
-		BROKE_WALL,
-		DAMAGE_WALL,
+		MV_IDLE,
+		MV_FAIL,
+		MV_SUCCESS,
+		MV_DESTROY,
+		MV_DAMAGE,
 	};
 
 	enum Skills {
-		SKILL_BAD    = 0,
-		INTELLIGENCE = (1 << 0),
-		TELEPATHY    = (1 << 1),
-		TUNNELING    = (1 << 2),
-		ERRATIC      = (1 << 3),
-		PASS         = (1 << 4),
-		PICKUP       = (1 << 5),
-		DESTROY      = (1 << 6),
-		UNIQUE       = (1 << 7),
-		BOSS         = (1 << 8),
+		SK_BAD    = 0,
+		SK_INTELLIGENCE = (1 << 0),
+		SK_TELEPATHY    = (1 << 1),
+		SK_TUNNELING    = (1 << 2),
+		SK_ERRATIC      = (1 << 3),
+		SK_PASS         = (1 << 4),
+		SK_PICKUP       = (1 << 5),
+		SK_DESTROY      = (1 << 6),
+		SK_UNIQUE       = (1 << 7),
+		SK_BOSS         = (1 << 8),
 	};
 
 	enum Action {
-		NONE,
-		UP,
-		DOWN,
-		MOVE,
-		QUIT,
-		STALL
+		AC_NONE,
+		AC_UP,
+		AC_DOWN,
+		AC_MOVE,
+		AC_QUIT,
+		AC_STALL
 	};
 
 	enum Pickup {
-		ADD,
-		WEIGHT,
-		SPACE,
-		NOTHING
+		PICK_NONE,
+		PICK_ADD,
+		PICK_WEIGHT,
+		PICK_FULL,
 	};
 
 protected:
@@ -60,7 +60,7 @@ protected:
 	Dice dam;
 
 	//For player inputs
-	Action action = NONE;
+	Action action = AC_NONE;
 	FMob* factory;
 
 	vector<shared_ptr<Object>> inventory;
@@ -94,10 +94,10 @@ public:
 
 	virtual void tick();
 	virtual Pickup pickUpObject();
+	virtual int getCarryWeight() const;
 	Movement move(const Point& next);
 	bool isOnEntity(Entity::Type type) const;
 	bool isBefore(const Mob& other) const;
-	int getCarryWeight() const;
 
 	bool isAlive() const {
 		return hp > 0;

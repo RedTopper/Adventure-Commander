@@ -112,17 +112,17 @@ void Mob::tickStraightLine(const string& type) {
 
 	string text;
 	switch (movement) {
-		case BROKE_WALL:
+		case MV_DESTROY:
 			text = "broke down the wall while beelining!";
 			break;
-		case DAMAGE_WALL:
+		case MV_DAMAGE:
 			text = "damaged a wall while beelining!";
 			break;
-		case SUCCESS:
+		case MV_SUCCESS:
 			text = "is beelining towards you!";
 			break;
 		default:
-		case FAILURE:
+		case MV_FAIL:
 			text = "tried to beeline, but failed!";
 			break;
 	}
@@ -138,17 +138,17 @@ void Mob::tickRandomly(const string& type) {
 
 	string text;
 	switch (movement) {
-		case BROKE_WALL:
+		case MV_DESTROY:
 			text = "broke down the wall!";
 			break;
-		case DAMAGE_WALL:
+		case MV_DAMAGE:
 			text = "chipped at the wall!";
 			break;
-		case SUCCESS:
+		case MV_SUCCESS:
 			text = "moved to a new spot!";
 			break;
 		default:
-		case FAILURE:
+		case MV_FAIL:
 			text = "did nothing!";
 			break;
 	}
@@ -166,7 +166,7 @@ void Mob::tickPathFind(const string& type) {
 		check += Path::ADJACENT[i];
 
 		int dist;
-		if (skills & TUNNELING) {
+		if (skills & SK_TUNNELING) {
 			dist = dungeon->getPathDig(check);
 		} else {
 			dist = dungeon->getPathMap(check);
@@ -183,17 +183,17 @@ void Mob::tickPathFind(const string& type) {
 		movement = move(next);
 		string text;
 		switch (movement) {
-			case BROKE_WALL:
+			case MV_DESTROY:
 				text = "broke down the wall to get to you!";
 				break;
-			case DAMAGE_WALL:
+			case MV_DAMAGE:
 				text = "damaged a wall to get to you!";
 				break;
-			case SUCCESS:
+			case MV_SUCCESS:
 				text = "coming after you!";
 				break;
 			default:
-			case FAILURE:
+			case MV_FAIL:
 				text = "somehow failed to move?";
 				break;
 		}
@@ -205,41 +205,41 @@ void Mob::tickPathFind(const string& type) {
 
 Mob::Movement Mob::move(const Point& next) {
 	Tile& tile = dungeon->getTile(next);
-	if (tile.type == Tile::ROCK && skills & TUNNELING) {
+	if (tile.type == Tile::ROCK && skills & SK_TUNNELING) {
 		if (tile.hardness <= Path::HARDNESS_RATE) {
 			tile.type = Tile::HALL;
 			tile.hardness = 0;
 			pos = next;
 			dungeon->recalculate();
-			return BROKE_WALL;
+			return MV_DESTROY;
 		} else {
 			tile.hardness -= Path::HARDNESS_RATE;
 			dungeon->recalculate();
-			return DAMAGE_WALL;
+			return MV_DAMAGE;
 		}
 	} else if (tile.type == Tile::HALL || tile.type == Tile::ROOM){
 		pos = next;
-		return SUCCESS;
+		return MV_SUCCESS;
 	}
 
-	return FAILURE;
+	return MV_FAIL;
 }
 
 void Mob::tick() {
 	if (hp <= 0) return;
 	dungeon->status = "Nothing important happened.";
 
-	if (skills & ERRATIC && rand() % 2) {
+	if (skills & SK_ERRATIC && rand() % 2) {
 		//Not the player, but erratic movement
 		tickRandomly("confused");
-	} else if (skills & TELEPATHY) {
+	} else if (skills & SK_TELEPATHY) {
 		//Not the player, not erratic, but has telepathy skill
-		if (skills & INTELLIGENCE) {
+		if (skills & SK_INTELLIGENCE) {
 			tickPathFind("telepathic");
 		} else {
 			tickStraightLine("telepathic");
 		}
-	} else if (skills & INTELLIGENCE) {
+	} else if (skills & SK_INTELLIGENCE) {
 		//Not the player, not erratic, not telepathic, but has intelligence
 		if (canSeePC()) known = MAX_KNOWN_TURNS;
 		if (known > 0) {
@@ -306,7 +306,7 @@ bool Mob::isOnEntity(Entity::Type type) const {
 
 Mob::Pickup Mob::pickUpObject() {
 	//First check if we can pick up item
-	if (inventory.size() == (uint32_t)(getMaxInventory())) return SPACE;
+	if (inventory.size() == (uint32_t)(getMaxInventory())) return PICK_FULL;
 
 	auto& objects = dungeon->getObjects();
 	auto it = objects.begin();
@@ -317,16 +317,16 @@ Mob::Pickup Mob::pickUpObject() {
 			it++;
 		} else if (o->getWeight() + getCarryWeight() > getMaxCarryWeight()) {
 			//Item we will pick up exceeds max capacity
-			return WEIGHT;
+			return PICK_WEIGHT;
 		} else {
 			//Pick up item from floor
 			inventory.push_back(o);
 			it = objects.erase(it);
-			return ADD;
+			return PICK_ADD;
 		}
 	}
 
-	return NOTHING;
+	return PICK_NONE;
 }
 
 bool Mob::isBefore(const Mob& other) const {

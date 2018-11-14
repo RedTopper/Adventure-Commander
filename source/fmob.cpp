@@ -36,16 +36,16 @@ Entity::Color FMob::toColor(string color) {
 }
 
 Mob::Skills FMob::toSkill(string skill) {
-	if     (skill == "SMART") return Mob::INTELLIGENCE;
-	else if(skill == "TELE") return Mob::TELEPATHY;
-	else if(skill == "TUNNEL") return Mob::TUNNELING;
-	else if(skill == "ERRATIC") return Mob::ERRATIC;
-	else if(skill == "PASS") return Mob::PASS;
-	else if(skill == "PICKUP") return Mob::PICKUP;
-	else if(skill == "DESTROY") return Mob::DESTROY;
-	else if(skill == "UNIQ") return Mob::UNIQUE;
-	else if(skill == "BOSS") return Mob::BOSS;
-	else return Mob::SKILL_BAD;
+	if     (skill == "SMART") return Mob::SK_INTELLIGENCE;
+	else if(skill == "TELE") return Mob::SK_TELEPATHY;
+	else if(skill == "TUNNEL") return Mob::SK_TUNNELING;
+	else if(skill == "ERRATIC") return Mob::SK_ERRATIC;
+	else if(skill == "PASS") return Mob::SK_PASS;
+	else if(skill == "PICKUP") return Mob::SK_PICKUP;
+	else if(skill == "DESTROY") return Mob::SK_DESTROY;
+	else if(skill == "UNIQ") return Mob::SK_UNIQUE;
+	else if(skill == "BOSS") return Mob::SK_BOSS;
+	else return Mob::SK_BAD;
 }
 
 ostream& FMob::dump(ostream& out) const {
@@ -112,7 +112,7 @@ istream& FMob::read(istream& in) {
 				while(!!(line >> word)) {
 					Mob::Skills skill = toSkill(word);
 					abilities |= skill;
-					if (Mob::Skills::UNIQUE & skill) unique = true;
+					if (Mob::Skills::SK_UNIQUE & skill) unique = true;
 				}
 				break;
 			case DESC:

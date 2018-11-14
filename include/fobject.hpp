@@ -74,7 +74,6 @@ private:
 	Dice value;
 
 public:
-	bool isEquipment() const;
 	static KeyWord toKeyWord(string word);
 	static Type toType(string word);
 	static string fromType(int type);

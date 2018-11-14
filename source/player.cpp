@@ -1,4 +1,6 @@
 #include <iomanip>
+#include <player.hpp>
+
 #include "dungeon.hpp"
 
 Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
@@ -16,7 +18,7 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	vector<string>()
 ) {
 	this->base = window;
-	this->action = NONE;
+	this->action = AC_NONE;
 	this->turn = 0;
 	this->dam = Dice(0, 1, 4);
 }
@@ -159,8 +161,8 @@ bool Player::tickTarget(const int ch, Point& dest) {
 void Player::tickInput() {
 	dungeon->updateFoggy();
 	dungeon->print(base);
-	action = NONE;
-	Movement res = IDLE;
+	action = AC_NONE;
+	Movement res = MV_IDLE;
 	uint32_t offset = 0;
 	Point dest = pos;
 	vector<string> lines;
@@ -210,24 +212,24 @@ void Player::tickInput() {
 		case '.':
 		case '5':
 		case ' ':
-			action = STALL;
+			action = AC_STALL;
 			break;
 		case '>':
 			if (isOnEntity(STAIRS_DOWN)) {
-				action = DOWN;
+				action = AC_DOWN;
 			} else {
 				dungeon->status = "You are not on a down staircase!";
 			}
 			break;
 		case '<':
 			if (isOnEntity(STAIRS_UP)) {
-				action = UP;
+				action = AC_UP;
 			} else {
 				dungeon->status = "You are not on an up staircase!";
 			}
 			break;
 		case 'Q':
-			action = QUIT;
+			action = AC_QUIT;
 			break;
 		case 'q':
 			dungeon->status = "If you really want to quit, try 'shift-q' instead.";
@@ -241,9 +243,10 @@ void Player::tickInput() {
 			while(tickScroll(ch, offset, "In game manual.", getHelp())) ch = getch();
 			break;
 		case 'i':
-			for (const auto& o : inventory) lines.push_back(item(*o, offset++));
+		case 'e':
+			for (const auto& o : ch == 'i' ? inventory : equipped) lines.push_back(item(*o, offset++));
 			offset = 0;
-			while(tickScroll(ch, offset, "Your Inventory.", lines)) ch = getch();
+			while(tickScroll(ch, offset, ch == 'i' ? "Your Inventory." : "Your Equipment.", lines)) ch = getch();
 			break;
 		case 'g':
 			ch = 0;
@@ -270,17 +273,17 @@ void Player::tickInput() {
 	}
 
 	//Move the player character
-	if (res == FAILURE) dungeon->status =  "I can't dig through that!";
-	if (res == SUCCESS) {
-		action = MOVE;
+	if (res == MV_FAIL) dungeon->status =  "I can't dig through that!";
+	if (res == MV_SUCCESS) {
+		action = AC_MOVE;
 		dungeon->recalculate();
 	}
 }
 
 void Player::tick() {
-	action = NONE;
+	action = AC_NONE;
 	dungeon->status = "It's your turn! (TAB for help)";
-	while (action == NONE) {
+	while (action == AC_NONE) {
 		tickInput();
 	}
 
@@ -290,16 +293,16 @@ void Player::tick() {
 Mob::Pickup Player::pickUpObject() {
 	Pickup pickup = Mob::pickUpObject();
 	switch(pickup) {
-		case NOTHING:
+		case PICK_NONE:
 			dungeon->status = "Nothing to pick up";
 			break;
-		case SPACE:
+		case PICK_FULL:
 			dungeon->status = "You are holding too many items";
 			break;
-		case WEIGHT:
+		case PICK_WEIGHT:
 			dungeon->status = "The item beneath you is too heavy to carry";
 			break;
-		case ADD:
+		case PICK_ADD:
 			dungeon->status = "You picked up " + inventory.back()->getName() + " (" + inventory.back()->getSymbol() + ")";
 			break;
 	}
@@ -350,6 +353,8 @@ const vector<string> Player::getHelp() {
 		"\tCharacter Controls:",
 		"\ti",
 		"\t\tShow your inventory",
+		"\te",
+		"\t\tShow your equipped items",
 		"\t",
 		"\tDebug Controls:",
 		"\tg",
@@ -393,4 +398,32 @@ const vector<string> Player::getHelp() {
 	help.insert(help.end(), post.begin(), post.end());
 
 	return help;
+}
+
+int Player::getCarryWeight() const {
+	int weight = Mob::getCarryWeight();
+	for (const auto& o : equipped) {
+		weight += o->getWeight();
+	}
+
+	return weight;
+}
+
+Player::Equip Player::equip(int item) {
+	if (item < 0 || (uint32_t)item >= inventory.size()) return EQ_INVALID;
+
+	auto o = inventory[item];
+	if (!o->isEquipment()) return EQ_NOT_EQUIPMENT;
+
+	int types = 0;
+	for (const auto& e : equipped) {
+		types |= e->getTypes();
+	}
+
+	if ((types & o->getTypes()) > 0) return EQ_USED;
+
+	inventory.erase(inventory.begin() + item);
+	equipped.push_back(o);
+
+	return EQ_SUCCESS;
 }

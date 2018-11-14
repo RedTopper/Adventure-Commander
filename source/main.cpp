@@ -235,8 +235,8 @@ int main(int argc, char** argv) {
 		dungeon->rotate();
 
 		Mob::Action action = mob->getAction();
-		if (action == Player::QUIT) break;
-		if (action == Player::DOWN && !history.empty()) {
+		if (action == Player::AC_QUIT) break;
+		if (action == Player::AC_DOWN && !history.empty()) {
 			//Take snapshot before leaving
 			dungeon->snapshotTake();
 			future.push(dungeon);
@@ -247,7 +247,7 @@ int main(int argc, char** argv) {
 			history.pop();
 		}
 
-		if (action == Player::UP) {
+		if (action == Player::AC_UP) {
 			//Take snapshot before leaving
 			dungeon->snapshotTake();
 			history.push(dungeon);

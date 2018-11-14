@@ -39,3 +39,23 @@ Object::Object(
 	this->symbolAlt = symbolAlt;
 	this->description = description;
 }
+
+
+bool Object::isEquipment() const {
+	int equipment = (
+		FObject::WEAPON
+		| FObject::OFFHAND
+		| FObject::RANGED
+		| FObject::ARMOR
+		| FObject::HELMET
+		| FObject::CLOAK
+		| FObject::GLOVES
+		| FObject::BOOTS
+		| FObject::RING
+		| FObject::AMULET
+		| FObject::LIGHT
+	);
+
+	//Checks if all "types" bits are in "equipment" bits
+	return (types | equipment) == equipment;
+}

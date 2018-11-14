@@ -14,6 +14,14 @@ private:
 	const static int DEF_SKILLS = 0; //PC has no skills
 	const static int DEF_SPEED = 10; //PC has no skills
 	const static int DEF_HP = 100;
+	vector<shared_ptr<Object>> equipped;
+
+	enum Equip {
+		EQ_INVALID,
+		EQ_NOT_EQUIPMENT,
+		EQ_USED,
+		EQ_SUCCESS
+	};
 
 private:
 	string relative(const Mob& other);
@@ -25,8 +33,10 @@ private:
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
 	static const vector<string> getHelp();
-	Mob::Pickup pickUpObject() override;
 	void tick() override;
+	int getCarryWeight() const override;
+	Mob::Pickup pickUpObject() override;
+	Player::Equip equip(int item);
 
 	const vector<shared_ptr<Object>>& getInventory() const {
 		return inventory;
@@ -43,8 +53,6 @@ public:
 	void setDungeon(Dungeon *dungeon) {
 		this->dungeon = dungeon;
 	}
-
-
 };
 
 #endif
