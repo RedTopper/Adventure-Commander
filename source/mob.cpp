@@ -292,7 +292,7 @@ bool Mob::isOnEntity(Entity::Type type) const {
 
 Mob::Pickup Mob::pickUpObject() {
 	//First check if we can pick up item
-	if (inventory.size() == getMaxInventory()) return SPACE;
+	if (inventory.size() == (uint32_t)(getMaxInventory())) return SPACE;
 
 	auto& objects = dungeon->getObjects();
 	auto it = objects.begin();
