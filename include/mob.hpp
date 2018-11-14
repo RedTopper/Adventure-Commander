@@ -107,12 +107,16 @@ public:
 		return turn;
 	}
 
-	int getOrder() const {
-		return order;
+	void setTurn(int turn) {
+		this->turn = turn;
 	}
 
 	void nextTurn() {
 		turn += 1000/getSpeed();
+	}
+
+	int getOrder() const {
+		return order;
 	}
 
 	Action getAction() const {

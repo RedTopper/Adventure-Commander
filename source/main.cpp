@@ -180,6 +180,7 @@ int main(int argc, char** argv) {
 	}
 
 	//The base dungeon
+	shared_ptr<Player> player;
 	shared_ptr<Dungeon> dungeon;
 	stack<shared_ptr<Dungeon>> history;
 	stack<shared_ptr<Dungeon>> future;
@@ -209,12 +210,12 @@ int main(int argc, char** argv) {
 	//Load dungeon from file
 	if (load) {
 		fstream file = get(fstream::in, "dungeon", home);
-		dungeon = make_shared<Dungeon>(base, file);
-		dungeon->finalize(factoryMobs, factoryObjects, mobs, 0, emoji);
+		dungeon = make_shared<Dungeon>(file);
+		dungeon->finalize(base, factoryMobs, factoryObjects, mobs, 0, emoji, player);
 		file.close();
 	} else {
-		dungeon = make_shared<Dungeon>(base, DUNGEON_DIM);
-		dungeon->finalize(factoryMobs, factoryObjects, mobs, 0, emoji);
+		dungeon = make_shared<Dungeon>(DUNGEON_DIM);
+		dungeon->finalize(base, factoryMobs, factoryObjects, mobs, 0, emoji, player);
 	}
 
 	//Economics established
@@ -225,18 +226,29 @@ int main(int argc, char** argv) {
 		Mob::Action action = mob->getAction();
 		if (action == Player::QUIT) break;
 		if (action == Player::DOWN && !history.empty()) {
+			//Take snapshot before leaving
+			dungeon->snapshotTake();
 			future.push(dungeon);
+
+			//Going down, already existing dungeon
 			dungeon = history.top();
+			dungeon->snapshotRestore();
 			history.pop();
 		}
 
 		if (action == Player::UP) {
+			//Take snapshot before leaving
+			dungeon->snapshotTake();
 			history.push(dungeon);
+
 			if (future.empty()) {
-				dungeon = make_shared<Dungeon>(base, DUNGEON_DIM);
-				dungeon->finalize(factoryMobs, factoryObjects, mobs, ++floor, emoji);
+				//Going up, create new dungeon
+				dungeon = make_shared<Dungeon>(DUNGEON_DIM);
+				dungeon->finalize(base, factoryMobs, factoryObjects, mobs, ++floor, emoji, player);
 			} else {
+				//Going up, already existing dungeon
 				dungeon = future.top();
+				dungeon->snapshotRestore();
 				future.pop();
 			}
 		}

@@ -23,8 +23,12 @@ public:
 		y = other.y;
 	}
 
-	inline int isClockwise(const Point& other) const {
+	inline bool isClockwise(const Point& other) const {
 		return atan2(*this^other, *this*other) > 0;
+	}
+
+	inline bool isZero() const {
+		return x == 0 && y == 0;
 	}
 
 	//The dot product

@@ -36,6 +36,10 @@ public:
 	int getMaxCarryWeight() const override {
 		return 40;
 	}
+
+	void setDungeon(Dungeon *dungeon) {
+		this->dungeon = dungeon;
+	}
 };
 
 #endif

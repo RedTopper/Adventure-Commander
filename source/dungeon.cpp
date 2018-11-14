@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <fstream>
 #include <limits>
+#include <dungeon.hpp>
+
 
 #include "dungeon.hpp"
 #include "perlin.hpp"
@@ -304,8 +306,21 @@ void Dungeon::postProcess(vector<vector<Tile>>& tiles) {
 	}
 }
 
-void Dungeon::finalize(vector<FMob>& fMob, vector<FObject>& fObject, int count, int floor, bool emoji) {
+void Dungeon::finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObject, int count, int floor, bool emoji, shared_ptr<Player>& player) {
+	if (player == nullptr) {
+		player = make_shared<Player>(this, base);
+	} else {
+		player->setDungeon(this);
+	}
+
 	this->emoji = emoji;
+	this->player = player;
+	if (playerPos.isZero()) {
+		//Place the player in the middle of the first room
+		this->player->move(Point(rooms[0].pos.x + (rooms[0].dim.x)/2, rooms[0].pos.y + (rooms[0].dim.y)/2));
+	} else {
+		this->player->move(playerPos);
+	}
 
 	//Reset factories
 	for(auto& m : fMob) m.setSpawned(false);
@@ -339,7 +354,7 @@ void Dungeon::finalize(vector<FMob>& fMob, vector<FObject>& fObject, int count, 
 	}
 }
 
-Dungeon::Dungeon(WINDOW* base, const Point& dim)
+Dungeon::Dungeon(const Point& dim)
 		: map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	if (dim < Point(1,1)) return;
 	this->dim = dim;
@@ -372,18 +387,17 @@ Dungeon::Dungeon(WINDOW* base, const Point& dim)
 		return !lhsCenter.isClockwise(rhsCenter);
 	});
 
-	//Place player
-	player = make_shared<Player>(this, base);
-	player->move(Point(rooms[0].pos.x + (rooms[0].dim.x)/2, rooms[0].pos.y + (rooms[0].dim.y)/2));
-
 	//Create the paths.
 	connectRoom(rooms[0], rooms[rooms.size() - 1]);
 	for(uint first = 0; first < rooms.size() - 1; first++) {
 		connectRoom(rooms[first], rooms[first + 1]);
 	}
+
+	//No need to restore position later
+	playerPos = Point();
 }
 
-Dungeon::Dungeon(WINDOW* base, fstream& file)
+Dungeon::Dungeon(fstream& file)
 		: map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	size_t length = HEADER.length();
 	char head[length + 1];
@@ -470,8 +484,8 @@ Dungeon::Dungeon(WINDOW* base, fstream& file)
 		placeRoom(room);
 	}
 
-	player = make_shared<Player>(this, base);
-	player->move(Point(pos[0], pos[1]));
+	//Need to be able to restore loaded position
+	playerPos = Point(pos[0], pos[1]);
 }
 
 void Dungeon::save(fstream& file) {
@@ -662,5 +676,16 @@ void Dungeon::print(WINDOW* win) {
 
 	wrefresh(win);
 	refresh++;
+}
+
+void Dungeon::snapshotTake() {
+	playerPos = player->getPos();
+	playerTurn = player->getTurn();
+}
+
+void Dungeon::snapshotRestore() {
+	player->setPos(playerPos);
+	player->setTurn(playerTurn);
+	player->setDungeon(this);
 }
 

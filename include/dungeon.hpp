@@ -55,6 +55,10 @@ private:
 	bool emoji;
 	Display display;
 
+	//player snapshot
+	Point playerPos;
+	int playerTurn;
+
 	template <class F, class T>
 	void generateFactory(vector<F>& factories, vector<shared_ptr<T>>& out, int total);
 	void connectRoomRasterize(const Point &from, const Point &to);
@@ -74,9 +78,11 @@ public:
 	string line1;
 	string line2;
 
-	Dungeon(WINDOW* base, const Point& dim);
-	Dungeon(WINDOW* base, fstream& file);
-	void finalize(vector<FMob>& fMob, vector<FObject>& fObject, int count,  int floor, bool emoji);
+	explicit Dungeon(const Point& dim);
+	explicit Dungeon(fstream& file);
+	void finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObject, int count,  int floor, bool emoji, shared_ptr<Player>& player);
+	void snapshotTake();
+	void snapshotRestore();
 	void save(fstream& file);
 	int alive() const;
 	void rotate();
