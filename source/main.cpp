@@ -229,7 +229,10 @@ int main(int argc, char** argv) {
 	//Economics established
 	while (dungeon->getPlayer()->isAlive() > 0 && dungeon->alive()) {
 		shared_ptr<Mob> mob = dungeon->getCurrentTurn();
+
+		//Tick and end turn
 		mob->tick();
+		dungeon->rotate();
 
 		Mob::Action action = mob->getAction();
 		if (action == Player::QUIT) break;
@@ -260,9 +263,6 @@ int main(int argc, char** argv) {
 				future.pop();
 			}
 		}
-
-		//Cycle to the next turn
-		dungeon->rotate();
 
 		if (all) {
 			dungeon->print(base);

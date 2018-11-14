@@ -277,7 +277,21 @@ void Mob::attack() {
 		}
 
 		stringstream status;
-		status << getSymbol() << " at (" << pos.x << ", " << pos.y << ") attacked " << other->getSymbol() << " at (" << other->pos.x << ", " << other->pos.y << ")! " << text;
+		status
+			<< getSymbol()
+			<< " at ("
+			<< pos.x
+			<< ", "
+			<< pos.y
+			<< ") attacked "
+			<< other->getSymbol()
+			<< " at ("
+			<< other->pos.x
+			<< ", "
+			<< other->pos.y
+			<< ")! "
+			<< text;
+
 		dungeon->status = status.str();
 	}
 }
@@ -333,6 +347,3 @@ int Mob::getCarryWeight() const {
 
 	return weight;
 }
-
-
-

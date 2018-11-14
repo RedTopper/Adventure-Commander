@@ -24,8 +24,8 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 string Player::relative(const Mob& other) {
 	stringstream str;
 	str
+		<< "(" << other.getSymbol() << ") "
 		<< setw(16) << other.getName()
-		<< " (" << other.getSymbolAlt() << "/" << other.getSymbol() << ")"
 		<< (other.isAlive() ? " is " : " was killed ")
 		<< abs(pos.y - other.getPos().y)
 		<< (other.getPos().y > pos.y ?  " south " : " north ")
@@ -39,8 +39,9 @@ string Player::item(const Object& object, int index) {
 	stringstream str;
 	str
 		<< index << ": "
-		<< "(" << object.getSymbolAlt() << "/" << object.getSymbol() << ") "
-		<< object.getName();
+		<< "(" << object.getSymbol() << ") "
+		<< left << setw(32) << object.getName()
+		<< " (" << FObject::fromType(object.getTypes()) << ")";
 	return str.str();
 }
 
@@ -369,11 +370,11 @@ const vector<string> Player::getHelp() {
 		"\tThere is an additional CMakeLists.txt provided if you would like to use",
 		"\tCMake to build the program instead.",
 		"\t",
-		"\tThis game uses Emoji (if enabled, see OPTIONS) and wide characters to get",
+		"\tThis game uses Emoji (if enabled, see OPTIONS) and wide chars to get",
 		"\tthe most out of your terminal emulator. This game will probably not work",
-		"\tin any non UTF-8 conforming terminal (such as real terminals, ironically).",
+		"\tin any non UTF-8 conforming terminal (such as real terminals).",
 		"\t",
-		"\tHave fun killing monsters and conquering dungeons in ADVENTURE COMMANDER!",
+		"\tHave fun killing monsters and defeating dungeons in ADVENTURE COMMANDER!",
 		"",
 		"OPTIONS",
 	};

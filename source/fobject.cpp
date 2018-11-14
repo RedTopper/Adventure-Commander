@@ -51,6 +51,31 @@ FObject::Type FObject::toType(string word) {
 	else return TYPE_BAD;
 }
 
+string FObject::fromType(int type) {
+	string str;
+	if(type & WEAPON) str += "Weapon, ";
+	if(type & OFFHAND) str +=  "Off-Hand, ";
+	if(type & RANGED) str +=  "Ranged, ";
+	if(type & ARMOR) str +=  "Armor, ";
+	if(type & HELMET) str +=  "Helmet, ";
+	if(type & CLOAK) str +=  "Cloak, ";
+	if(type & GLOVES) str +=  "Gloves, ";
+	if(type & BOOTS) str +=  "Boots, ";
+	if(type & RING) str +=  "Ring, ";
+	if(type & AMULET) str +=  "Amulet, ";
+	if(type & LIGHT) str +=  "Light, ";
+	if(type & SCROLL) str +=  "Scroll, ";
+	if(type & BOOK) str +=  "Book, ";
+	if(type & FLASK) str +=  "Flask, ";
+	if(type & GOLD) str +=  "Gold, ";
+	if(type & AMMUNITION) str +=  "Ammo, ";
+	if(type & FOOD) str +=  "Food, ";
+	if(type & WAND) str +=  "Wand, ";
+	if(type & CONTAINER) str +=  "Container, ";
+	if(str.length() < 2) return str;
+	return str.erase(str.length() - 2);
+}
+
 ostream &FObject::dump(ostream &out) const {
 	out << "BEGIN PARSED OBJECT" << endl;
 	out << "NAME:  '" << name << "'" << endl;

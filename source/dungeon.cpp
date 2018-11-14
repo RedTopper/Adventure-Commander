@@ -315,6 +315,7 @@ void Dungeon::finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObjec
 
 	this->emoji = emoji;
 	this->player = player;
+	this->player->setTurn(0);
 	if (playerPos.isZero()) {
 		//Place the player in the middle of the first room
 		this->player->move(Point(rooms[0].pos.x + (rooms[0].dim.x)/2, rooms[0].pos.y + (rooms[0].dim.y)/2));

@@ -44,6 +44,10 @@ public:
 	int getWeight() const {
 		return weight;
 	}
+
+	int getTypes() const {
+		return types;
+	}
 };
 
 #endif
