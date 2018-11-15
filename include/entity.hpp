@@ -77,6 +77,10 @@ public:
 	const string& getName() const {
 		return name;
 	}
+
+	const vector<string>& getDescription() const {
+		return description;
+	}
 };
 
 #endif

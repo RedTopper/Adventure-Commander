@@ -81,7 +81,7 @@ void Player::list(const deque<shared_ptr<Object>>& objects, const string& title,
 
 void Player::expunge(int index) {
 	if (index < 0 || (uint32_t)index >= inventory.size()) {
-		dungeon->status = "Invalid expunge selection.";
+		dungeon->status = "Cannot expunge - invalid inventory selection.";
 		return;
 	}
 
@@ -108,7 +108,7 @@ void Player::expunge(int index) {
 
 void Player::unequip(int index) {
 	if (index < 0 || (uint32_t)index >= equipped.size()) {
-		dungeon->status = "Invalid equipment selection.";
+		dungeon->status = "Cannot unequip - invalid equipment selection.";
 		return;
 	}
 
@@ -123,9 +123,41 @@ void Player::unequip(int index) {
 	dungeon->status = "Your " + displayObject(*item) + " was put in your inventory.";
 }
 
+void Player::inspect(int index) {
+	if (index < 0 || (uint32_t)index >= inventory.size()) {
+		dungeon->status = "Cannot inspect - invalid inventory selection.";
+		return;
+	}
+	int ch = 0;
+	uint32_t offset = 0;
+	auto item = inventory[index];
+
+	vector<string> desc;
+	desc.emplace_back("Damage:  " + item->getDamageString());
+	desc.emplace_back("Weight:  " + to_string(item->getWeight()));
+	desc.emplace_back("Defence: " + to_string(item->getDef()));
+	desc.emplace_back("Speed:   " + to_string(item->getSpeed()));
+	desc.emplace_back("Value:   " + to_string(item->getValue()));
+	desc.insert(desc.end(), item->getDescription().begin(), item->getDescription().end());
+	while(tickScroll(ch, offset, displayObject(*item) + ".", desc)) ch = getch();
+}
+
+void Player::drop(int index) {
+	if (index < 0 || (uint32_t)index >= inventory.size()) {
+		dungeon->status = "Cannot drop - invalid inventory selection.";
+		return;
+	}
+
+	auto item = inventory[index];
+	item->setPos(pos);
+	inventory.erase(inventory.begin() + index);
+	dungeon->getObjects().push_back(item);
+	dungeon->status = displayObject(*item) + " was left on the ground.";
+}
+
 void Player::equip(int index) {
 	if (index < 0 || (uint32_t)index >= inventory.size()) {
-		dungeon->status = "Invalid inventory selection.";
+		dungeon->status = "Cannot equip - invalid inventory selection.";
 		return;
 	}
 
@@ -230,9 +262,6 @@ bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<
 	switch (ch) {
 		case KEY_UP:
 			if (offset == 0) beep();
-			//FALLTHROUGH
-		case KEY_RESIZE:
-			if (offset > 0) offset--;
 			break;
 		case KEY_DOWN:
 			if (offset + max < lines.size()) {
@@ -323,12 +352,10 @@ bool Player::tickTarget(const int ch, Point& dest) {
 	if (dest.y < 1) dest.y = 1;
 	if (dest.x >= dungeon->getDim().x - 1)  dest.x = dungeon->getDim().x - 2;
 	if (dest.y >= dungeon->getDim().y - 1)  dest.y = dungeon->getDim().y - 2;
-
 	dungeon->print(base);
 
 	//Move the destination down one because of the first status line
 	mvwaddstr(base, dest.y + 1, dest.x, "\u00D7");
-
 	return true;
 }
 
@@ -416,6 +443,10 @@ void Player::tickInput() {
 		case '\t':
 			while(tickScroll(ch, offset, "In game manual.", getHelp())) ch = getch();
 			break;
+		case 't':
+		case 'e':
+			list(equipped, "Unequip what?", 'a', &Player::unequip);
+			break;
 		case 'i':
 		case 'w':
 			list(inventory, "Equip what?", '0', &Player::equip);
@@ -423,9 +454,11 @@ void Player::tickInput() {
 		case 'x':
 			list(inventory, "Expunge what?", '0', &Player::expunge);
 			break;
-		case 't':
-		case 'e':
-			list(equipped, "Unequip what?", 'a', &Player::unequip);
+		case 'd':
+			list(inventory, "Drop what?", '0', &Player::drop);
+			break;
+		case 'I':
+			list(inventory, "Inspect what?", '0', &Player::inspect);
 			break;
 		case 'g':
 			ch = 0;

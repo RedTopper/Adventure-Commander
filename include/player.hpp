@@ -23,6 +23,7 @@ private:
 	void unequip(int index);
 	void equip(int index);
 	void expunge(int index);
+	void drop(int index);
 	void tickInput();
 	bool tickScroll(int ch, uint &offset, const string &title, const vector<string> &lines);
 	bool tickTarget(int ch, Point& dest);
@@ -45,12 +46,14 @@ public:
 	}
 
 	int getMaxCarryWeight() const override {
-		return 40;
+		return 50;
 	}
 
 	void setDungeon(Dungeon *dungeon) {
 		this->dungeon = dungeon;
 	}
+
+	void inspect(int);
 };
 
 #endif

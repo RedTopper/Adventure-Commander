@@ -43,12 +43,30 @@ private:
 public:
 	bool isEquipment() const;
 
+	int getDef() const {
+		return def;
+	}
+
+	int getSpeed() const {
+		return speed;
+	}
+
+	int getValue() const {
+		return value;
+	}
+
 	int getWeight() const {
 		return weight;
 	}
 
 	int getTypes() const {
 		return types;
+	}
+
+	string getDamageString() {
+		stringstream str;
+		str << dam;
+		return str.str();
 	}
 };
 
