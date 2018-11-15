@@ -18,6 +18,7 @@ public:
 		MV_SUCCESS,
 		MV_DESTROY,
 		MV_DAMAGE,
+		MV_ATTACK,
 	};
 
 	enum Skills {
@@ -68,14 +69,14 @@ protected:
 
 private:
 	Point nextPoint(Point end);
-	void statusString(const string& text, const string& type);
+	void statusString(const string& type, Movement move);
 	void tickStraightLine(const string& type);
 	void tickRandomly(const string& type);
 	void tickPathFind(const string& type);
 	bool canSeePC();
 
 protected:
-	void attack();
+	virtual void attack();
 
 public:
 	Mob(
@@ -96,7 +97,7 @@ public:
 	virtual void tick();
 	virtual Pickup pickUpObject();
 	virtual int getCarryWeight() const;
-	Movement move(const Point& next);
+	virtual Movement move(const Point& next);
 	bool isOnEntity(Entity::Type type) const;
 	bool isBefore(const Mob& other) const;
 

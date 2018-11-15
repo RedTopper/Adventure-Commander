@@ -1,6 +1,4 @@
-
-#include <mob.hpp>
-
+#include <algorithm>
 #include "path.hpp"
 #include "mob.hpp"
 #include "dungeon.hpp"
@@ -35,7 +33,28 @@ Mob::Mob(
 	this->factory = factory;
 }
 
-void Mob::statusString(const string& text, const string& type) {
+void Mob::statusString(const string& type, Movement move) {
+	//Status text set in attack
+	if (move == MV_ATTACK) return;
+
+	string text;
+	switch(move) {
+		case MV_FAIL:
+			text = "failed to move!";
+			break;
+		case MV_SUCCESS:
+			text = "moved!";
+			break;
+		case MV_DAMAGE:
+			text = "damaged a wall!";
+			break;
+		case MV_DESTROY:
+			text = "destroyed a wall!";
+			break;
+		default:
+			text = "looked alive!";
+	}
+
 	stringstream out;
 	out
 		<< getSymbol()
@@ -51,6 +70,83 @@ void Mob::statusString(const string& text, const string& type) {
 		<< text;
 
 	dungeon->status = out.str();
+}
+
+void Mob::attack() {
+
+}
+
+Mob::Movement Mob::move(const Point& next) {
+	//If the place we move to is the player, attack!
+	if (next == dungeon->getPlayer()->getPos()) {
+		attack();
+		return MV_ATTACK;
+	}
+
+	//Check if the mob can tunnel
+	Tile& tile = dungeon->getTile(next);
+	if (tile.type == Tile::ROCK && skills & SK_TUNNELING) {
+		//Can tunnel
+		if (tile.hardness <= Path::HARDNESS_RATE) {
+			//Broke down a wall
+			tile.type = Tile::HALL;
+			tile.hardness = 0;
+			pos = next;
+			dungeon->recalculate();
+			return MV_DESTROY;
+		} else {
+			//Simply damaged a wall
+			tile.hardness -= Path::HARDNESS_RATE;
+			dungeon->recalculate();
+			return MV_DAMAGE;
+		}
+	}
+
+	//So it can't tunnel
+	//Are we moving into an open space?
+	if (tile.type == Tile::HALL || tile.type == Tile::ROOM){
+		//Check if there is a mob where we are going to move
+		const auto& mobNext = dungeon->getMob(next);
+		if (mobNext != nullptr) {
+			//So there is, we have to push it out of the way
+			bool pushed = false;
+
+			//Randomly flip the adjacent array for randomness
+			vector<Point> adjacent = Path::getAdjacent();
+			if (rand() % 2) reverse(adjacent.begin(), adjacent.end());
+			for(const auto& dir : adjacent) {
+				Point adj = Point() + dir + next;
+
+				//Skip adjacent tiles that are not free space
+				const auto mobNextAdjTile = dungeon->getTile(adj).type;
+				if (!(mobNextAdjTile == Tile::ROOM || mobNextAdjTile == Tile::HALL)) continue;
+
+				//Skip the player
+				if (adj == dungeon->getPlayer()->getPos()) continue;
+
+				//Skip adjacent tiles that have mobs
+				auto mobNextAdj = dungeon->getMob(adj);
+				if (mobNextAdj != nullptr) continue;
+
+				//We found an open space
+				mobNext->setPos(adj);
+				pushed = true;
+				break;
+			}
+
+			//We did not push the next monster, so we'll swap it
+			if (!pushed) {
+				mobNext->setPos(pos);
+			}
+		}
+
+		//Update the mobs current position
+		pos = next;
+		return MV_SUCCESS;
+	}
+
+	//What?
+	return MV_FAIL;
 }
 
 bool Mob::canSeePC() {
@@ -108,62 +204,23 @@ Point Mob::nextPoint(Point end) {
 
 void Mob::tickStraightLine(const string& type) {
 	Point next = nextPoint(dungeon->getPlayer()->pos);
-	Movement movement = move(next);
-
-	string text;
-	switch (movement) {
-		case MV_DESTROY:
-			text = "broke down the wall while beelining!";
-			break;
-		case MV_DAMAGE:
-			text = "damaged a wall while beelining!";
-			break;
-		case MV_SUCCESS:
-			text = "is beelining towards you!";
-			break;
-		default:
-		case MV_FAIL:
-			text = "tried to beeline, but failed!";
-			break;
-	}
-
-	statusString(text, type);
+	statusString(type, move(next));
 }
 
 void Mob::tickRandomly(const string& type) {
-	int dir = rand() % (int)(sizeof(Path::ADJACENT)/sizeof(Path::ADJACENT[0]));
+	int dir = rand() % (int)Path::getAdjacent().size();
 	Point next = Point(pos);
-	next += Path::ADJACENT[dir];
-	Movement movement = move(next);
-
-	string text;
-	switch (movement) {
-		case MV_DESTROY:
-			text = "broke down the wall!";
-			break;
-		case MV_DAMAGE:
-			text = "chipped at the wall!";
-			break;
-		case MV_SUCCESS:
-			text = "moved to a new spot!";
-			break;
-		default:
-		case MV_FAIL:
-			text = "did nothing!";
-			break;
-	}
-
-	statusString(text, type);
+	next += Path::getAdjacent()[dir];
+	statusString(type, move(next));
 }
 
-void Mob::tickPathFind(const string& type) {
-	int adj = sizeof(Path::ADJACENT)/sizeof(Path::ADJACENT[0]);
+void Mob::tickPathFind(const string& type) { ;
 	Point next;
 	int lowest = INT32_MAX;
-	for (int i = 0; i < adj; i++) {
+	for (int i = 0; i < (int)Path::getAdjacent().size(); i++) {
 		Point check;
 		check = pos;
-		check += Path::ADJACENT[i];
+		check += Path::getAdjacent()[i];
 
 		int dist;
 		if (skills & SK_TUNNELING) {
@@ -179,50 +236,10 @@ void Mob::tickPathFind(const string& type) {
 	}
 
 	if (lowest < INT32_MAX) {
-		Movement movement;
-		movement = move(next);
-		string text;
-		switch (movement) {
-			case MV_DESTROY:
-				text = "broke down the wall to get to you!";
-				break;
-			case MV_DAMAGE:
-				text = "damaged a wall to get to you!";
-				break;
-			case MV_SUCCESS:
-				text = "coming after you!";
-				break;
-			default:
-			case MV_FAIL:
-				text = "somehow failed to move?";
-				break;
-		}
-		statusString(text, type);
+		statusString(type, move(next));
 	} else {
 		tickRandomly("trapped");
 	}
-}
-
-Mob::Movement Mob::move(const Point& next) {
-	Tile& tile = dungeon->getTile(next);
-	if (tile.type == Tile::ROCK && skills & SK_TUNNELING) {
-		if (tile.hardness <= Path::HARDNESS_RATE) {
-			tile.type = Tile::HALL;
-			tile.hardness = 0;
-			pos = next;
-			dungeon->recalculate();
-			return MV_DESTROY;
-		} else {
-			tile.hardness -= Path::HARDNESS_RATE;
-			dungeon->recalculate();
-			return MV_DAMAGE;
-		}
-	} else if (tile.type == Tile::HALL || tile.type == Tile::ROOM){
-		pos = next;
-		return MV_SUCCESS;
-	}
-
-	return MV_FAIL;
 }
 
 void Mob::tick() {
@@ -255,44 +272,6 @@ void Mob::tick() {
 		} else {
 			tickRandomly("a bumbling idiot");
 		}
-	}
-
-	attack();
-}
-
-void Mob::attack() {
-	//Attack phase
-	for (uint i = 0; i < dungeon->getMobs().size() + 1; i++) {
-		//Make sure to include the player in the attack phase
-		const shared_ptr<Mob> other = (i < dungeon->getMobs().size()) ? dungeon->getMobs()[i] : dungeon->getPlayer();
-
-		//Collision detection.
-		if (order == other->order || other->hp == 0 || pos != other->pos) continue;
-
-		other->hp--;
-		string text = "Looks like it hurt!";
-		if (hp == 0) {
-			text = "It killed it brutally!";
-			if (factory) factory->notCreatable();
-		}
-
-		stringstream status;
-		status
-			<< getSymbol()
-			<< " at ("
-			<< pos.x
-			<< ", "
-			<< pos.y
-			<< ") attacked "
-			<< other->getSymbol()
-			<< " at ("
-			<< other->pos.x
-			<< ", "
-			<< other->pos.y
-			<< ")! "
-			<< text;
-
-		dungeon->status = status.str();
 	}
 }
 

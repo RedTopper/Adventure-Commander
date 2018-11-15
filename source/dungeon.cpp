@@ -703,3 +703,12 @@ void Dungeon::snapshotRestore() {
 	player->setDungeon(this);
 }
 
+const shared_ptr<Mob> Dungeon::getMob(const Point &p) {
+	for (const auto& m : mobs) {
+		if (m->getPos() != p) continue;
+		return m;
+	}
+
+	return nullptr;
+}
+

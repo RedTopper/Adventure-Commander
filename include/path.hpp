@@ -11,7 +11,6 @@ class Dungeon;
 class Path {
 public:
 	static const int HARDNESS_RATE = 85;
-	static const Point ADJACENT[8];
 
 	enum Style {
 		VIA_DIG,
@@ -39,6 +38,8 @@ public:
 	int getDist(const Point& p) const {
 		return path[p.y][p.x];
 	}
+
+	static const vector<Point> getAdjacent();
 };
 
 #endif

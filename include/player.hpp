@@ -30,14 +30,15 @@ private:
 	bool tickScroll(int ch, uint &offset, const string &title, const vector<string> &lines);
 	bool tickTarget(int ch, Point &dest);
 	bool choice(const vector<string>& text);
+	void attack() override;
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
-
+	static const vector<string> getHelp();
 	void tick() override;
 	int getCarryWeight() const override;
 	Mob::Pickup pickUpObject() override;
-	static const vector<string> getHelp();
+	Mob::Movement move(const Point& next) override;
 
 	const deque<shared_ptr<Object>>& getInventory() const {
 		return inventory;
@@ -67,6 +68,12 @@ public:
 		int max = this->dam.max();
 		for (const auto& o : equipped) max += o->getDamage().max();
 		return max;
+	}
+
+	int getDamage() const {
+		int dam = this->dam.roll();
+		for (const auto& o : equipped) dam += o->getDamage().roll();
+		return dam;
 	}
 
 	int getDefence() const {

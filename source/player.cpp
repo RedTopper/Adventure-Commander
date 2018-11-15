@@ -569,6 +569,28 @@ Mob::Pickup Player::pickUpObject() {
 	return pickup;
 }
 
+void Player::attack() {
+
+}
+
+Mob::Movement Player::move(const Point &next) {
+	if (dungeon->getMob(next) != nullptr) {
+		attack();
+		return MV_ATTACK;
+	}
+
+	//In bounds
+	if (next < Point() || next >= dungeon->getDim()) return MV_FAIL;
+
+	//On empty space
+	const auto tile = dungeon->getTile(next).type;
+	if (!(tile == Tile::HALL || tile == Tile::ROOM)) return MV_FAIL;
+
+	//Ok to move
+	pos = next;
+	return MV_SUCCESS;
+}
+
 const vector<string> Player::getHelp() {
 	vector<string> help = {
 		"ADVENTURE COMMANDER(6)",

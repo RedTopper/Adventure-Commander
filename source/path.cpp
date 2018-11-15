@@ -1,16 +1,8 @@
+
+#include <path.hpp>
+
 #include "path.hpp"
 #include "dungeon.hpp"
-
-const Point Path::ADJACENT[8] = { // NOLINT(cert-err58-cpp)
-	{0, -1},
-	{1, -1},
-	{1,  0},
-	{1,  1},
-	{0,  1},
-	{-1, 1},
-	{-1, 0},
-	{-1, -1},
-};
 
 Path::Path(Dungeon *dungeon, Path::Style style) {
 	this->dungeon = dungeon;
@@ -38,7 +30,7 @@ void Path::recalculate() {
 		queue.pop();
 
 		int distCurrent = path[cur.p.y][cur.p.x];
-		for (const auto &adj : ADJACENT) {
+		for (const auto &adj : getAdjacent()) {
 			Point next = Point(cur.p);
 			next += adj;
 
@@ -60,4 +52,19 @@ void Path::recalculate() {
 			}
 		}
 	}
+}
+
+const vector<Point> Path::getAdjacent() {
+	vector<Point> adj = {
+		{0, -1},
+		{1, -1},
+		{1,  0},
+		{1,  1},
+		{0,  1},
+		{-1, 1},
+		{-1, 0},
+		{-1, -1},
+	};
+
+	return adj;
 }

@@ -81,6 +81,7 @@ public:
 	explicit Dungeon(const Point& dim);
 	explicit Dungeon(fstream& file);
 	void finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObject, int count,  int floor, bool emoji, shared_ptr<Player>& player);
+	const shared_ptr<Mob> getMob(const Point& p);
 	void snapshotTake();
 	void snapshotRestore();
 	void save(fstream& file);
