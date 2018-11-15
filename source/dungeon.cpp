@@ -526,13 +526,12 @@ void Dungeon::save(fstream& file) {
 	}
 }
 
-int Dungeon::alive() const {
-	int alive = 0;
+bool Dungeon::alive() const {
 	for (const auto& m : mobs) {
-		if (m->isAlive()) alive++;
+		if ((m->getSkills() & Mob::SK_BOSS) && !m->isAlive()) return false;
 	}
 
-	return alive;
+	return true;
 }
 
 void Dungeon:: rotate() {
@@ -570,7 +569,7 @@ void Dungeon::printEntity(WINDOW *win, const shared_ptr<Entity> &e) {
 	//An emoji takes two characters on some terminals, so they can't overlap
 	bool isLeft = false;
 	for (const auto& mo : mobs) {
-		if (e->getPos().x == mo->getPos().x - 1 && e->getPos().y == mo->getPos().y) {
+		if (mo->isAlive() && e->getPos().x == mo->getPos().x - 1 && e->getPos().y == mo->getPos().y) {
 			isLeft = true;
 			break;
 		}
@@ -665,7 +664,7 @@ void Dungeon::print(WINDOW* win) {
 		<< "HP: " << player->getHp()
 		<< " | Damage: " << player->getMinDamage() << " - " << player->getMaxDamage()
 		<< " | Speed: " << player->getSpeed()
-		<< " | Defence: " << player->getDefence();
+		<< " | Defense: " << player->getDefense();
 
 	line1 = str.str();
 
@@ -705,7 +704,7 @@ void Dungeon::snapshotRestore() {
 
 const shared_ptr<Mob> Dungeon::getMob(const Point &p) {
 	for (const auto& m : mobs) {
-		if (m->getPos() != p) continue;
+		if (!(m->isAlive() && m->getPos() == p)) continue;
 		return m;
 	}
 

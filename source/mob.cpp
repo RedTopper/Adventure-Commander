@@ -72,14 +72,23 @@ void Mob::statusString(const string& type, Movement move) {
 	dungeon->status = out.str();
 }
 
-void Mob::attack() {
+int Mob::damage(int dam) {
+	hp -= dam;
+	if (hp < 0) hp = 0;
+	factory->notCreatable();
+	return dam;
+}
 
+void Mob::attack(const Point&) {
+	int damage = dungeon->getPlayer()->damage(getDamage());
+	dungeon->status = "(" + getSymbol() + ") " + getName() + " damaged you for " + to_string(damage) + "! [ANY KEY]";
+	dungeon->getPlayer()->flip();
 }
 
 Mob::Movement Mob::move(const Point& next) {
 	//If the place we move to is the player, attack!
 	if (next == dungeon->getPlayer()->getPos()) {
-		attack();
+		attack(next);
 		return MV_ATTACK;
 	}
 

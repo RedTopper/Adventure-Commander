@@ -77,7 +77,7 @@ public:
 	static KeyWord toKeyWord(string word);
 	static Type toType(string word);
 	static string fromType(int type);
-	Object get(Dungeon* dungeon, ...);
+	Object get(Dungeon* dungeon, int);
 
 private:
 	ostream& dump(ostream& out) const override;

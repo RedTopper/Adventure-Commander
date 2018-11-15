@@ -13,13 +13,13 @@ private:
 	const static int DEF_ORDER = 0;
 	const static int DEF_SKILLS = 0; //PC has no skills
 	const static int DEF_SPEED = 10; //PC has no skills
-	const static int DEF_HP = 100;
+	const static int DEF_HP = 500;
 	deque<shared_ptr<Object>> equipped;
 
 private:
+	void list(const deque<shared_ptr<Object>>& objects, const string& title, int start, void (Player::*action)(int));
 	string displayMob(const Mob &other);
 	string displayObject(const Object &object);
-	void list(const deque<shared_ptr<Object>>& objects, const string& title, int start, void (Player::*action)(int));
 	void look(Point point);
 	void inspect(int index);
 	void unequip(int index);
@@ -30,15 +30,18 @@ private:
 	bool tickScroll(int ch, uint &offset, const string &title, const vector<string> &lines);
 	bool tickTarget(int ch, Point &dest);
 	bool choice(const vector<string>& text);
-	void attack() override;
+	void attack(const Point& dest) override;
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
 	static const vector<string> getHelp();
+	void flip() const;
 	void tick() override;
+	int damage(int dam) override;
 	int getCarryWeight() const override;
 	Mob::Pickup pickUpObject() override;
 	Mob::Movement move(const Point& next) override;
+
 
 	const deque<shared_ptr<Object>>& getInventory() const {
 		return inventory;
@@ -50,6 +53,12 @@ public:
 
 	int getMaxCarryWeight() const override {
 		return 50;
+	}
+
+	int getDamage() const override {
+		int dam = this->dam.roll();
+		for (const auto& o : equipped) dam += o->getDamage().roll();
+		return dam;
 	}
 
 	int getSpeed() const override {
@@ -70,13 +79,7 @@ public:
 		return max;
 	}
 
-	int getDamage() const {
-		int dam = this->dam.roll();
-		for (const auto& o : equipped) dam += o->getDamage().roll();
-		return dam;
-	}
-
-	int getDefence() const {
+	int getDefense() const {
 		int def = 0;
 		for (const auto& o : equipped) def += o->getDef();
 		return def;

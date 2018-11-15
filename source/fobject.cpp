@@ -194,7 +194,7 @@ int FObject::getRequired() const {
 	);
 }
 
-Object FObject::get(Dungeon *dungeon, ...) {
+Object FObject::get(Dungeon *dungeon, int) {
 	const array<string, 20> SYMBOL = {
 		"\U0001F531", //Trident
 		"\U0001F52A", //Knife

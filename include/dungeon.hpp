@@ -85,7 +85,7 @@ public:
 	void snapshotTake();
 	void snapshotRestore();
 	void save(fstream& file);
-	int alive() const;
+	bool alive() const;
 	void rotate();
 	void updateFoggy();
 	void print(WINDOW* window);

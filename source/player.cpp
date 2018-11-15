@@ -1,7 +1,4 @@
 #include <iomanip>
-#include <player.hpp>
-
-
 #include "player.hpp"
 #include "dungeon.hpp"
 
@@ -28,7 +25,7 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	this->turn = 0;
 }
 
-string Player::displayMob(const Mob &other) {
+string Player::displayMob(const Mob& other) {
 	stringstream str;
 	str
 		<< "(" << other.getSymbol() << ") "
@@ -42,7 +39,7 @@ string Player::displayMob(const Mob &other) {
 	return str.str();
 }
 
-string Player::displayObject(const Object &object) {
+string Player::displayObject(const Object& object) {
 	stringstream str;
 	str
 		<< "("
@@ -115,7 +112,7 @@ void Player::inspect(int index) {
 	vector<string> desc;
 	desc.emplace_back("Damage:  " + item->getDamageString());
 	desc.emplace_back("Weight:  " + to_string(item->getWeight()));
-	desc.emplace_back("Defence: " + to_string(item->getDef()));
+	desc.emplace_back("Defense: " + to_string(item->getDef()));
 	desc.emplace_back("Speed:   " + to_string(item->getSpeed()));
 	desc.emplace_back("Value:   " + to_string(item->getValue()));
 	desc.insert(desc.end(), item->getDescription().begin(), item->getDescription().end());
@@ -282,7 +279,6 @@ void Player::tick() {
 	action = AC_NONE;
 	dungeon->status = "It's your turn! (TAB for help)";
 	while (action == AC_NONE) tickInput();
-	attack();
 }
 
 bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<string>& constLines) {
@@ -543,7 +539,7 @@ void Player::tickInput() {
 
 	//Move the player character
 	if (res == MV_FAIL) dungeon->status =  "I can't dig through that!";
-	if (res == MV_SUCCESS) {
+	if (res == MV_SUCCESS || res == MV_ATTACK) {
 		action = AC_MOVE;
 		dungeon->recalculate();
 	}
@@ -569,13 +565,35 @@ Mob::Pickup Player::pickUpObject() {
 	return pickup;
 }
 
-void Player::attack() {
+int Player::damage(int dam) {
+	dam -= getDefense();
+	if (dam < 0) dam = 0;
+	hp -= dam;
+	if (hp < 0) hp = 0;
+	return dam;
+}
 
+void Player::attack(const Point& dest) {
+	auto& mob = dungeon->getMob(dest);
+	int damage = mob->damage(getDamage());
+	dungeon->status =
+		"You attacked ("
+		+ mob->getSymbol()
+		+ ") "
+		+ mob->getName()
+		+ " for "
+		+ to_string(damage)
+		+ " HP! ("
+		+ to_string(mob->getHp())
+		+ ") [ANY KEY]";
+
+	flip();
 }
 
 Mob::Movement Player::move(const Point &next) {
-	if (dungeon->getMob(next) != nullptr) {
-		attack();
+	const auto& mob = dungeon->getMob(next);
+	if (mob != nullptr) {
+		attack(next);
 		return MV_ATTACK;
 	}
 
@@ -589,6 +607,11 @@ Mob::Movement Player::move(const Point &next) {
 	//Ok to move
 	pos = next;
 	return MV_SUCCESS;
+}
+
+void Player::flip() const {
+	dungeon->print(base);
+	getch();
 }
 
 const vector<string> Player::getHelp() {

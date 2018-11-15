@@ -76,7 +76,7 @@ private:
 	bool canSeePC();
 
 protected:
-	virtual void attack();
+	virtual void attack(const Point&);
 
 public:
 	Mob(
@@ -95,9 +95,11 @@ public:
 	);
 
 	virtual void tick();
-	virtual Pickup pickUpObject();
+	virtual int damage(int dam);
 	virtual int getCarryWeight() const;
+	virtual Pickup pickUpObject();
 	virtual Movement move(const Point& next);
+
 	bool isOnEntity(Entity::Type type) const;
 	bool isBefore(const Mob& other) const;
 
@@ -127,6 +129,14 @@ public:
 
 	int getHp() const {
 		return hp;
+	}
+
+	int getSkills() const {
+		return skills;
+	}
+
+	virtual int getDamage() const {
+		return this->dam.roll();
 	}
 
 	virtual int getSpeed() const {
