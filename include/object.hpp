@@ -41,6 +41,10 @@ private:
 public:
 	bool isEquipment() const;
 
+	Dice getDamage() const {
+		return dam;
+	}
+
 	int getDef() const {
 		return def;
 	}

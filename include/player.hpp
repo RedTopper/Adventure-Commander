@@ -20,13 +20,15 @@ private:
 	string displayMob(const Mob &other);
 	string displayObject(const Object &object);
 	void list(const deque<shared_ptr<Object>>& objects, const string& title, int start, void (Player::*action)(int));
+	void look(Point point);
+	void inspect(int index);
 	void unequip(int index);
 	void equip(int index);
 	void expunge(int index);
 	void drop(int index);
 	void tickInput();
 	bool tickScroll(int ch, uint &offset, const string &title, const vector<string> &lines);
-	bool tickTarget(const int ch, Point &dest);
+	bool tickTarget(int ch, Point &dest);
 	bool choice(const vector<string>& text);
 
 public:
@@ -49,13 +51,33 @@ public:
 		return 50;
 	}
 
+	int getSpeed() const override {
+		int speed = this->speed;
+		for (const auto& o : equipped) speed += o->getSpeed();
+		return speed > 1 ? speed : 1;
+	}
+
+	int getMinDamage() const {
+		int min = this->dam.min();
+		for (const auto& o : equipped) min += o->getDamage().min();
+		return min;
+	}
+
+	int getMaxDamage() const {
+		int max = this->dam.max();
+		for (const auto& o : equipped) max += o->getDamage().max();
+		return max;
+	}
+
+	int getDefence() const {
+		int def = 0;
+		for (const auto& o : equipped) def += o->getDef();
+		return def;
+	}
+
 	void setDungeon(Dungeon *dungeon) {
 		this->dungeon = dungeon;
 	}
-
-	void inspect(int);
-
-	void look(Point point);
 };
 
 #endif

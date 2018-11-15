@@ -662,12 +662,20 @@ void Dungeon::print(WINDOW* win) {
 	//Write status
 	stringstream str;
 	str
-		<< "Turn: " << player->getTurn()
-		<< " | HP: " << player->getHp()
+		<< "HP: " << player->getHp()
+		<< " | Damage: " << player->getMinDamage() << " - " << player->getMaxDamage()
 		<< " | Speed: " << player->getSpeed()
+		<< " | Defence: " << player->getDefence();
+
+	line1 = str.str();
+
+	str.str("");
+	str
+		<< "Turn: " << player->getTurn()
 		<< " | Items: " << player->getInventory().size() << "/" <<player->getMaxInventory()
 		<< " | Carry: " << player->getCarryWeight() << "/" << player->getMaxCarryWeight();
-	line1 = str.str();
+	line2 = str.str();
+
 	mvwaddstr(win, 0, 0, status.c_str());
 	mvwaddstr(win, dim.y + 1, 0, line1.c_str());
 	mvwaddstr(win, dim.y + 2, 0, line2.c_str());

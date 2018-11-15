@@ -128,8 +128,8 @@ public:
 		return hp;
 	}
 
-	int getSpeed() const {
-		return speed;
+	virtual int getSpeed() const {
+		return speed > 1 ? speed : 1;
 	}
 
 	virtual int getMaxInventory() const {

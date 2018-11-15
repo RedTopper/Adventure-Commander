@@ -1,4 +1,6 @@
 #include <string>
+#include <dice.hpp>
+
 
 #include "dice.hpp"
 
@@ -27,4 +29,12 @@ int Dice::roll() const {
 	int val = base;
 	for (int i = 0; i < count; i++) val += (rand() % sides) + 1;
 	return val;
+}
+
+int Dice::min() const {
+	return base + count;
+}
+
+int Dice::max() const {
+	return base + count * sides;
 }

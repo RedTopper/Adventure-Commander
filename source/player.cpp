@@ -17,7 +17,7 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	DEF_SKILLS,
 	DEF_SPEED,
 	DEF_HP,
-	Dice(1, 1, 1),
+	Dice(0, 1, 4),
 	"Player",
 	"\U0001F464",
 	"@",
@@ -26,7 +26,6 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	this->base = window;
 	this->action = AC_NONE;
 	this->turn = 0;
-	this->dam = Dice(0, 1, 4);
 }
 
 string Player::displayMob(const Mob &other) {
@@ -79,6 +78,50 @@ void Player::list(const deque<shared_ptr<Object>>& objects, const string& title,
 	}
 }
 
+void Player::look(Point dest) {
+	shared_ptr<Mob> mob;
+	for(auto& m : dungeon->getMobs()) {
+		if (m->isAlive() && m->getPos() == dest && dungeon->isInRange(*m)) {
+			mob = m;
+			break;
+		}
+	}
+
+	if (mob == nullptr) {
+		dungeon->status = "There's no monster there.";
+		return;
+	}
+
+	int ch = 0;
+	uint32_t offset = 0;
+	vector<string> desc;
+	desc.emplace_back("HP:      " + to_string(mob->getHp()));
+	desc.emplace_back("Speed:   " + to_string(mob->getSpeed()));
+	desc.emplace_back("Damage:  " + mob->getDamageString());
+	desc.insert(desc.end(), mob->getDescription().begin(), mob->getDescription().end());
+	while(tickScroll(ch, offset, displayMob(*mob), desc)) ch = getch();
+}
+
+void Player::inspect(int index) {
+	if (index < 0 || (uint32_t)index >= inventory.size()) {
+		dungeon->status = "Cannot inspect - invalid inventory selection.";
+		return;
+	}
+
+	int ch = 0;
+	uint32_t offset = 0;
+	auto item = inventory[index];
+
+	vector<string> desc;
+	desc.emplace_back("Damage:  " + item->getDamageString());
+	desc.emplace_back("Weight:  " + to_string(item->getWeight()));
+	desc.emplace_back("Defence: " + to_string(item->getDef()));
+	desc.emplace_back("Speed:   " + to_string(item->getSpeed()));
+	desc.emplace_back("Value:   " + to_string(item->getValue()));
+	desc.insert(desc.end(), item->getDescription().begin(), item->getDescription().end());
+	while(tickScroll(ch, offset, displayObject(*item) + ".", desc)) ch = getch();
+}
+
 void Player::expunge(int index) {
 	if (index < 0 || (uint32_t)index >= inventory.size()) {
 		dungeon->status = "Cannot expunge - invalid inventory selection.";
@@ -121,26 +164,6 @@ void Player::unequip(int index) {
 	equipped.erase(equipped.begin() + index);
 	inventory.push_front(item);
 	dungeon->status = "Your " + displayObject(*item) + " was put in your inventory.";
-}
-
-void Player::inspect(int index) {
-	if (index < 0 || (uint32_t)index >= inventory.size()) {
-		dungeon->status = "Cannot inspect - invalid inventory selection.";
-		return;
-	}
-
-	int ch = 0;
-	uint32_t offset = 0;
-	auto item = inventory[index];
-
-	vector<string> desc;
-	desc.emplace_back("Damage:  " + item->getDamageString());
-	desc.emplace_back("Weight:  " + to_string(item->getWeight()));
-	desc.emplace_back("Defence: " + to_string(item->getDef()));
-	desc.emplace_back("Speed:   " + to_string(item->getSpeed()));
-	desc.emplace_back("Value:   " + to_string(item->getValue()));
-	desc.insert(desc.end(), item->getDescription().begin(), item->getDescription().end());
-	while(tickScroll(ch, offset, displayObject(*item) + ".", desc)) ch = getch();
 }
 
 void Player::drop(int index) {
@@ -246,30 +269,6 @@ bool Player::choice(const vector<string>& text) {
 	}
 }
 
-void Player::look(Point dest) {
-	shared_ptr<Mob> mob;
-	for(auto& m : dungeon->getMobs()) {
-		if (m->isAlive() && m->getPos() == dest && dungeon->isInRange(*m)) {
-			mob = m;
-			break;
-		}
-	}
-
-	if (mob == nullptr) {
-		dungeon->status = "There's no monster there.";
-		return;
-	}
-
-	int ch = 0;
-	uint32_t offset = 0;
-	vector<string> desc;
-	desc.emplace_back("HP:      " + to_string(mob->getHp()));
-	desc.emplace_back("Speed:   " + to_string(mob->getSpeed()));
-	desc.emplace_back("Damage:  " + mob->getDamageString());
-	desc.insert(desc.end(), mob->getDescription().begin(), mob->getDescription().end());
-	while(tickScroll(ch, offset, displayMob(*mob), desc)) ch = getch();
-}
-
 int Player::getCarryWeight() const {
 	int weight = Mob::getCarryWeight();
 	for (const auto& o : equipped) {
@@ -334,7 +333,7 @@ bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<
 	return true;
 }
 
-bool Player::tickTarget(const int ch, Point &dest) {
+bool Player::tickTarget(int ch, Point &dest) {
 	switch (ch) {
 		case '7':
 		case 'y':
@@ -621,6 +620,8 @@ const vector<string> Player::getHelp() {
 		"\t\tDrop an item back onto the floor",
 		"\tI",
 		"\t\tInspect an item and view it's properties",
+		"\tL",
+		"\t\tGet information about a nearby monsters",
 		"\t",
 		"\tDebug Controls:",
 		"\tg",
