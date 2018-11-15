@@ -1,4 +1,6 @@
 #include <iomanip>
+#include <player.hpp>
+
 
 #include "player.hpp"
 #include "dungeon.hpp"
@@ -51,6 +53,57 @@ string Player::displayObject(const Object &object) {
 		<< ") "
 		<< object.getName();
 	return str.str();
+}
+
+void Player::list(const deque<shared_ptr<Object>>& objects, const string& title, int start, void (Player::*action)(int)) {
+	int ch = 0;
+	char letter = (char)start;
+	uint32_t offset = 0;
+
+	//Construct a vector with each item on a line
+	vector<string> lines;
+	lines.reserve(objects.size());
+	for (const auto& o : objects) lines.push_back(string() + letter++ + ": " + displayObject(*o));
+
+	//List the items
+	while(tickScroll(ch, offset, title, lines)) {
+		ch = getch();
+
+		//If the letter picked was between the start letter and the end letter
+		if (ch >= start && ch < (uint32_t)start + objects.size()) {
+
+			//Call the given function
+			(this->*action)(ch - start);
+			break;
+		}
+	}
+}
+
+void Player::expunge(int index) {
+	if (index < 0 || (uint32_t)index >= inventory.size()) {
+		dungeon->status = "Invalid expunge selection.";
+		return;
+	}
+
+	auto item = inventory[index];
+
+	bool remove = choice({
+		"HOLD UP!",
+		"You are about to DESTROY this item FOREVER:",
+		"(a long time)",
+		"",
+		displayObject(*item),
+		"",
+		"Are you REALLY sure you want to do that?"
+	});
+
+	if (remove) {
+		inventory.erase(inventory.begin() + index);
+		dungeon->status = "You will be missed " + displayObject(*item) + ".";
+	} else {
+		dungeon->status = "You decided to keep the item around.";
+		return;
+	}
 }
 
 void Player::unequip(int index) {
@@ -109,9 +162,13 @@ void Player::equip(int index) {
 		//Player has space, ask if they want to swap the item
 		bool remove = choice({
 			"You are about to equip the item:",
+			"",
 			displayObject(*newer),
+			"",
 			"This will unequip the item:",
+			"",
 			displayObject(*older),
+			"",
 			"The item will be returned to your inventory.",
 			"Are you sure you want to do that?"
 		});
@@ -283,7 +340,6 @@ void Player::tickInput() {
 	uint32_t offset = 0;
 	Point dest = pos;
 	vector<string> lines;
-	char letter;
 	int ch = getch();
 	switch (ch) {
 		case KEY_HOME:
@@ -362,27 +418,14 @@ void Player::tickInput() {
 			break;
 		case 'i':
 		case 'w':
-			letter = '0';
-			for (const auto& o : inventory) lines.push_back(string() + letter++ + ": " + displayObject(*o));
-			while(tickScroll(ch, offset, "Your Inventory.", lines)) {
-				ch = getch();
-				if (ch >= '0' && ch <= '9') {
-					equip(ch - '0');
-					break;
-				}
-			}
+			list(inventory, "Equip what?", '0', &Player::equip);
+			break;
+		case 'x':
+			list(inventory, "Expunge what?", '0', &Player::expunge);
 			break;
 		case 't':
 		case 'e':
-			letter = 'a';
-			for (const auto& o : equipped) lines.push_back(string() + letter++ + ": " + displayObject(*o));
-			while(tickScroll(ch, offset, "Your Equipment.", lines)) {
-				ch = getch();
-				if (ch >= 'a' && ch <= 'l') {
-					unequip(ch - 'a');
-					break;
-				}
-			}
+			list(equipped, "Unequip what?", 'a', &Player::unequip);
 			break;
 		case 'g':
 			ch = 0;
