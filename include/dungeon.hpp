@@ -126,7 +126,7 @@ public:
 		return emoji;
 	}
 
-	bool isInRange(const Entity &e) {
+	bool isInRange(const Entity& e) {
 		return display != FOGGY || e.isRemembered() || (player
 			&& e.getPos().x - player->getPos().x >= -FOG_X
 			&& e.getPos().x - player->getPos().x <= FOG_X

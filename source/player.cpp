@@ -249,7 +249,7 @@ bool Player::choice(const vector<string>& text) {
 void Player::look(Point dest) {
 	shared_ptr<Mob> mob;
 	for(auto& m : dungeon->getMobs()) {
-		if (m->isAlive() && m->getPos() == dest) {
+		if (m->isAlive() && m->getPos() == dest && dungeon->isInRange(*m)) {
 			mob = m;
 			break;
 		}
