@@ -298,7 +298,7 @@ void Mob::attack() {
 
 bool Mob::isOnEntity(Entity::Type type) const {
 	for (auto& e : dungeon->getEntities()) {
-		if (pos == e.getPos() && e.getType() == type) return true;
+		if (pos == e.getPos() && e.getEntityType() == type) return true;
 	}
 
 	return false;
@@ -309,8 +309,7 @@ Mob::Pickup Mob::pickUpObject() {
 	if (inventory.size() == (uint32_t)(getMaxInventory())) return PICK_FULL;
 
 	auto& objects = dungeon->getObjects();
-	auto it = objects.begin();
-	while (it != objects.end()) {
+	for (auto it = objects.begin(); it != objects.end();) {
 		auto& o = *it;
 		if (pos != o->getPos()) {
 			//Not on this item
@@ -320,7 +319,7 @@ Mob::Pickup Mob::pickUpObject() {
 			return PICK_WEIGHT;
 		} else {
 			//Pick up item from floor
-			inventory.push_back(o);
+			inventory.insert(inventory.begin(), o);
 			it = objects.erase(it);
 			return PICK_ADD;
 		}

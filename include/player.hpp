@@ -16,27 +16,22 @@ private:
 	const static int DEF_HP = 100;
 	vector<shared_ptr<Object>> equipped;
 
-	enum Equip {
-		EQ_INVALID,
-		EQ_NOT_EQUIPMENT,
-		EQ_USED,
-		EQ_SUCCESS
-	};
-
 private:
-	string relative(const Mob& other);
-	string item(const Object& object, int index);
+	string displayMob(const Mob &other);
+	string displayObject(const Object &object);
 	bool tickScroll(int ch, uint &offset, const string &title, const vector<string> &lines);
 	bool tickTarget(int ch, Point& dest);
+	bool choice(const vector<string>& text);
 	void tickInput();
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
 	static const vector<string> getHelp();
+	void unequip(int index);
+	void equip(int index);
 	void tick() override;
 	int getCarryWeight() const override;
 	Mob::Pickup pickUpObject() override;
-	Player::Equip equip(int item);
 
 	const vector<shared_ptr<Object>>& getInventory() const {
 		return inventory;

@@ -50,7 +50,7 @@ public:
 		return this->symbolAlt;
 	}
 
-	const Type& getType() const {
+	const Type& getEntityType() const {
 		return type;
 	}
 

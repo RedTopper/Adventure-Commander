@@ -1,7 +1,11 @@
 #include <iomanip>
-#include <player.hpp>
 
+#include "player.hpp"
 #include "dungeon.hpp"
+
+static int center(const string& str) {
+	return (COLS / 2) - ((int)str.size() / 2);
+}
 
 Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	dungeon,
@@ -23,7 +27,7 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	this->dam = Dice(0, 1, 4);
 }
 
-string Player::relative(const Mob& other) {
+string Player::displayMob(const Mob &other) {
 	stringstream str;
 	str
 		<< "(" << other.getSymbol() << ") "
@@ -37,14 +41,113 @@ string Player::relative(const Mob& other) {
 	return str.str();
 }
 
-string Player::item(const Object& object, int index) {
+string Player::displayObject(const Object &object) {
 	stringstream str;
 	str
-		<< index << ": "
-		<< "(" << object.getSymbol() << ") "
-		<< left << setw(32) << object.getName()
-		<< " (" << FObject::fromType(object.getTypes()) << ")";
+		<< "("
+		<< object.getSymbol()
+		<< " "
+		<< FObject::fromType(object.getTypes())
+		<< ") "
+		<< object.getName();
 	return str.str();
+}
+
+void Player::unequip(int index) {
+
+}
+
+void Player::equip(int index) {
+	if (index < 0 || (uint32_t)index >= inventory.size()) {
+		dungeon->status = "Invalid item selection.";
+		return;
+	}
+
+	auto newer = inventory[index];
+	if (!newer->isEquipment()) {
+		dungeon->status = "The item you tried to select is not equipment.";
+		return;
+	}
+
+	int ringCount = 0;
+	int ringCountMax = 2;
+	for (auto it = equipped.begin(); it != equipped.end();) {
+		shared_ptr<Object> older = *it;
+
+		//Don't care about items of different types
+		if ((older->getTypes() & newer->getTypes()) == 0) {
+			it++;
+			continue;
+		}
+
+		//Don't care about rings when the count is less than ring max
+		if ((older->getTypes() & FObject::RING) > 0 && ringCount < ringCountMax - 1) {
+			ringCount++;
+			it++;
+			continue;
+		}
+
+		//Item is of the same type, but player has no more space!
+		if (inventory.size() >= getMaxInventory()) {
+			dungeon->status = "Your inventory is too full to equip this item.";
+			return;
+		}
+
+		//Player has space, ask if they want to swap the item
+		bool remove = choice({
+			"You are about to equip the item:",
+			displayObject(*newer),
+			"This will unequip the item:",
+			displayObject(*older),
+			"The item will be returned to your inventory.",
+			"Are you sure you want to do that?"
+		});
+
+		if (remove) {
+			//Will increase inventory by one.
+			inventory.push_back(older);
+			it = equipped.erase(it);
+		} else {
+			//Let the user know the action failed.
+			dungeon->status = "You decided not to wear that item.";
+			return;
+		}
+	}
+
+	//If we got through the previous loop, equip the item.
+	inventory.erase(inventory.begin() + index);
+
+	//insert the new item into the beginning
+	//For the case of a ring, we remove the LAST ring,
+	//so the user will always swap out their oldest.
+	equipped.insert(equipped.begin(), newer);
+	dungeon->status = "You are now wearing " + displayObject(*newer);
+}
+
+bool Player::choice(const vector<string>& text) {
+	werase(base);
+
+	int row = 2;
+	string question = "(Y / N)";
+
+	//Draw question
+	for (const auto& line : text) mvwprintw(base, row++, center(line), line.c_str());
+	mvwprintw(base, row + 1, center(question), question.c_str());
+
+	//Keep in loop until user presses Y/N
+	while (true) {
+		wrefresh(base);
+		int in = getch();
+		if (in == 'y' || in == 'Y') return true;
+		if (in == 'n' || in == 'N') return false;
+	}
+}
+
+void Player::tick() {
+	action = AC_NONE;
+	dungeon->status = "It's your turn! (TAB for help)";
+	while (action == AC_NONE) tickInput();
+	attack();
 }
 
 bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<string>& constLines) {
@@ -56,7 +159,8 @@ bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<
 	werase(base);
 	switch (ch) {
 		case KEY_UP:
-			if (offset == 0) beep(); //FALLTHROUGH
+			if (offset == 0) beep();
+			//FALLTHROUGH
 		case KEY_RESIZE:
 			if (offset > 0) offset--;
 			break;
@@ -166,6 +270,7 @@ void Player::tickInput() {
 	uint32_t offset = 0;
 	Point dest = pos;
 	vector<string> lines;
+	char letter;
 	int ch = getch();
 	switch (ch) {
 		case KEY_HOME:
@@ -236,17 +341,34 @@ void Player::tickInput() {
 			break;
 		case 'm':
 			//keep ticking and getting characters until tick returns false
-			for (const auto& m : dungeon->getMobs()) lines.push_back(relative(*m));
+			for (const auto& m : dungeon->getMobs()) lines.push_back(displayMob(*m));
 			while(tickScroll(ch, offset, "Monster list.", lines)) ch = getch();
 			break;
 		case '\t':
 			while(tickScroll(ch, offset, "In game manual.", getHelp())) ch = getch();
 			break;
 		case 'i':
+		case 'w':
+			letter = '0';
+			for (const auto& o : inventory) lines.push_back(string() + letter++ + ": " + displayObject(*o));
+			while(tickScroll(ch, offset, "Your Inventory.", lines)) {
+				ch = getch();
+				if (ch >= '0' && ch <= '9') {
+					equip(ch - '0');
+					break;
+				}
+			}
+			break;
+		case 't':
 		case 'e':
-			for (const auto& o : ch == 'i' ? inventory : equipped) lines.push_back(item(*o, offset++));
-			offset = 0;
-			while(tickScroll(ch, offset, ch == 'i' ? "Your Inventory." : "Your Equipment.", lines)) ch = getch();
+			letter = 'a';
+			for (const auto& o : equipped) lines.push_back(string() + letter++ + ": " + displayObject(*o));
+			while(tickScroll(ch, offset, "Your Equipment.", lines)) {
+				ch = getch();
+				if (ch >= 'a' && ch <= 'l') {
+					unequip(ch - 'a');
+				}
+			}
 			break;
 		case 'g':
 			ch = 0;
@@ -280,16 +402,6 @@ void Player::tickInput() {
 	}
 }
 
-void Player::tick() {
-	action = AC_NONE;
-	dungeon->status = "It's your turn! (TAB for help)";
-	while (action == AC_NONE) {
-		tickInput();
-	}
-
-	attack();
-}
-
 Mob::Pickup Player::pickUpObject() {
 	Pickup pickup = Mob::pickUpObject();
 	switch(pickup) {
@@ -303,7 +415,7 @@ Mob::Pickup Player::pickUpObject() {
 			dungeon->status = "The item beneath you is too heavy to carry";
 			break;
 		case PICK_ADD:
-			dungeon->status = "You picked up " + inventory.back()->getName() + " (" + inventory.back()->getSymbol() + ")";
+			dungeon->status = displayObject(*inventory.front()) + " was added to your inventory.";
 			break;
 	}
 
@@ -351,8 +463,8 @@ const vector<string> Player::getHelp() {
 		"\t\tPick up an item off the ground",
 		"\t",
 		"\tCharacter Controls:",
-		"\ti",
-		"\t\tShow your inventory",
+		"\ti, w",
+		"\t\tShow your inventory and pick items to equip",
 		"\te",
 		"\t\tShow your equipped items",
 		"\t",
@@ -384,8 +496,6 @@ const vector<string> Player::getHelp() {
 		"OPTIONS",
 	};
 
-	for(const auto& str : getOptions()) help.push_back("\t" + str);
-
 	vector<string> post = {
 		"",
 		"AUTHOR",
@@ -395,8 +505,8 @@ const vector<string> Player::getHelp() {
 		"ADVENTURE COMMANDER(6)"
 	};
 
+	for(const auto& str : getOptions()) help.push_back("\t" + str);
 	help.insert(help.end(), post.begin(), post.end());
-
 	return help;
 }
 
@@ -407,23 +517,4 @@ int Player::getCarryWeight() const {
 	}
 
 	return weight;
-}
-
-Player::Equip Player::equip(int item) {
-	if (item < 0 || (uint32_t)item >= inventory.size()) return EQ_INVALID;
-
-	auto o = inventory[item];
-	if (!o->isEquipment()) return EQ_NOT_EQUIPMENT;
-
-	int types = 0;
-	for (const auto& e : equipped) {
-		types |= e->getTypes();
-	}
-
-	if ((types & o->getTypes()) > 0) return EQ_USED;
-
-	inventory.erase(inventory.begin() + item);
-	equipped.push_back(o);
-
-	return EQ_SUCCESS;
 }
