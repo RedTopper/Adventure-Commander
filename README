@@ -1,27 +1,33 @@
 # Adventure Commander
 A text base adventure game written in C++
 
-# Author
+## Author
 Aaron Walter
 ajwalter
 792829065
 
-# Build
+## Build
 Install ncurses on Fedora: `sudo yum install ncurses-devel`
 Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- IMPORTANT
 1. Run `make` to compile everything
-2. Run `./game --help` so you know what's up
-3. Run `./game` with wanted options
+2. Run `./game`
+3. Press `TAB` for in game help!
 
-# Notable features for this version
-- Parsing object definitions, use --parse to launch the parser
-- You can load in files from the resources folder and home directory (--home)
-- Made my own monster definition file v1.1 that contains UTF8 encoded emoji
-  (parser can still read v1 files, so feel free to load your own with --home)
-- Mobs have more than 1 health. Monsters still do 1 dmg to eachother, however.
-- Still uses emoji! Use --lame to disable. Works on fedora and pyrite over ssh.
+## Notable features for this version
+- Real :tm: Combat!
+- Monsters push other monsters out of the way
+- You can beat the game by defeating the boss
+- You have an inventory and equipment stash
+- In game help screen (try TAB)
+- You have a max weight as well as inventory space
+- Some items are kind of OP...
+- Some other things probably...
+- Bugs maybe? It's 4:30 AM idk...
 
-# Changes from specifications
+## Changes from specifications
+- End target mode with ENTER instead of g/t
+- Items are simply listed from 0 - 9, and aren't necessarily "slots"
+- Items in your equipment are similarly labeled a - l and expand as needed.
 - I made the fog visible area slightly bigger.
 - Mobs use emoji if not disabled
 - Uses emoji for all items
@@ -33,7 +39,9 @@ Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev` <- IMPORTANT
 - Rock is LIGHT SHADE, MEDIUM SHADE, and DARK SHADE to represent hardness
 - Rooms are SPACE
 
-# Important console setup
+## If you are having problems, see below
+
+### Important console setup
 This game uses UTF-8 to make it look nice! Please read this if your terminal 
 looks messed up (ex: question marks or blank output):
 - If you are using `gnome-terminal` (called Terminal), UTF-8 works with emoji. 
@@ -41,7 +49,7 @@ looks messed up (ex: question marks or blank output):
 WARNING: All monsters will be boxes if you do this without --lame (sad)!
 (Tested on CS327FedoraLinux)
 
-# Other information
+### Other information
 In any case, your locale should be set to "en_US.UTF-8". You can check with the
 command `locale`. SSH environments can sometimes break this, so you might need
 to put these in your `~/.profile` if you are using SSH and see question marks:
