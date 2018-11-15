@@ -319,7 +319,7 @@ Mob::Pickup Mob::pickUpObject() {
 			return PICK_WEIGHT;
 		} else {
 			//Pick up item from floor
-			inventory.insert(inventory.begin(), o);
+			inventory.push_front(o);
 			it = objects.erase(it);
 			return PICK_ADD;
 		}

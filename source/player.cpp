@@ -54,12 +54,25 @@ string Player::displayObject(const Object &object) {
 }
 
 void Player::unequip(int index) {
+	if (index < 0 || (uint32_t)index >= equipped.size()) {
+		dungeon->status = "Invalid equipment selection.";
+		return;
+	}
 
+	if (inventory.size() >= (uint32_t)getMaxInventory()) {
+		dungeon->status = "Your inventory is too full to unequip this item!";
+		return;
+	}
+
+	auto item = equipped[index];
+	equipped.erase(equipped.begin() + index);
+	inventory.push_front(item);
+	dungeon->status = "Your " + displayObject(*item) + " was put in your inventory.";
 }
 
 void Player::equip(int index) {
 	if (index < 0 || (uint32_t)index >= inventory.size()) {
-		dungeon->status = "Invalid item selection.";
+		dungeon->status = "Invalid inventory selection.";
 		return;
 	}
 
@@ -88,7 +101,7 @@ void Player::equip(int index) {
 		}
 
 		//Item is of the same type, but player has no more space!
-		if (inventory.size() >= getMaxInventory()) {
+		if (inventory.size() >= (uint32_t)getMaxInventory()) {
 			dungeon->status = "Your inventory is too full to equip this item.";
 			return;
 		}
@@ -120,7 +133,7 @@ void Player::equip(int index) {
 	//insert the new item into the beginning
 	//For the case of a ring, we remove the LAST ring,
 	//so the user will always swap out their oldest.
-	equipped.insert(equipped.begin(), newer);
+	equipped.push_front(newer);
 	dungeon->status = "You are now wearing " + displayObject(*newer);
 }
 
@@ -367,6 +380,7 @@ void Player::tickInput() {
 				ch = getch();
 				if (ch >= 'a' && ch <= 'l') {
 					unequip(ch - 'a');
+					break;
 				}
 			}
 			break;
@@ -465,8 +479,8 @@ const vector<string> Player::getHelp() {
 		"\tCharacter Controls:",
 		"\ti, w",
 		"\t\tShow your inventory and pick items to equip",
-		"\te",
-		"\t\tShow your equipped items",
+		"\te, t",
+		"\t\tShow your equipped items ant pick items to unequip",
 		"\t",
 		"\tDebug Controls:",
 		"\tg",

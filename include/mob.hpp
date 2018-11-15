@@ -2,6 +2,7 @@
 #define MOB_H
 
 #include <vector>
+#include <deque>
 #include <memory>
 
 #include "dice.hpp"
@@ -63,7 +64,7 @@ protected:
 	Action action = AC_NONE;
 	FMob* factory;
 
-	vector<shared_ptr<Object>> inventory;
+	deque<shared_ptr<Object>> inventory;
 
 private:
 	Point nextPoint(Point end);

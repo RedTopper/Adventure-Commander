@@ -14,7 +14,7 @@ private:
 	const static int DEF_SKILLS = 0; //PC has no skills
 	const static int DEF_SPEED = 10; //PC has no skills
 	const static int DEF_HP = 100;
-	vector<shared_ptr<Object>> equipped;
+	deque<shared_ptr<Object>> equipped;
 
 private:
 	string displayMob(const Mob &other);
@@ -33,7 +33,7 @@ public:
 	int getCarryWeight() const override;
 	Mob::Pickup pickUpObject() override;
 
-	const vector<shared_ptr<Object>>& getInventory() const {
+	const deque<shared_ptr<Object>>& getInventory() const {
 		return inventory;
 	}
 
