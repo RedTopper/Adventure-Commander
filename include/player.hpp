@@ -26,7 +26,7 @@ private:
 	void drop(int index);
 	void tickInput();
 	bool tickScroll(int ch, uint &offset, const string &title, const vector<string> &lines);
-	bool tickTarget(int ch, Point& dest);
+	bool tickTarget(const int ch, Point &dest);
 	bool choice(const vector<string>& text);
 
 public:
@@ -54,6 +54,8 @@ public:
 	}
 
 	void inspect(int);
+
+	void look(Point point);
 };
 
 #endif

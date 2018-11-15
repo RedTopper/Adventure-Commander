@@ -3,7 +3,6 @@
 
 Object::Object(
 	Dungeon *dungeon,
-	FObject* factory,
 	Color color,
 	int types,
 	int hit,
@@ -24,7 +23,6 @@ Object::Object(
 	color,
 	false
 ) {
-	this->factory = factory;
 	this->types = types;
 	this->hit = hit;
 	this->dodge = dodge;

@@ -139,6 +139,12 @@ public:
 	virtual int getMaxCarryWeight() const {
 		return 10;
 	}
+
+	string getDamageString() {
+		stringstream str;
+		str << dam;
+		return str.str();
+	}
 };
 
 #endif

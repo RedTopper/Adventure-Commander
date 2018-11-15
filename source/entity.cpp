@@ -59,3 +59,7 @@ const string Entity::getSymbol() const {
 		return this->symbolAlt;
 	}
 }
+
+void Entity::setRemembered(bool r) {
+	if (dungeon->getDisplay() == Dungeon::FOGGY) remembered = r;
+}

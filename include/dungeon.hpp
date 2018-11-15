@@ -126,12 +126,12 @@ public:
 		return emoji;
 	}
 
-	bool isOutOfRange(const Entity& e) {
-		return display == FOGGY && !e.isRemembered() && player
-			&& (e.getPos().x - player->getPos().x < -FOG_X
-			|| e.getPos().x - player->getPos().x > FOG_X
-			|| e.getPos().y - player->getPos().y < -FOG_Y
-			|| e.getPos().y - player->getPos().y > FOG_Y);
+	bool isInRange(const Entity &e) {
+		return display != FOGGY || e.isRemembered() || (player
+			&& e.getPos().x - player->getPos().x >= -FOG_X
+			&& e.getPos().x - player->getPos().x <= FOG_X
+			&& e.getPos().y - player->getPos().y >= -FOG_Y
+			&& e.getPos().y - player->getPos().y <= FOG_Y);
 	}
 
 	int getPathMap(const Point& p) const {

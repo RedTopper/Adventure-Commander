@@ -250,7 +250,6 @@ Object FObject::get(Dungeon *dungeon, ...) {
 
 	return Object(
 		dungeon,
-		this,
 		getRandomColor(colors),
 		types,
 		hit.roll(),

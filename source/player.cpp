@@ -70,7 +70,7 @@ void Player::list(const deque<shared_ptr<Object>>& objects, const string& title,
 		ch = getch();
 
 		//If the letter picked was between the start letter and the end letter
-		if (ch >= start && ch < (uint32_t)start + objects.size()) {
+		if (ch >= start && ch < start + (int)objects.size()) {
 
 			//Call the given function
 			(this->*action)(ch - start);
@@ -128,6 +128,7 @@ void Player::inspect(int index) {
 		dungeon->status = "Cannot inspect - invalid inventory selection.";
 		return;
 	}
+
 	int ch = 0;
 	uint32_t offset = 0;
 	auto item = inventory[index];
@@ -245,6 +246,39 @@ bool Player::choice(const vector<string>& text) {
 	}
 }
 
+void Player::look(Point dest) {
+	shared_ptr<Mob> mob;
+	for(auto& m : dungeon->getMobs()) {
+		if (m->isAlive() && m->getPos() == dest) {
+			mob = m;
+			break;
+		}
+	}
+
+	if (mob == nullptr) {
+		dungeon->status = "There's no monster there.";
+		return;
+	}
+
+	int ch = 0;
+	uint32_t offset = 0;
+	vector<string> desc;
+	desc.emplace_back("HP:      " + to_string(mob->getHp()));
+	desc.emplace_back("Speed:   " + to_string(mob->getSpeed()));
+	desc.emplace_back("Damage:  " + mob->getDamageString());
+	desc.insert(desc.end(), mob->getDescription().begin(), mob->getDescription().end());
+	while(tickScroll(ch, offset, displayMob(*mob), desc)) ch = getch();
+}
+
+int Player::getCarryWeight() const {
+	int weight = Mob::getCarryWeight();
+	for (const auto& o : equipped) {
+		weight += o->getWeight();
+	}
+
+	return weight;
+}
+
 void Player::tick() {
 	action = AC_NONE;
 	dungeon->status = "It's your turn! (TAB for help)";
@@ -262,6 +296,7 @@ bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<
 	switch (ch) {
 		case KEY_UP:
 			if (offset == 0) beep();
+			if (offset > 0) offset--;
 			break;
 		case KEY_DOWN:
 			if (offset + max < lines.size()) {
@@ -299,7 +334,7 @@ bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<
 	return true;
 }
 
-bool Player::tickTarget(const int ch, Point& dest) {
+bool Player::tickTarget(const int ch, Point &dest) {
 	switch (ch) {
 		case '7':
 		case 'y':
@@ -335,14 +370,9 @@ bool Player::tickTarget(const int ch, Point& dest) {
 			break;
 		case 27: //ESC
 		case 'q':
+			dest = Point();
 			return false;
-		case 'r':
-			dest = Point((rand() % (dungeon->getDim().x - 2)) + 1, (rand() % (dungeon->getDim().y - 2)) + 1);
-			//FALLTHROUGH
-		case 'g':
-			dungeon->status = "Woosh!";
-			dungeon->getTile(dest).type = Tile::HALL;
-			move(dest);
+		case '\n':
 			return false;
 		default:
 			break;
@@ -363,12 +393,17 @@ void Player::tickInput() {
 	dungeon->updateFoggy();
 	dungeon->print(base);
 	action = AC_NONE;
-	Movement res = MV_IDLE;
 	uint32_t offset = 0;
+	Movement res = MV_IDLE;
 	Point dest = pos;
 	vector<string> lines;
 	int ch = getch();
+
+	//is this AI?
 	switch (ch) {
+		default:
+			dungeon->status = to_string(ch) + " is invalid!";
+			break;
 		case KEY_HOME:
 		case '7':
 		case 'y':
@@ -415,20 +450,6 @@ void Player::tickInput() {
 		case ' ':
 			action = AC_STALL;
 			break;
-		case '>':
-			if (isOnEntity(STAIRS_DOWN)) {
-				action = AC_DOWN;
-			} else {
-				dungeon->status = "You are not on a down staircase!";
-			}
-			break;
-		case '<':
-			if (isOnEntity(STAIRS_UP)) {
-				action = AC_UP;
-			} else {
-				dungeon->status = "You are not on an up staircase!";
-			}
-			break;
 		case 'Q':
 			action = AC_QUIT;
 			break;
@@ -436,11 +457,11 @@ void Player::tickInput() {
 			dungeon->status = "If you really want to quit, try 'shift-q' instead.";
 			break;
 		case 'm':
-			//keep ticking and getting characters until tick returns false
 			for (const auto& m : dungeon->getMobs()) lines.push_back(displayMob(*m));
 			while(tickScroll(ch, offset, "Monster list.", lines)) ch = getch();
 			break;
 		case '\t':
+		case '?':
 			while(tickScroll(ch, offset, "In game manual.", getHelp())) ch = getch();
 			break;
 		case 't':
@@ -460,28 +481,65 @@ void Player::tickInput() {
 		case 'I':
 			list(inventory, "Inspect what?", '0', &Player::inspect);
 			break;
-		case 'g':
-			ch = 0;
-			dungeon->status = "You cheater! You entered teleport mode!";
-			while(tickTarget(ch, dest)) ch = getch();
-			break;
 		case 'f':
 			dungeon->status = "You cheater! You toggled the fog!";
 			dungeon->setDisplay(dungeon->getDisplay() == Dungeon::FOGGY ? Dungeon::NORMAL : Dungeon::FOGGY);
 			break;
 		case 'D':
 			dungeon->status = "You cheater! You switched to path-find distance!";
-			dungeon->setDisplay(Dungeon::DISTANCE);
+			dungeon->setDisplay(dungeon->getDisplay() == Dungeon::DISTANCE ? Dungeon::NORMAL : Dungeon::DISTANCE);
 			break;
 		case 'T':
 			dungeon->status = "You cheater! You switched to path-find dig!";
-			dungeon->setDisplay(Dungeon::TUNNEL);
+			dungeon->setDisplay(dungeon->getDisplay() == Dungeon::TUNNEL ? Dungeon::NORMAL : Dungeon::TUNNEL);
 			break;
 		case ',':
 			pickUpObject();
 			break;
-		default:
-			dungeon->status = to_string(ch) + " is invalid!";
+
+		case '>':
+			if (isOnEntity(STAIRS_DOWN)) {
+				action = AC_DOWN;
+			} else {
+				dungeon->status = "You are not on a down staircase!";
+			}
+			break;
+
+		case '<':
+			if (isOnEntity(STAIRS_UP)) {
+				action = AC_UP;
+			} else {
+				dungeon->status = "You are not on an up staircase!";
+			}
+			break;
+
+		case 'g':
+			dungeon->status = "You cheater! You entered teleport mode! [ENTER / r]";
+			while(tickTarget(ch, dest) && ch != 'r') ch = getch();
+
+			if (ch == 'r') {
+				auto& dim = dungeon->getDim();
+				dest = Point((rand() % (dim.x - 2)) + 1, (rand() % (dim.y - 2)) + 1);
+			}
+
+			if (dest > Point()) {
+				dungeon->status = "Woosh!";
+				auto& tile = dungeon->getTile(dest);
+				tile.type = tile.type == Tile::ROOM ? Tile::ROOM : Tile::HALL;
+				move(dest);
+			}
+
+			break;
+
+		case 'L':
+			dungeon->status = "What do you want to look at? [ENTER]";
+			while(tickTarget(ch, dest)) ch = getch();
+			if (dest == Point()) break;
+			if (dest == pos) {
+				dungeon->status = "*You see yourself in a mirror. It's quite a sight...*";
+			} else {
+				look(dest);
+			}
 	}
 
 	//Move the player character
@@ -553,10 +611,16 @@ const vector<string> Player::getHelp() {
 		"\t\tPick up an item off the ground",
 		"\t",
 		"\tCharacter Controls:",
-		"\ti, w",
-		"\t\tShow your inventory and pick items to equip",
 		"\te, t",
 		"\t\tShow your equipped items ant pick items to unequip",
+		"\ti, w",
+		"\t\tShow your inventory and pick items to equip",
+		"\tx",
+		"\t\tExpunge an item (destroy it forever)",
+		"\td",
+		"\t\tDrop an item back onto the floor",
+		"\tI",
+		"\t\tInspect an item and view it's properties",
 		"\t",
 		"\tDebug Controls:",
 		"\tg",
@@ -598,13 +662,4 @@ const vector<string> Player::getHelp() {
 	for(const auto& str : getOptions()) help.push_back("\t" + str);
 	help.insert(help.end(), post.begin(), post.end());
 	return help;
-}
-
-int Player::getCarryWeight() const {
-	int weight = Mob::getCarryWeight();
-	for (const auto& o : equipped) {
-		weight += o->getWeight();
-	}
-
-	return weight;
 }

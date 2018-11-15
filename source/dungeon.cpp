@@ -637,14 +637,14 @@ void Dungeon::print(WINDOW* win) {
 
 	//Output objects
 	for (auto& o : objects) {
-		if (isOutOfRange(*o)) continue;
+		if (!isInRange(*o)) continue;
 		o->setRemembered(true);
 		printEntity(win, o);
 	}
 
 	//Write entities
 	for (auto& e : entities) {
-		if (isOutOfRange(e)) continue;
+		if (!isInRange(e)) continue;
 		e.setRemembered(true);
 		mvwaddstr(win, e.getPos().y + 1, e.getPos().x, e.getSymbol().c_str());
 	}
@@ -656,7 +656,7 @@ void Dungeon::print(WINDOW* win) {
 
 	//Write mobs
 	for (const auto& m : mobs) {
-		if (m->isAlive() && !isOutOfRange(*m)) printEntity(win, m);
+		if (m->isAlive() && isInRange(*m)) printEntity(win, m);
 	}
 
 	//Write status

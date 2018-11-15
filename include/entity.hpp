@@ -44,6 +44,7 @@ protected:
 
 public:
 	Entity(Dungeon* dungeon, Type type, Color color, bool halls);
+	void setRemembered(bool r);
 	const string getSymbol() const;
 
 	const string getSymbolAlt() const {
@@ -64,10 +65,6 @@ public:
 
 	bool isRemembered() const {
 		return remembered;
-	}
-
-	void setRemembered(bool r) {
-		remembered = r;
 	}
 
 	Color getColor() const {

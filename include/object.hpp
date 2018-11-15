@@ -11,7 +11,6 @@ class Object : public Entity {
 public:
 	Object(
 		Dungeon *dungeon,
-		FObject* factory,
 		Color color,
 		int types,
 		int hit,
@@ -29,7 +28,6 @@ public:
 	);
 
 private:
-	FObject* factory;
 	Dice dam;
 	int types;
 	int hit;
