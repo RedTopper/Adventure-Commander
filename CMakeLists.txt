@@ -34,6 +34,7 @@ add_executable(Adventure_Commander
 	source/fmob.cpp
 	source/fobject.cpp
 	source/object.cpp
+	include/twist.hpp
 )
 
 target_link_libraries(Adventure_Commander ncursesw)

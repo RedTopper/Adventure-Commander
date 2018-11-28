@@ -1,8 +1,9 @@
 #include <string>
-#include <dice.hpp>
 
-
+#include "twist.hpp"
 #include "dice.hpp"
+
+using namespace std;
 
 Dice::Dice(int base, int count, int sides) {
 	this->base = base;
@@ -27,7 +28,7 @@ istream &Dice::read(istream &in) {
 
 int Dice::roll() const {
 	int val = base;
-	for (int i = 0; i < count; i++) val += (rand() % sides) + 1;
+	for (int i = 0; i < count; i++) val += Twist::rand(1, sides);
 	return val;
 }
 

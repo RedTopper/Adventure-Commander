@@ -19,8 +19,6 @@
 
 extern const Point DUNGEON_DIM;
 
-using namespace std;
-
 class Dungeon {
 public:
 	enum Display {
@@ -36,20 +34,20 @@ public:
 private:
 	struct TurnOrder {
 		//Should return true if lhs is considered to go before rhs
-		bool operator()(const shared_ptr<Mob>& lhs, const shared_ptr<Mob>& rhs) const {
+		bool operator()(const std::shared_ptr<Mob>& lhs, const std::shared_ptr<Mob>& rhs) const {
 			return !lhs->isBefore(*rhs);
 		}
 	};
 
 	Point dim;
-	shared_ptr<Player> player;
-	vector<shared_ptr<Mob>> mobs;
-	vector<shared_ptr<Object>> objects;
-	priority_queue<shared_ptr<Mob>, vector<shared_ptr<Mob>>, TurnOrder> turn;
-	vector<Room> rooms;
-	vector<Entity> entities;
-	vector<vector<Tile>> tiles;
-	vector<vector<Tile>> fog;
+	std::shared_ptr<Player> player;
+	std::vector<std::shared_ptr<Mob>> mobs;
+	std::vector<std::shared_ptr<Object>> objects;
+	std::vector<Room> rooms;
+	std::vector<Entity> entities;
+	std::vector<std::vector<Tile>> tiles;
+	std::vector<std::vector<Tile>> fog;
+	std::priority_queue<std::shared_ptr<Mob>, std::vector<std::shared_ptr<Mob>>, TurnOrder> turn;
 	Path map;
 	Path dig;
 	bool emoji;
@@ -60,7 +58,7 @@ private:
 	int playerTurn;
 
 	template <class F, class T>
-	void generateFactory(vector<F>& factories, vector<shared_ptr<T>>& out, int total);
+	void generateFactory(std::vector<F>& factories, std::vector<std::shared_ptr<T>>& out, int total);
 	void connectRoomRasterize(const Point &from, const Point &to);
 	void connectRoom(const Room &first, const Room &second);
 	bool placeRoomAttempt(const Room &room);
@@ -69,45 +67,45 @@ private:
 	void placeTile(const Point &pos, uint8_t hardness, const float *seed);
 	void generateRooms();
 	void generateEntities(int floor);
-	void printEntity(WINDOW *win, const shared_ptr<Entity> &e);
-	void postProcess(vector<vector<Tile>>& tiles);
+	void printEntity(WINDOW *win, const std::shared_ptr<Entity> &e);
+	void postProcess(std::vector<std::vector<Tile>>& tiles);
 	int isFull();
 
 public:
-	string status;
-	string line1;
-	string line2;
+	std::string status;
+	std::string line1;
+	std::string line2;
 
 	explicit Dungeon(const Point& dim);
-	explicit Dungeon(fstream& file);
-	void finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObject, int count,  int floor, bool emoji, shared_ptr<Player>& player);
-	const shared_ptr<Mob> getMob(const Point& p);
+	explicit Dungeon(std::fstream& file);
+	void finalize(WINDOW* base, std::vector<FMob>& fMob, std::vector<FObject>& fObject, int count,  int floor, bool emoji, std::shared_ptr<Player>& player);
+	const std::shared_ptr<Mob> getMob(const Point& p);
 	void snapshotTake();
 	void snapshotRestore();
-	void save(fstream& file);
+	void save(std::fstream& file);
 	bool alive() const;
 	void rotate();
 	void updateFoggy();
 	void print(WINDOW* window);
 
 	//Getters and setters
-	const vector<Entity>& getEntities() const {
+	const std::vector<Entity>& getEntities() const {
 		return entities;
 	}
 
-	const vector<shared_ptr<Mob>>& getMobs() const {
+	const std::vector<std::shared_ptr<Mob>>& getMobs() const {
 		return mobs;
 	}
 
-	vector<shared_ptr<Object>>& getObjects() {
+	std::vector<std::shared_ptr<Object>>& getObjects() {
 		return objects;
 	}
 
-	const shared_ptr<Player>& getPlayer() const {
+	const std::shared_ptr<Player>& getPlayer() const {
 		return player;
 	}
 
-	const shared_ptr<Mob>& getCurrentTurn() const {
+	const std::shared_ptr<Mob>& getCurrentTurn() const {
 		return turn.top();
 	}
 

@@ -6,8 +6,6 @@
 
 #include "point.hpp"
 
-using namespace std;
-
 class Dungeon;
 class Entity {
 public:
@@ -35,19 +33,19 @@ protected:
 	Type type;
 	Point pos;
 	Color color;
-	string name;
-	string symbol;
-	string symbolAlt;
-	vector<string> description;
+	std::string name;
+	std::string symbol;
+	std::string symbolAlt;
+	std::vector<std::string> description;
 
 	Point getSpawn(bool halls) const;
 
 public:
 	Entity(Dungeon* dungeon, Type type, Color color, bool halls);
 	void setRemembered(bool r);
-	const string getSymbol() const;
+	const std::string getSymbol() const;
 
-	const string getSymbolAlt() const {
+	const std::string getSymbolAlt() const {
 		return this->symbolAlt;
 	}
 
@@ -71,11 +69,11 @@ public:
 		return color;
 	}
 
-	const string& getName() const {
+	const std::string& getName() const {
 		return name;
 	}
 
-	const vector<string>& getDescription() const {
+	const std::vector<std::string>& getDescription() const {
 		return description;
 	}
 };

@@ -14,12 +14,12 @@ private:
 	const static int DEF_SKILLS = 0; //PC has no skills
 	const static int DEF_SPEED = 10; //PC has no skills
 	const static int DEF_HP = 500;
-	deque<shared_ptr<Object>> equipped;
+	std::deque<std::shared_ptr<Object>> equipped;
 
 private:
-	void list(const deque<shared_ptr<Object>>& objects, const string& title, int start, void (Player::*action)(int));
-	string displayMob(const Mob &other);
-	string displayObject(const Object &object);
+	void list(const std::deque<std::shared_ptr<Object>>& objects, const std::string& title, int start, void (Player::*action)(int));
+	std::string displayMob(const Mob &other);
+	std::string displayObject(const Object &object);
 	void look(Point point);
 	void inspect(int index);
 	void unequip(int index);
@@ -27,14 +27,14 @@ private:
 	void expunge(int index);
 	void drop(int index);
 	void tickInput();
-	bool tickScroll(int ch, uint &offset, const string &title, const vector<string> &lines);
+	bool tickScroll(int ch, uint32_t &offset, const std::string &title, const std::vector<std::string> &lines);
 	bool tickTarget(int ch, Point &dest);
-	bool choice(const vector<string>& text);
+	bool choice(const std::vector<std::string>& text);
 	void attack(const Point& dest) override;
 
 public:
 	Player(Dungeon* dungeon, WINDOW* window);
-	static const vector<string> getHelp();
+	static const std::vector<std::string> getHelp();
 	void flip() const;
 	void tick() override;
 	int damage(int dam) override;
@@ -43,7 +43,7 @@ public:
 	Mob::Movement move(const Point& next) override;
 
 
-	const deque<shared_ptr<Object>>& getInventory() const {
+	const std::deque<std::shared_ptr<Object>>& getInventory() const {
 		return inventory;
 	}
 

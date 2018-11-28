@@ -3,6 +3,7 @@
 #include <stack>
 #include <fstream>
 
+#include "twist.hpp"
 #include "main.hpp"
 #include "dungeon.hpp"
 
@@ -117,7 +118,7 @@ Mob::Color getRandomColor(int colors) {
 }
 
 template <class T>
-vector<T> loadFactory(const string &filename, const string &header, bool home){
+vector<T> loadFactory(const string &filename, const string &header, bool home) {
 	string line;
 	vector<T> factory;
 	fstream desc = get(fstream::in, filename, home);
@@ -135,7 +136,6 @@ vector<T> loadFactory(const string &filename, const string &header, bool home){
 
 int main(int argc, char** argv) {
 	setlocale(LC_ALL, "en_US.UTF-8");
-	srand((unsigned int) time(nullptr));
 
 	int mobs = 10;
 	bool save = false;

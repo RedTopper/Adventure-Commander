@@ -21,10 +21,10 @@ public:
 		int attribute,
 		int value,
 		const Dice& dam,
-		const string& name,
-		const string& symbol,
-		const string& symbolAlt,
-		const vector<string>& description
+		const std::string& name,
+		const std::string& symbol,
+		const std::string& symbolAlt,
+		const std::vector<std::string>& description
 	);
 
 private:
@@ -65,8 +65,8 @@ public:
 		return types;
 	}
 
-	string getDamageString() {
-		stringstream str;
+	std::string getDamageString() {
+		std::stringstream str;
 		str << dam;
 		return str.str();
 	}

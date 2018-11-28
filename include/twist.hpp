@@ -1,0 +1,81 @@
+#ifndef ADVENTURE_COMMANDER_TWIST_HPP
+#define ADVENTURE_COMMANDER_TWIST_HPP
+
+#include <random>
+#include <iostream>
+#include <algorithm>
+#include <functional>
+
+class Twist {
+private:
+	std::mt19937 mt;
+
+public:
+	Twist(Twist const&) = delete;
+	void operator=(Twist const&) = delete;
+
+	/**
+	 * Generates a float between [0.0, 1.0)
+	 * @return a random float
+	 */
+	static double rand() {
+		return rand(1.0);
+	}
+
+	/**
+	 * Generates an int between [0, max]
+	 * @param max The maximum integer (Closed)
+	 * @return a random int
+	 */
+	static int rand(int max) {
+		return rand(0, max);
+	}
+
+	/**
+	 * Generates a double between [0, max)
+	 * @param max The maximum double (Open)
+	 * @return a random double
+	 */
+	static double rand(double max) {
+		return rand(0.0, max);
+	}
+
+	/**
+	 * Generates an int between [min, max]
+	 * @param min The minimum integer (Closed)
+	 * @param max The maximum integer (Closed)
+	 * @return a random int
+	 */
+	static int rand(int min, int max) {
+		return std::uniform_int_distribution<>(min, max)(self().mt);
+	}
+
+	/**
+	 * Generates a double between [min, max)
+	 * @param min The minimum double (Closed)
+	 * @param max The maximum double (Open)
+	 * @return a random double
+	 */
+	static double rand(double min, double max) {
+		return std::uniform_real_distribution<>(min, max)(self().mt);
+	}
+
+private:
+	Twist() {
+		//Apparently you can't trust random_device to
+		//actually give you a random source of numbers...
+		//Seems to work correctly on my machine though.
+		std::random_device source;
+		std::mt19937::result_type data[std::mt19937::state_size];
+		generate(std::begin(data), std::end(data), ref(source));
+		std::seed_seq seeds(std::begin(data), std::end(data));
+		mt = std::mt19937(seeds);
+	}
+
+	static Twist& self() {
+		static Twist twist;
+		return twist;
+	}
+};
+
+#endif

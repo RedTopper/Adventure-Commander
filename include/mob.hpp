@@ -65,14 +65,14 @@ protected:
 	Action action = AC_NONE;
 	FMob* factory;
 
-	deque<shared_ptr<Object>> inventory;
+	std::deque<std::shared_ptr<Object>> inventory;
 
 private:
 	Point nextPoint(Point end);
-	void statusString(const string& type, Movement move);
-	void tickStraightLine(const string& type);
-	void tickRandomly(const string& type);
-	void tickPathFind(const string& type);
+	void statusString(const std::string& type, Movement move);
+	void tickStraightLine(const std::string& type);
+	void tickRandomly(const std::string& type);
+	void tickPathFind(const std::string& type);
 	bool canSeePC();
 
 protected:
@@ -88,10 +88,10 @@ public:
 		int speed,
 		int hp,
 		const Dice& dam,
-		const string& name,
-		const string& symbol,
-		const string& symbolAlt,
-		const vector<string>& description
+		const std::string& name,
+		const std::string& symbol,
+		const std::string& symbolAlt,
+		const std::vector<std::string>& description
 	);
 
 	virtual void tick();
@@ -151,8 +151,8 @@ public:
 		return 10;
 	}
 
-	string getDamageString() {
-		stringstream str;
+	std::string getDamageString() {
+		std::stringstream str;
 		str << dam;
 		return str.str();
 	}

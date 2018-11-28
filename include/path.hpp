@@ -5,8 +5,6 @@
 
 #include "point.hpp"
 
-using namespace std;
-
 class Dungeon;
 class Path {
 public:
@@ -30,7 +28,7 @@ private:
 
 	Style style;
 	Dungeon* dungeon;
-	vector<vector<int>> path;
+	std::vector<std::vector<int>> path;
 
 public:
 	Path(Dungeon* dungeon, Style style);
@@ -39,7 +37,7 @@ public:
 		return path[p.y][p.x];
 	}
 
-	static const vector<Point> getAdjacent();
+	static const std::vector<Point> getAdjacent();
 };
 
 #endif

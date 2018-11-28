@@ -8,8 +8,6 @@
 #include "factory.hpp"
 #include "mob.hpp"
 
-using namespace std;
-
 class FMob : public Factory {
 public:
 	enum KeyWord {
@@ -33,24 +31,24 @@ private:
 	int colors = 0;
 	int abilities = 0;
 
-	string name;
-	string symbol;
-	string symbolAlt;
-	vector<string> description;
+	std::string name;
+	std::string symbol;
+	std::string symbolAlt;
+	std::vector<std::string> description;
 
 	Dice hp;
 	Dice dam;
 	Dice speed;
 
 public:
-	static KeyWord toKeyWord(string word);
-	static Entity::Color toColor(string color);
-	static Mob::Skills toSkill(string skill);
+	static KeyWord toKeyWord(std::string word);
+	static Entity::Color toColor(std::string color);
+	static Mob::Skills toSkill(std::string skill);
 	Mob get(Dungeon* dungeon, int turn);
 
 private:
-	ostream& dump(ostream& out) const override;
-	istream& read(istream& in) override;
+	std::ostream& dump(std::ostream& out) const override;
+	std::istream& read(std::istream& in) override;
 	int getRequired() const override;
 };
 

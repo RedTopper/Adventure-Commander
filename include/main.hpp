@@ -5,10 +5,9 @@
 
 #include "mob.hpp"
 
-using namespace std;
-
 enum Error {
 	FINE = 0,
+	ENTROPY,
 	FILE_READ_BAD = 0x10,
 	FILE_READ_BAD_HEAD,
 	FILE_READ_BAD_VERSION,
@@ -26,10 +25,10 @@ enum Error {
 };
 
 int skewBetweenRange(int skew, int low, int high);
-string& ltrim(string& str, const string& chars = "\t\r\n ");
-string& rtrim(string& str, const string& chars = "\t\r\n ");
-string& trim(string& str, const string& chars = "\t\r\n ");
-vector<string> getOptions();
+std::string& ltrim(std::string& str, const std::string& chars = "\t\r\n ");
+std::string& rtrim(std::string& str, const std::string& chars = "\t\r\n ");
+std::string& trim(std::string& str, const std::string& chars = "\t\r\n ");
+std::vector<std::string> getOptions();
 Mob::Color getRandomColor(int colors);
 
 #endif

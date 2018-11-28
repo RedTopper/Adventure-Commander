@@ -8,8 +8,6 @@
 #include "factory.hpp"
 #include "object.hpp"
 
-using namespace std;
-
 class FObject : public Factory {
 public:
 	enum KeyWord {
@@ -61,8 +59,8 @@ private:
 	int types = 0;
 	int colors = 0;
 
-	string name;
-	vector<string> description;
+	std::string name;
+	std::vector<std::string> description;
 
 	Dice hit;
 	Dice dam;
@@ -74,14 +72,14 @@ private:
 	Dice value;
 
 public:
-	static KeyWord toKeyWord(string word);
-	static Type toType(string word);
-	static string fromType(int type);
+	static KeyWord toKeyWord(std::string word);
+	static Type toType(std::string word);
+	static std::string fromType(int type);
 	Object get(Dungeon* dungeon, int);
 
 private:
-	ostream& dump(ostream& out) const override;
-	istream& read(istream& in) override;
+	std::ostream& dump(std::ostream& out) const override;
+	std::istream& read(std::istream& in) override;
 	int getRequired() const override;
 };
 

@@ -1,8 +1,7 @@
-
-#include <path.hpp>
-
 #include "path.hpp"
 #include "dungeon.hpp"
+
+using namespace std;
 
 Path::Path(Dungeon *dungeon, Path::Style style) {
 	this->dungeon = dungeon;

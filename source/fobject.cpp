@@ -6,6 +6,8 @@
 #include "fmob.hpp"
 #include "fobject.hpp"
 
+using namespace std;
+
 FObject::KeyWord FObject::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
 	else if(word == "BEGIN") return BEGIN;

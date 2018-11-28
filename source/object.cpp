@@ -1,6 +1,8 @@
 #include "object.hpp"
 #include "fobject.hpp"
 
+using namespace std;
+
 Object::Object(
 	Dungeon *dungeon,
 	Color color,

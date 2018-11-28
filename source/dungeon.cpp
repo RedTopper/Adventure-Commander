@@ -1,12 +1,13 @@
 #include <algorithm>
 #include <fstream>
 #include <limits>
-#include <dungeon.hpp>
 
-
+#include "twist.hpp"
 #include "dungeon.hpp"
 #include "perlin.hpp"
 #include "main.hpp"
+
+using namespace std;
 
 //default size
 const Point DUNGEON_DIM = Point(80, 21); // NOLINT(cert-err58-cpp)
@@ -23,8 +24,7 @@ static const int ROOM_Y_MIN = 3;
 static const int ROOM_Y_MAX = 8;
 
 //Randomness of midpoint, radius
-static const int ROOM_CON_RAD = 3;
-static const int ROOM_CON_RAD_MIN = 1;
+static const int ROOM_CON_RAD = 4;
 
 //Magic header
 static const string HEADER = "RLG327-F2018"; // NOLINT(cert-err58-cpp)
@@ -66,18 +66,16 @@ void Dungeon::connectRoom(const Room &first, const Room &second) {
 	Point mid = Point();
 
 	//Start anywhere in the first room
-	start.x = rand() % first.dim.x + first.pos.x;
-	start.y = rand() % first.dim.y + first.pos.y;
+	start.x = Twist::rand(first.dim.x) + first.pos.x;
+	start.y = Twist::rand(first.dim.y) + first.pos.y;
 
 	//End anywhere in the second room
-	end.x = rand() % second.dim.x + second.pos.x;
-	end.y = rand() % second.dim.y + second.pos.y;
+	end.x = Twist::rand(second.dim.x) + second.pos.x;
+	end.y = Twist::rand(second.dim.y) + second.pos.y;
 
 	//Find some value to offset the midpoint.
-	offset.x = (rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN);
-	offset.y = (rand() % (ROOM_CON_RAD + 1 - ROOM_CON_RAD_MIN) + ROOM_CON_RAD_MIN);
-	offset.x *= rand() % 2 ? 1 : -1;
-	offset.y *= rand() % 2 ? 1 : -1;
+	offset.x = Twist::rand(-ROOM_CON_RAD, ROOM_CON_RAD);
+	offset.y = Twist::rand(-ROOM_CON_RAD, ROOM_CON_RAD);
 
 	//Get the actual midpoint.
 	mid.x = (int)(((float)(start.x) + (float)(end.x)) / 2.0f + (float)offset.x);

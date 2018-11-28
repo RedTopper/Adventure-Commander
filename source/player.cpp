@@ -1,6 +1,9 @@
 #include <iomanip>
+
 #include "player.hpp"
 #include "dungeon.hpp"
+
+using namespace std;
 
 static int center(const string& str) {
 	return (COLS / 2) - ((int)str.size() / 2);
@@ -281,7 +284,7 @@ void Player::tick() {
 	while (action == AC_NONE) tickInput();
 }
 
-bool Player::tickScroll(int ch, uint &offset, const string& title, const vector<string>& constLines) {
+bool Player::tickScroll(int ch, uint32_t &offset, const string& title, const vector<string>& constLines) {
 	vector<string> lines = constLines;
 	if (lines.empty()) lines.emplace_back("We've come up empty!");
 

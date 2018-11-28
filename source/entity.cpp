@@ -2,6 +2,8 @@
 #include "entity.hpp"
 #include "dungeon.hpp"
 
+using namespace std;
+
 Entity::Entity(Dungeon* dungeon, Type type, Color color, bool halls) {
 	const string ENT[] = {
 			"?", //Mob has it's own definition.

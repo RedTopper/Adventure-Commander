@@ -6,6 +6,8 @@
 #include "main.hpp"
 #include "fmob.hpp"
 
+using namespace std;
+
 FMob::KeyWord FMob::toKeyWord(string word) {
 	if(trim(word).empty()) return KWD_EMPTY;
 	else if(word == "BEGIN") return BEGIN;
