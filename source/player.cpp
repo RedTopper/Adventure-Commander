@@ -3,6 +3,7 @@
 #include "player.hpp"
 #include "dungeon.hpp"
 #include "fobject.hpp"
+#include "twist.hpp"
 #include "main.hpp"
 
 using namespace std;
@@ -519,7 +520,7 @@ void Player::tickInput() {
 
 			if (ch == 'r') {
 				auto& dim = dungeon->getDim();
-				dest = Point((rand() % (dim.x - 2)) + 1, (rand() % (dim.y - 2)) + 1);
+				dest = Twist::rand(Point(1), dungeon->getDim() - 2);
 			}
 
 			if (dest > Point()) {

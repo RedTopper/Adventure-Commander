@@ -102,7 +102,7 @@ Mob::Color getRandomColor(int colors) {
 	}
 
 	//Get a random number from 1 - set bits
-	int out = (rand() % count) + 1;
+	int out = Twist::rand(count - 1) + 1;
 	int color = 1;
 
 	//Check if we hit a bit

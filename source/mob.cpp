@@ -5,6 +5,7 @@
 #include "dungeon.hpp"
 #include "player.hpp"
 #include "fmob.hpp"
+#include "twist.hpp"
 
 using namespace std;
 
@@ -127,7 +128,7 @@ Mob::Movement Mob::move(const Point& next) {
 
 			//Randomly flip the adjacent array for randomness
 			vector<Point> adjacent = Path::getAdjacent();
-			if (rand() % 2) reverse(adjacent.begin(), adjacent.end());
+			if (Twist::rand(1)) reverse(adjacent.begin(), adjacent.end());
 			for(const auto& dir : adjacent) {
 				Point adj = Point() + dir + next;
 
@@ -222,7 +223,7 @@ void Mob::tickStraightLine(const string& type) {
 }
 
 void Mob::tickRandomly(const string& type) {
-	int dir = rand() % (int)Path::getAdjacent().size();
+	int dir = Twist::rand((int)Path::getAdjacent().size() - 1);
 	Point next = Point(pos);
 	next += Path::getAdjacent()[dir];
 	statusString(type, move(next));
@@ -260,7 +261,7 @@ void Mob::tick() {
 	if (hp <= 0) return;
 	dungeon->status = "Nothing important happened.";
 
-	if (skills & SK_ERRATIC && rand() % 2) {
+	if (skills & SK_ERRATIC && Twist::rand(1)) {
 		//Not the player, but erratic movement
 		tickRandomly("confused");
 	} else if (skills & SK_TELEPATHY) {
