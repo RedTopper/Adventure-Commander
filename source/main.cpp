@@ -18,8 +18,10 @@ const char* LOAD = "--load";
 const char* MOBS = "--nummon";
 const char* LAME = "--lame";
 const char* HOME = "--home";
+const char* SEED = "--seed";
 const char* PARSE = "--parse";
 const char* ALL = "--all";
+
 
 vector<string> getOptions() {
 	vector<string> options = {
@@ -30,6 +32,7 @@ vector<string> getOptions() {
 		"[--all] Show all moves instead of just PC moves",
 		"[--parse] Attempt to parse /monster_desc.txt",
 		"[--home] Access files from the ~/.rlg327 directory instead of /resource",
+		"[--seed] <string> A seed for the internal random number generator",
 		"[--nummon] <count> Number of monsters to generate",
 	};
 
@@ -141,6 +144,7 @@ int main(int argc, char** argv) {
 	bool emoji = true;
 	bool parse = false;
 	bool home = false;
+	string seed;
 
 	//Parse arguments
 	for (int argi = 1; argi < argc; argi++) {
@@ -161,6 +165,8 @@ int main(int argc, char** argv) {
 			home = true;
 		} else if (arg == PARSE) {
 			parse = true;
+		} else if (arg == SEED && require(argi, argc, arg)) {
+			seed = argv[argi];
 		} else if (arg == MOBS && require(argi, argc, arg)) {
 			mobs = atoi(argv[argi]); // NOLINT(cert-err34-c)
 			if (mobs < 1) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
@@ -169,6 +175,8 @@ int main(int argc, char** argv) {
 			help("Unknown argument", arg, ARGUMENT_UNKNOWN);
 		}
 	}
+
+	if (!seed.empty()) Twist::seed(seed);
 
 	//Load both factory files
 	vector<FMob> factoryMobs = loadFactory<FMob>("monster_desc.txt", "RLG327 MONSTER DESCRIPTION 1", home);

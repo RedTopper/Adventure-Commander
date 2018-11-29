@@ -518,10 +518,8 @@ void Player::tickInput() {
 			dungeon->status = "You cheater! You entered teleport mode! [ENTER / r]";
 			while(tickTarget(ch, dest) && ch != 'r') ch = getch();
 
-			if (ch == 'r') {
-				auto& dim = dungeon->getDim();
-				dest = Twist::rand(Point(1), dungeon->getDim() - 2);
-			}
+			//option to go random
+			if (ch == 'r') dest = Twist::rand(Point(1), dungeon->getDim() - 2);
 
 			if (dest > Point()) {
 				dungeon->status = "Woosh!";

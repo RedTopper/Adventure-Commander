@@ -105,6 +105,11 @@ public:
 		return std::min(geom(probability) + min, max);
 	}
 
+	static void seed(const std::string& str) {
+		std::seed_seq seed (str.begin(), str.end());
+		self().mt = std::mt19937(seed);
+	}
+
 private:
 	Twist() {
 		//Apparently you can't trust random_device to
