@@ -1,6 +1,8 @@
 #include "point.hpp"
 #include "entity.hpp"
 #include "dungeon.hpp"
+#include "twist.hpp"
+#include "player.hpp"
 
 using namespace std;
 
@@ -31,8 +33,7 @@ Point Entity::getSpawn(const bool halls) const {
 	Point point;
 	bool onEntity = true;
 	while(onEntity) {
-		point.x = rand() % dungeon->getDim().x;
-		point.y = rand() % dungeon->getDim().y;
+		point = Twist::rand(Point(1), dungeon->getDim() - 2);
 		const Tile& tile = dungeon->getTile(point);
 
 		//Spawn on floor

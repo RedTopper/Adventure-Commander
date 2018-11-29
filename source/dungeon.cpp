@@ -6,6 +6,9 @@
 #include "dungeon.hpp"
 #include "perlin.hpp"
 #include "main.hpp"
+#include "player.hpp"
+#include "fmob.hpp"
+#include "fobject.hpp"
 
 using namespace std;
 
@@ -60,22 +63,10 @@ void Dungeon::connectRoomRasterize(const Point &from, const Point &to) {
 }
 
 void Dungeon::connectRoom(const Room &first, const Room &second) {
-	Point start = Point();
-	Point end = Point();
-	Point offset = Point();
+	Point start = Twist::rand(first.dim - 1) + first.pos;
+	Point end = Twist::rand(second.dim - 1) + second.pos;
+	Point offset = Twist::rand(Point(-ROOM_CON_RAD), Point(ROOM_CON_RAD));
 	Point mid = Point();
-
-	//Start anywhere in the first room
-	start.x = Twist::rand(first.dim.x) + first.pos.x;
-	start.y = Twist::rand(first.dim.y) + first.pos.y;
-
-	//End anywhere in the second room
-	end.x = Twist::rand(second.dim.x) + second.pos.x;
-	end.y = Twist::rand(second.dim.y) + second.pos.y;
-
-	//Find some value to offset the midpoint.
-	offset.x = Twist::rand(-ROOM_CON_RAD, ROOM_CON_RAD);
-	offset.y = Twist::rand(-ROOM_CON_RAD, ROOM_CON_RAD);
 
 	//Get the actual midpoint.
 	mid.x = (int)(((float)(start.x) + (float)(end.x)) / 2.0f + (float)offset.x);
@@ -167,33 +158,35 @@ void Dungeon::generateRooms() {
 	Room room;
 
 	do {
-		room.dim.x = skewBetweenRange(4, ROOM_X_MIN, ROOM_X_MAX);
-		room.dim.y = skewBetweenRange(4, ROOM_Y_MIN, ROOM_Y_MAX);
-		room.pos.x = (rand() % (dim.x - 1 - room.dim.x)) + 1;
-		room.pos.y = (rand() % (dim.y - 1 - room.dim.y)) + 1;
+		room.dim.x = Twist::geom(0.25, ROOM_X_MIN, ROOM_X_MAX);
+		room.dim.y = Twist::geom(0.25, ROOM_Y_MIN, ROOM_Y_MAX);
+		room.pos = Twist::rand(Point(1), dim - room.dim - 1);
 	} while (!placeRoomAttempt(room));
 
 	placeRoom(room);
 }
 
 template <class F, class T>
-void Dungeon::generateFactory(vector<F>& factories, vector<shared_ptr<T>>& out, int total) {
+vector<shared_ptr<T>> Dungeon::generateFactory(vector<F>& factories, int total) {
+	vector<shared_ptr<T>> out;
 	int generated = 0;
 	bool running = true;
 	while(running) {
-		for (auto factory : factories) {
+		for (Factory& factory : factories) {
 			if (generated == total) {
 				running = false;
 				break;
 			}
 
-			int chance = rand() % 100;
+			int chance = Twist::rand(100);
 			if (!(factory.isCreatable() && !factory.isSpawned() && chance <= factory.getRarity())) continue;
-			out.push_back(make_shared<T>(factory.get(this, generated + 1)));
+			out.push_back(static_pointer_cast<T>(factory.make(this, generated + 1)));
 			factory.setSpawned(true);
 			generated++;
 		}
 	}
+
+	return out;
 }
 
 void Dungeon::generateEntities(int floor) {
@@ -304,7 +297,7 @@ void Dungeon::postProcess(vector<vector<Tile>>& tiles) {
 	}
 }
 
-void Dungeon::finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObject, int count, int floor, bool emoji, shared_ptr<Player>& player) {
+void Dungeon::finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObject, shared_ptr<Player>& player, int floor, bool emoji, int count) {
 	if (player == nullptr) {
 		player = make_shared<Player>(this, base);
 	} else {
@@ -325,13 +318,13 @@ void Dungeon::finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObjec
 	for(auto& m : fMob) m.setSpawned(false);
 
 	//Create mobs
-	generateFactory<FMob, Mob>(fMob, mobs, count + floor > 100 ? 100 : count + floor);
-	generateFactory<FObject, Object>(fObject, objects, 10);
+	mobs = generateFactory<FMob, Mob>(fMob, count + floor > 100 ? 100 : count + floor);
+	objects = generateFactory<FObject, Object>(fObject, 10);
 	generateEntities(floor);
 	recalculate();
 
 	//Create the turn queue
-	turn = priority_queue<shared_ptr<Mob>, vector<shared_ptr<Mob>>, TurnOrder>();
+	turn = Turn();
 	turn.push(player);
 	for (const auto& m : mobs) {
 		turn.push(m);
@@ -361,7 +354,7 @@ Dungeon::Dungeon(const Point& dim)
 	//Get seed for noise
 	float seed[dim.y * dim.x];
 	for (int i = 0; i < dim.y * dim.x; i++) {
-		seed[i] = (float)rand() / (float)RAND_MAX;
+		seed[i] = (float)Twist::rand();
 	}
 
 	//Initialize dungeon
@@ -562,6 +555,15 @@ int Dungeon::isFull() {
 	return room/total > ROOM_MAX_FULLNESS;
 }
 
+bool Dungeon::isInRange(const Entity &e) {
+	return display != FOGGY || e.isRemembered() || (player
+		&& e.getPos().x - player->getPos().x >= -FOG_X
+		&& e.getPos().x - player->getPos().x <= FOG_X
+		&& e.getPos().y - player->getPos().y >= -FOG_Y
+		&& e.getPos().y - player->getPos().y <= FOG_Y);
+}
+
+
 void Dungeon::printEntity(WINDOW *win, const shared_ptr<Entity> &e) {
 	//check if the mob is directly to the left of another mob.
 	//An emoji takes two characters on some terminals, so they can't overlap
@@ -708,4 +710,3 @@ const shared_ptr<Mob> Dungeon::getMob(const Point &p) {
 
 	return nullptr;
 }
-

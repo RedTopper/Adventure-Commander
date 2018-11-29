@@ -2,6 +2,8 @@
 
 #include "player.hpp"
 #include "dungeon.hpp"
+#include "fobject.hpp"
+#include "main.hpp"
 
 using namespace std;
 

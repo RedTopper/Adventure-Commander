@@ -5,6 +5,7 @@
 #include "main.hpp"
 #include "fmob.hpp"
 #include "fobject.hpp"
+#include "object.hpp"
 
 using namespace std;
 
@@ -176,7 +177,7 @@ istream &FObject::read(istream &in) {
 	return in;
 }
 
-int FObject::getRequired() const {
+unsigned int FObject::getRequired() const {
 	return (
 		  NAME
 		| DESC
@@ -196,13 +197,13 @@ int FObject::getRequired() const {
 	);
 }
 
-Object FObject::get(Dungeon *dungeon, int) {
+const shared_ptr<Entity> FObject::make(Dungeon *dungeon, int) {
 	const array<string, 20> SYMBOL = {
 		"\U0001F531", //Trident
 		"\U0001F52A", //Knife
 		"\U0001F3F9", //Bow
 		"\U0001F530", //Shield
-		"\U0001F3A9", //Tophat
+		"\U0001F3A9", //Top Hat
 		"\U0001F455", //Shirt
 		"\U0001F9E4", //Gloves
 		"\U0001F45E", //Shoes
@@ -250,7 +251,7 @@ Object FObject::get(Dungeon *dungeon, int) {
 		index++;
 	}
 
-	return Object(
+	return make_shared<Object>(
 		dungeon,
 		getRandomColor(colors),
 		types,

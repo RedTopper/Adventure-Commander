@@ -21,7 +21,7 @@ public:
 private:
 	std::ostream& dump(std::ostream& out) const override;
 	std::istream& read(std::istream& in) override;
-	int getRequired() const override {
+	unsigned int getRequired() const override {
 		//No requirements for dice, isValid always true.
 		return 0;
 	}

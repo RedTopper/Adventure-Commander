@@ -7,9 +7,9 @@
 
 #include "dice.hpp"
 #include "entity.hpp"
-#include "object.hpp"
 
 class FMob;
+class Object;
 class Mob:  public Entity {
 public:
 	enum Movement {

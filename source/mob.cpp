@@ -3,6 +3,8 @@
 #include "path.hpp"
 #include "mob.hpp"
 #include "dungeon.hpp"
+#include "player.hpp"
+#include "fmob.hpp"
 
 using namespace std;
 

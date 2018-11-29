@@ -133,7 +133,7 @@ istream& FMob::read(istream& in) {
 	return in;
 }
 
-int FMob::getRequired() const {
+unsigned int FMob::getRequired() const {
 	return (
 		  NAME
 		| DESC
@@ -148,8 +148,8 @@ int FMob::getRequired() const {
 	);
 }
 
-Mob FMob::get(Dungeon* dungeon, int turn) {
-	return Mob(dungeon, this, getRandomColor(colors), turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
+const shared_ptr<Entity> FMob::make(Dungeon *dungeon, int turn) {
+	return make_shared<Mob>(dungeon, this, getRandomColor(colors), turn, abilities, speed.roll(), hp.roll(), dam, name, symbol, symbolAlt, description);
 }
 
 

@@ -1,5 +1,6 @@
 #include "path.hpp"
 #include "dungeon.hpp"
+#include "player.hpp"
 
 using namespace std;
 

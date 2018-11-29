@@ -10,15 +10,16 @@
 #include "point.hpp"
 #include "tile.hpp"
 #include "room.hpp"
-#include "entity.hpp"
 #include "mob.hpp"
-#include "player.hpp"
 #include "path.hpp"
-#include "fmob.hpp"
-#include "fobject.hpp"
 
 extern const Point DUNGEON_DIM;
 
+class Mob;
+class FMob;
+class Object;
+class FObject;
+class Player;
 class Dungeon {
 public:
 	enum Display {
@@ -33,32 +34,34 @@ public:
 
 private:
 	struct TurnOrder {
-		//Should return true if lhs is considered to go before rhs
+		//Should return false if lhs is considered to go before rhs
 		bool operator()(const std::shared_ptr<Mob>& lhs, const std::shared_ptr<Mob>& rhs) const {
 			return !lhs->isBefore(*rhs);
 		}
 	};
 
+	typedef std::priority_queue<std::shared_ptr<Mob>, std::vector<std::shared_ptr<Mob>>, TurnOrder> Turn;
+
 	Point dim;
-	std::shared_ptr<Player> player;
-	std::vector<std::shared_ptr<Mob>> mobs;
-	std::vector<std::shared_ptr<Object>> objects;
 	std::vector<Room> rooms;
 	std::vector<Entity> entities;
+	std::vector<std::shared_ptr<Mob>> mobs;
+	std::vector<std::shared_ptr<Object>> objects;
 	std::vector<std::vector<Tile>> tiles;
 	std::vector<std::vector<Tile>> fog;
-	std::priority_queue<std::shared_ptr<Mob>, std::vector<std::shared_ptr<Mob>>, TurnOrder> turn;
+	std::shared_ptr<Player> player;
+	Turn turn;
 	Path map;
 	Path dig;
-	bool emoji;
 	Display display;
+	bool emoji;
 
 	//player snapshot
 	Point playerPos;
 	int playerTurn;
 
 	template <class F, class T>
-	void generateFactory(std::vector<F>& factories, std::vector<std::shared_ptr<T>>& out, int total);
+	std::vector<std::shared_ptr<T>> generateFactory(std::vector<F>& factories, int total);
 	void connectRoomRasterize(const Point &from, const Point &to);
 	void connectRoom(const Room &first, const Room &second);
 	bool placeRoomAttempt(const Room &room);
@@ -78,7 +81,7 @@ public:
 
 	explicit Dungeon(const Point& dim);
 	explicit Dungeon(std::fstream& file);
-	void finalize(WINDOW* base, std::vector<FMob>& fMob, std::vector<FObject>& fObject, int count,  int floor, bool emoji, std::shared_ptr<Player>& player);
+	void finalize(WINDOW* base, std::vector<FMob>& fMob, std::vector<FObject>& fObject, std::shared_ptr<Player>& player, int floor, bool emoji, int count);
 	const std::shared_ptr<Mob> getMob(const Point& p);
 	void snapshotTake();
 	void snapshotRestore();
@@ -87,6 +90,7 @@ public:
 	void rotate();
 	void updateFoggy();
 	void print(WINDOW* window);
+	bool isInRange(const Entity& e);
 
 	//Getters and setters
 	const std::vector<Entity>& getEntities() const {
@@ -123,14 +127,6 @@ public:
 
 	bool isFancy() const {
 		return emoji;
-	}
-
-	bool isInRange(const Entity& e) {
-		return display != FOGGY || e.isRemembered() || (player
-			&& e.getPos().x - player->getPos().x >= -FOG_X
-			&& e.getPos().x - player->getPos().x <= FOG_X
-			&& e.getPos().y - player->getPos().y >= -FOG_Y
-			&& e.getPos().y - player->getPos().y <= FOG_Y);
 	}
 
 	int getPathMap(const Point& p) const {

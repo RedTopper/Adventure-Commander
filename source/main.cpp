@@ -6,6 +6,9 @@
 #include "twist.hpp"
 #include "main.hpp"
 #include "dungeon.hpp"
+#include "fmob.hpp"
+#include "fobject.hpp"
+#include "player.hpp"
 
 using namespace std;
 
@@ -73,12 +76,6 @@ static fstream get(ios_base::openmode mode, const string& name, bool home) {
 	return fs;
 }
 
-int skewBetweenRange(const int skew, const int low, const int high) {
-	int value = low;
-	while (rand() % skew && value < high) value++;
-	return value;
-}
-
 string &ltrim(string &str, const string &chars) {
 	str.erase(0, str.find_first_not_of(chars));
 	return str;
@@ -127,7 +124,7 @@ vector<T> loadFactory(const string &filename, const string &header, bool home) {
 	while (!!desc) {
 		T obj;
 		desc >> obj;
-		if(obj.isValid()) factory.push_back(obj);
+		if((static_cast<Stream*>(&obj))->isValid()) factory.push_back(obj);
 	}
 
 	desc.close();
@@ -177,8 +174,8 @@ int main(int argc, char** argv) {
 	vector<FMob> factoryMobs = loadFactory<FMob>("monster_desc.txt", "RLG327 MONSTER DESCRIPTION 1", home);
 	vector<FObject> factoryObjects = loadFactory<FObject>("object_desc.txt", "RLG327 OBJECT DESCRIPTION 1", home);
 
-	if (factoryMobs.empty()) help("Parsed file was empty. Try using --parse to debug.", "Mobs", FILE_READ_BAD);
-	if (factoryObjects.empty()) help("Parsed file was empty. Try using --parse to debug.", "Objects", FILE_READ_BAD);
+	if (factoryMobs.empty()) help("Parsed file was empty. Try using --parse to debug.", "Mobs", FILE_READ_EMPTY);
+	if (factoryObjects.empty()) help("Parsed file was empty. Try using --parse to debug.", "Objects", FILE_READ_EMPTY);
 
 	//Still output the files loaded if needed
 	if (parse) {
@@ -219,11 +216,11 @@ int main(int argc, char** argv) {
 	if (load) {
 		fstream file = get(fstream::in, "dungeon", home);
 		dungeon = make_shared<Dungeon>(file);
-		dungeon->finalize(base, factoryMobs, factoryObjects, mobs, 0, emoji, player);
+		dungeon->finalize(base, factoryMobs, factoryObjects, player, 0, emoji, mobs);
 		file.close();
 	} else {
 		dungeon = make_shared<Dungeon>(DUNGEON_DIM);
-		dungeon->finalize(base, factoryMobs, factoryObjects, mobs, 0, emoji, player);
+		dungeon->finalize(base, factoryMobs, factoryObjects, player, 0, emoji, mobs);
 	}
 
 	//Economics established
@@ -255,7 +252,7 @@ int main(int argc, char** argv) {
 			if (future.empty()) {
 				//Going up, create new dungeon
 				dungeon = make_shared<Dungeon>(DUNGEON_DIM);
-				dungeon->finalize(base, factoryMobs, factoryObjects, mobs, ++floor, emoji, player);
+				dungeon->finalize(base, factoryMobs, factoryObjects, player, ++floor, emoji, mobs);
 			} else {
 				//Going up, already existing dungeon
 				dungeon = future.top();

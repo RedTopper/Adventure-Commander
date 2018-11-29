@@ -6,7 +6,6 @@
 
 #include "dice.hpp"
 #include "factory.hpp"
-#include "object.hpp"
 
 class FObject : public Factory {
 public:
@@ -56,8 +55,8 @@ public:
 	};
 
 private:
-	int types = 0;
-	int colors = 0;
+	unsigned int types = 0;
+	unsigned int colors = 0;
 
 	std::string name;
 	std::vector<std::string> description;
@@ -75,12 +74,12 @@ public:
 	static KeyWord toKeyWord(std::string word);
 	static Type toType(std::string word);
 	static std::string fromType(int type);
-	Object get(Dungeon* dungeon, int);
+	const std::shared_ptr<Entity> make(Dungeon *dungeon, int) override;
 
 private:
 	std::ostream& dump(std::ostream& out) const override;
 	std::istream& read(std::istream& in) override;
-	int getRequired() const override;
+	unsigned int getRequired() const override;
 };
 
 #endif

@@ -4,7 +4,7 @@
 #include <ncursesw/curses.h>
 
 #include "mob.hpp"
-#include "main.hpp"
+#include "object.hpp"
 
 class Player: public Mob {
 private:

@@ -28,8 +28,8 @@ public:
 	};
 
 private:
-	int colors = 0;
-	int abilities = 0;
+	unsigned int colors = 0;
+	unsigned int abilities = 0;
 
 	std::string name;
 	std::string symbol;
@@ -44,12 +44,12 @@ public:
 	static KeyWord toKeyWord(std::string word);
 	static Entity::Color toColor(std::string color);
 	static Mob::Skills toSkill(std::string skill);
-	Mob get(Dungeon* dungeon, int turn);
+	const std::shared_ptr<Entity> make(Dungeon *dungeon, int turn) override;
 
 private:
 	std::ostream& dump(std::ostream& out) const override;
 	std::istream& read(std::istream& in) override;
-	int getRequired() const override;
+	unsigned int getRequired() const override;
 };
 
 #endif
