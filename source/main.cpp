@@ -40,6 +40,7 @@ vector<string> getOptions() {
 }
 
 static void help(const string& message, const string& command, Error error) {
+	endwin();
 	cout << command << ": " << message << endl;
 	cout << "Remember, please see the readme if anything looks weird!" << endl;
 	cout << "Adventure Commander Help:" << endl;
@@ -290,6 +291,9 @@ int main(int argc, char** argv) {
 	dungeon->print(base);
 	getch();
 
+	//shutdown ncurses
+	endwin();
+
 	//Save dungeon to file.
 	if (save) {
 		fstream file = get(fstream::out, "dungeon", home);
@@ -298,5 +302,4 @@ int main(int argc, char** argv) {
 	}
 
 	//That's all folks.
-	endwin();
 }

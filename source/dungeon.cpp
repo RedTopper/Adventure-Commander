@@ -298,19 +298,27 @@ void Dungeon::postProcess(vector<vector<Tile>>& tiles) {
 }
 
 void Dungeon::finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObject, shared_ptr<Player>& player, int floor, bool emoji, int count) {
+
+	//Generate a new player (if needed)
 	if (player == nullptr) {
 		player = make_shared<Player>(this, base);
 	} else {
 		player->setDungeon(this);
 	}
 
+	//Shuffles the order of the factories so they produce interesting dungeons.
+	shuffle(fMob.begin(), fMob.end(), Twist::getTwister());
+	shuffle(fObject.begin(), fObject.end(), Twist::getTwister());
+
 	this->emoji = emoji;
 	this->player = player;
 	this->player->setTurn(0);
+
 	if (playerPos.isZero()) {
 		//Place the player in the middle of the first room
 		this->player->move(Point(rooms[0].pos.x + (rooms[0].dim.x)/2, rooms[0].pos.y + (rooms[0].dim.y)/2));
 	} else {
+		//Player is returning to this dungeon
 		this->player->move(playerPos);
 	}
 

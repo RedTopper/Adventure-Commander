@@ -105,9 +105,21 @@ public:
 		return std::min(geom(probability) + min, max);
 	}
 
+	/**
+	 * Seeds the internal engine
+	 * @param str A string, like how Minecraft seeds it's worlds.
+	 */
 	static void seed(const std::string& str) {
 		std::seed_seq seed (str.begin(), str.end());
 		self().mt = std::mt19937(seed);
+	}
+
+	/**
+	 * Gets the internal engine for external use.
+	 * @return The internal mt19937 engine.
+	 */
+	static std::mt19937 getTwister() {
+		return self().mt;
 	}
 
 private:
