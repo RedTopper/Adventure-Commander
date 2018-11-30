@@ -10,7 +10,6 @@
 #include "point.hpp"
 #include "tile.hpp"
 #include "room.hpp"
-#include "mob.hpp"
 #include "path.hpp"
 
 extern const Point DUNGEON_DIM;
@@ -20,6 +19,12 @@ class FMob;
 class Object;
 class FObject;
 class Player;
+class Entity;
+class Order {
+public:
+	bool operator()(const std::shared_ptr<Mob>& lhs, const std::shared_ptr<Mob>& rhs) const;
+};
+
 class Dungeon {
 public:
 	enum Display {
@@ -33,14 +38,7 @@ public:
 	static const int FOG_Y = 2;
 
 private:
-	struct TurnOrder {
-		//Should return false if lhs is considered to go before rhs
-		bool operator()(const std::shared_ptr<Mob>& lhs, const std::shared_ptr<Mob>& rhs) const {
-			return !lhs->isBefore(*rhs);
-		}
-	};
-
-	typedef std::priority_queue<std::shared_ptr<Mob>, std::vector<std::shared_ptr<Mob>>, TurnOrder> Turn;
+	typedef std::priority_queue<std::shared_ptr<Mob>, std::vector<std::shared_ptr<Mob>>, Order> Turn;
 
 	Point dim;
 	std::vector<Room> rooms;

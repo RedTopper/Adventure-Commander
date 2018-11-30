@@ -76,7 +76,7 @@ public:
 	 * Checks if both x and y are zero
 	 * @return bool true / false
 	 */
-	inline bool isZero() const {
+	bool isZero() const {
 		return x == 0 && y == 0;
 	}
 
@@ -85,7 +85,7 @@ public:
 	 * @param other Point to add
 	 * @return reference to this with (x + other.x, y + other.y)
 	 */
-	inline Point& operator+=(const Point& other) {
+	Point& operator+=(const Point& other) {
 		x += other.x;
 		y += other.y;
 		return *this;
@@ -96,7 +96,7 @@ public:
 	 * @param offset An offset
 	 * @return reference to this with (x + offset, y + offset)
 	 */
-	inline Point& operator+=(int offset) {
+	Point& operator+=(int offset) {
 		x += offset;
 		y += offset;
 		return *this;
@@ -107,7 +107,7 @@ public:
 	 * @param other Point to add
 	 * @return A point copy with (x + other.x, y + other.y)
 	 */
-	inline Point operator+(const Point& other) const {
+	Point operator+(const Point& other) const {
 		return Point(*this) += other;
 	}
 
@@ -116,7 +116,7 @@ public:
 	 * @param offset An offset
 	 * @return A point copy with (x + offset, y + offset)
 	 */
-	inline Point operator+(int offset) const {
+	Point operator+(int offset) const {
 		return Point(*this) += offset;
 	}
 
@@ -125,7 +125,7 @@ public:
 	 * @param other Point to subtract
 	 * @return reference to this with (x - other.x, y - other.y)
 	 */
-	inline Point& operator-=(const Point& other) {
+	Point& operator-=(const Point& other) {
 		x -= other.x;
 		y -= other.y;
 		return *this;
@@ -136,7 +136,7 @@ public:
 	 * @param offset An offset
 	 * @return reference to this with (x - offset, y - offset)
 	 */
-	inline Point& operator-=(int offset) {
+	Point& operator-=(int offset) {
 		x -= offset;
 		y -= offset;
 		return *this;
@@ -147,7 +147,7 @@ public:
 	 * @param other Point to subtract
 	 * @return A new point with (x - other.x, y - other.y)
 	 */
-	inline Point operator-(const Point& other) const {
+	Point operator-(const Point& other) const {
 		return Point(*this) -= other;
 	}
 
@@ -156,7 +156,7 @@ public:
 	 * @param offset An offset
 	 * @return A point copy with (x - offset, y - offset)
 	 */
-	inline Point operator-(int offset) const {
+	Point operator-(int offset) const {
 		return Point(*this) -= offset;
 	}
 
@@ -165,7 +165,7 @@ public:
 	 * @param other The point to check
 	 * @return true if x = other.x and y = other.y
 	 */
-	inline bool operator==(const Point& other) const {
+	bool operator==(const Point& other) const {
 		return x == other.x && y == other.y;
 	}
 
@@ -174,7 +174,7 @@ public:
 	 * @param other The point to check
 	 * @return true if x != other.x or y != other.y
 	 */
-	inline bool operator!=(const Point& other) const {
+	bool operator!=(const Point& other) const {
 		return !(*this == other);
 	}
 
@@ -183,7 +183,7 @@ public:
 	 * @param other The point to check
 	 * @return true if x < other.x and y < other.y
 	 */
-	inline bool operator<(const Point& other) const {
+	bool operator<(const Point& other) const {
 		return x < other.x && y < other.y;
 	}
 
@@ -192,7 +192,7 @@ public:
 	 * @param other The point to check
 	 * @return true if x <= other.x and y <= other.y
 	 */
-	inline bool operator<=(const Point& other) const {
+	bool operator<=(const Point& other) const {
 		return *this < other || *this == other;
 	}
 
@@ -201,7 +201,7 @@ public:
 	 * @param other The point to check
 	 * @return true if x > other.x and y > other.y
 	 */
-	inline bool operator>(const Point& other) const {
+	bool operator>(const Point& other) const {
 		return x > other.x && y > other.y;
 	}
 
@@ -210,7 +210,7 @@ public:
 	 * @param other The point to check
 	 * @return true if x >= other.x and y >= other.y
 	 */
-	inline bool operator>=(const Point& other) const {
+	bool operator>=(const Point& other) const {
 		return *this > other || *this == other;
 	}
 

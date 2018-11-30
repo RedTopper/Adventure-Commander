@@ -33,6 +33,12 @@ static const int ROOM_CON_RAD = 4;
 static const string HEADER = "RLG327-F2018"; // NOLINT(cert-err58-cpp)
 static const uint32_t VERSION = 0;
 
+//Should return false if lhs is considered to go before rhs
+//Used to declare the turn order of mobs/player during the game loop
+bool Order::operator()(const shared_ptr<Mob> &lhs, const shared_ptr<Mob> &rhs) const {
+	return !lhs->isBefore(*rhs);
+}
+
 void Dungeon::connectRoomRasterize(const Point &from, const Point &to) {
 	Point current = from;
 	Point dist = Point();
