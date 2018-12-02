@@ -1,14 +1,13 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <ncursesw/curses.h>
-
 #include "mob.hpp"
 #include "object.hpp"
 
+class Driver;
 class Player: public Mob {
 private:
-	WINDOW* base;
+	std::shared_ptr<Driver> base;
 	const static Color DEF_COLOR = WHITE;
 	const static int DEF_ORDER = 0;
 	const static int DEF_SKILLS = 0; //PC has no skills
@@ -30,12 +29,13 @@ private:
 	bool tickScroll(int ch, uint32_t &offset, const std::string &title, const std::vector<std::string> &lines);
 	bool tickTarget(int ch, Point &dest);
 	bool choice(const std::vector<std::string>& text);
+	int center(const std::string& str);
 	void attack(const Point& dest) override;
 
 public:
-	Player(Dungeon* dungeon, WINDOW* window);
+	Player(Dungeon* dungeon, std::shared_ptr<Driver>& base);
 	static const std::vector<std::string> getHelp();
-	void flip() const;
+	void flip();
 	void tick() override;
 	int damage(int dam) override;
 	int getCarryWeight() const override;
@@ -68,14 +68,14 @@ public:
 	}
 
 	int getMinDamage() const {
-		int min = this->dam.min();
-		for (const auto& o : equipped) min += o->getDamage().min();
+		int min = this->dam.low();
+		for (const auto& o : equipped) min += o->getDamage().low();
 		return min;
 	}
 
 	int getMaxDamage() const {
-		int max = this->dam.max();
-		for (const auto& o : equipped) max += o->getDamage().max();
+		int max = this->dam.high();
+		for (const auto& o : equipped) max += o->getDamage().high();
 		return max;
 	}
 

@@ -29,5 +29,6 @@ std::string& rtrim(std::string& str, const std::string& chars = "\t\r\n ");
 std::string& trim(std::string& str, const std::string& chars = "\t\r\n ");
 std::vector<std::string> getOptions();
 Mob::Color getRandomColor(int colors);
+uint32_t swap(uint32_t num);
 
 #endif

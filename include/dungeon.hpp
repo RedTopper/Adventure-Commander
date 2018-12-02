@@ -1,7 +1,6 @@
 #ifndef DUNGEON_H
 #define DUNGEON_H
 
-#include <ncursesw/curses.h>
 #include <string>
 #include <vector>
 #include <queue>
@@ -20,6 +19,7 @@ class Object;
 class FObject;
 class Player;
 class Entity;
+class Driver;
 class Order {
 public:
 	bool operator()(const std::shared_ptr<Mob>& lhs, const std::shared_ptr<Mob>& rhs) const;
@@ -68,7 +68,7 @@ private:
 	void placeTile(const Point &pos, uint8_t hardness, const float *seed);
 	void generateRooms();
 	void generateEntities(int floor);
-	void printEntity(WINDOW *win, const std::shared_ptr<Entity> &e);
+	void printEntity(std::shared_ptr<Driver>& base, const std::shared_ptr<Entity> &e);
 	void postProcess(std::vector<std::vector<Tile>>& tiles);
 	int isFull();
 
@@ -79,7 +79,7 @@ public:
 
 	explicit Dungeon(const Point& dim);
 	explicit Dungeon(std::fstream& file);
-	void finalize(WINDOW* base, std::vector<FMob>& fMob, std::vector<FObject>& fObject, std::shared_ptr<Player>& player, int floor, bool emoji, int count);
+	void finalize(std::shared_ptr<Driver>& base, std::vector<FMob>& fMob, std::vector<FObject>& fObject, std::shared_ptr<Player>& player, int floor, bool emoji, int count);
 	const std::shared_ptr<Mob> getMob(const Point& p);
 	void snapshotTake();
 	void snapshotRestore();
@@ -87,7 +87,7 @@ public:
 	bool alive() const;
 	void rotate();
 	void updateFoggy();
-	void print(WINDOW* window);
+	void print(std::shared_ptr<Driver>& base);
 	bool isInRange(const Entity& e);
 
 	//Getters and setters

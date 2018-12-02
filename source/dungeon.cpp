@@ -9,6 +9,7 @@
 #include "player.hpp"
 #include "fmob.hpp"
 #include "fobject.hpp"
+#include "driver.hpp"
 
 using namespace std;
 
@@ -303,7 +304,7 @@ void Dungeon::postProcess(vector<vector<Tile>>& tiles) {
 	}
 }
 
-void Dungeon::finalize(WINDOW* base, vector<FMob>& fMob, vector<FObject>& fObject, shared_ptr<Player>& player, int floor, bool emoji, int count) {
+void Dungeon::finalize(shared_ptr<Driver>& base, vector<FMob>& fMob, vector<FObject>& fObject, shared_ptr<Player>& player, int floor, bool emoji, int count) {
 
 	//Generate a new player (if needed)
 	if (player == nullptr) {
@@ -366,7 +367,8 @@ Dungeon::Dungeon(const Point& dim)
 	this->dim = dim;
 	
 	//Get seed for noise
-	float seed[dim.y * dim.x];
+	vector<float> seed;
+	seed.resize(dim.y * dim.x);
 	for (int i = 0; i < dim.y * dim.x; i++) {
 		seed[i] = (float)Twist::rand();
 	}
@@ -376,7 +378,7 @@ Dungeon::Dungeon(const Point& dim)
 	fog = tiles;
 	for(int row = 0; row < dim.y; row++) {
 		for(int col = 0; col < dim.x; col++) {
-			placeTile((Point) {col, row}, 0x01, seed);
+			placeTile(Point(col, row), 0x01, seed.data());
 		}
 	}
 	
@@ -406,35 +408,33 @@ Dungeon::Dungeon(const Point& dim)
 Dungeon::Dungeon(fstream& file)
 		: map(this, Path::VIA_FLOOR), dig(this, Path::VIA_DIG) {
 	size_t length = HEADER.length();
-	char head[length + 1];
+	vector<char> head;
+	head.resize(length + 1);
 	this->dim = DUNGEON_DIM;
 	
 	//Read magic header
-	file.read(head, length);
+	file.read(head.data(), length);
 	head[length] = '\0';
-	if (!file || HEADER != head) {
-		endwin();
-		wprintf(L"Bad file header '%s'!\n", head);
+	if (!file || HEADER != head.data()) {
+		cout << "Bad file header '" << head.data() << "'!" << endl;
 		exit(FILE_READ_BAD_HEAD);
 	}
 	
 	//Check file version
 	uint32_t version;
 	file.read(reinterpret_cast<char*>(&version), sizeof(version));
-	version = be32toh(version);
+	version = swap(version);
 	if (!file || version != VERSION) {
-		endwin();
-		wprintf(L"Bad file version!\n");
+		cout << "Bad file version!" << endl;
 		exit(FILE_READ_BAD_VERSION);
 	}
 	
 	//Get file size
 	uint32_t size;
 	file.read(reinterpret_cast<char*>(&size), sizeof(size));
-	size = be32toh(size);
+	size = swap(size);
 	if (!file) {
-		endwin();
-		wprintf(L"Bad file size (EOF)!\n");
+		cout << "Bad file size (EOF)!" << endl;
 		exit(FILE_READ_EOF_SIZE);
 	}
 	
@@ -442,8 +442,7 @@ Dungeon::Dungeon(fstream& file)
 	uint8_t pos[2];
 	file.read(reinterpret_cast<char*>(&pos), sizeof(pos));
 	if (!file || pos[0] >= dim.x || pos[1] >= dim.y) {
-		endwin();
-		wprintf(L"Bad file player co-ordinates (EOF)!\n");
+		cout << "Bad file player co-ordinates (EOF)!" << endl;
 		exit(FILE_READ_EOF_PLAYER);
 	}
 	
@@ -456,8 +455,7 @@ Dungeon::Dungeon(fstream& file)
 			file.read(reinterpret_cast<char*>(&hardness), sizeof(hardness));
 			
 			if (!file) {
-				endwin();
-				wprintf(L"Missing tile harness information (EOF)!\n");
+				cout << "Missing tile harness information (EOF)!" << endl;
 				exit(FILE_READ_EOF_HARDNESS);
 			}
 
@@ -471,8 +469,7 @@ Dungeon::Dungeon(fstream& file)
 		uint8_t data[4];
 		file.read(reinterpret_cast<char*>(&data), sizeof(data));
 		if (!file) {
-			endwin();
-			wprintf(L"Missing rooms information (EOF)!\n");
+			cout << "Missing rooms information (EOF)!" << endl;
 			exit(FILE_READ_EOF_ROOMS);
 		}
 
@@ -499,11 +496,11 @@ void Dungeon::save(fstream& file) {
 	file.write(HEADER.c_str(), HEADER.length());
 	
 	//Version
-	uint32_t ver = htobe32(VERSION);
+	uint32_t ver = swap(VERSION);
 	file.write(reinterpret_cast<char*>(&ver), sizeof(ver));
 	
 	//Size of file, 22 for the header, width and height of dungeon, and extra rooms
-	uint32_t size = htobe32((uint32_t)(22 + dim.x * dim.y + rooms.size() * 4));
+	uint32_t size = swap((uint32_t)(22 + dim.x * dim.y + rooms.size() * 4));
 	file.write(reinterpret_cast<char*>(&size), sizeof(size));
 	
 	//Player position
@@ -558,7 +555,7 @@ void Dungeon::updateFoggy() {
 }
 
 int Dungeon::isFull() {
-	float total = dim.x * dim.y;
+	float total = (float)(dim.x * dim.y);
 	float room = 0.0;
 	for(int row = 0; row < dim.y; row++) {
 		for(int col = 0; col < dim.x; col++) {
@@ -578,7 +575,7 @@ bool Dungeon::isInRange(const Entity &e) {
 }
 
 
-void Dungeon::printEntity(WINDOW *win, const shared_ptr<Entity> &e) {
+void Dungeon::printEntity(shared_ptr<Driver>& base, const shared_ptr<Entity> &e) {
 	//check if the mob is directly to the left of another mob.
 	//An emoji takes two characters on some terminals, so they can't overlap
 	bool isLeft = false;
@@ -603,20 +600,12 @@ void Dungeon::printEntity(WINDOW *win, const shared_ptr<Entity> &e) {
 	}
 
 	//Render only if the player is near
-	attron(COLOR_PAIR(e->getColor()));
-	mvwaddstr(win,
-		e->getPos().y + 1,
-		e->getPos().x,
-		isLeft ? e->getSymbolAlt().c_str() : e->getSymbol().c_str()
-	);
-
-	//Stop rendering colors so the rest of the dungeon looks ok
-	attroff(COLOR_PAIR(e->getColor()));
+	base->color(e->getPos() + Point(0, 1), e->getColor(), isLeft ? e->getSymbolAlt() : e->getSymbol());
 }
 
-void Dungeon::print(WINDOW* win) {
+void Dungeon::print(shared_ptr<Driver>& base) {
 	//clean window
-	werase(win);
+	base->clear();
 
 	//Render fog or tiles
 	vector<vector<Tile>> &tiles = display == FOGGY ? this->fog : this->tiles;
@@ -645,31 +634,31 @@ void Dungeon::print(WINDOW* win) {
 			}
 		}
 
-		mvwaddstr(win, row + 1, 0, line.str().c_str());
+		base->str(Point(0, row + 1), line.str());
 	}
 
 	//Output objects
 	for (auto& o : objects) {
 		if (!isInRange(*o)) continue;
 		o->setRemembered(true);
-		printEntity(win, o);
+		printEntity(base, o);
 	}
 
 	//Write entities
 	for (auto& e : entities) {
 		if (!isInRange(e)) continue;
 		e.setRemembered(true);
-		mvwaddstr(win, e.getPos().y + 1, e.getPos().x, e.getSymbol().c_str());
+		base->str(e.getPos() + Point(0, 1), e.getSymbol());
 	}
 
 	//Write players
 	if(player) {
-		printEntity(win, player);
+		printEntity(base, player);
 	}
 
 	//Write mobs
 	for (const auto& m : mobs) {
-		if (m->isAlive() && isInRange(*m)) printEntity(win, m);
+		if (m->isAlive() && isInRange(*m)) printEntity(base, m);
 	}
 
 	//Write status
@@ -687,21 +676,22 @@ void Dungeon::print(WINDOW* win) {
 		<< "Turn: " << player->getTurn()
 		<< " | Items: " << player->getInventory().size() << "/" <<player->getMaxInventory()
 		<< " | Carry: " << player->getCarryWeight() << "/" << player->getMaxCarryWeight();
+
 	line2 = str.str();
 
-	mvwaddstr(win, 0, 0, status.c_str());
-	mvwaddstr(win, dim.y + 1, 0, line1.c_str());
-	mvwaddstr(win, dim.y + 2, 0, line2.c_str());
+	base->str(Point(), status);
+	base->str(Point(0, dim.y + 1), line1);
+	base->str(Point(0, dim.y + 2), line2);
 
 	//Some terminals have trouble with emoji, so help them out
 	//by redrawing the whole window every few frames.
 	static int refresh = 0;
 	if (emoji && refresh == 5) {
-		redrawwin(win);
+		base->touch();
 		refresh = 0;
 	}
 
-	wrefresh(win);
+	base->flip();
 	refresh++;
 }
 

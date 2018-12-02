@@ -3,9 +3,16 @@ CXX = g++
 NAME = game
 BUILD = build
 SOURCE = source
-INCLUDE = include
+INCLUDE = include library
+
+ifeq ($(OS),Windows_NT)
+CXXFLAGS = -static -mwindows
+LDFLAGS = -static -mwindows ./library/PDCurses/wingui/pdcurses.a
+else
 LDFLAGS = -lncursesw
-CXXFLAGS = -Wall -Wextra -finput-charset=UTF-8 -std=c++11 -I$(INCLUDE)
+endif
+
+CXXFLAGS += -Wall -Wextra -finput-charset=UTF-8 -std=c++11 $(addprefix -I,$(INCLUDE))
 DEPFLAGS = -MMD -MP -MF $(BUILD)/$*.d
 
 #Make Rules

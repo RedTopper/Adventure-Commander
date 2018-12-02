@@ -8,9 +8,9 @@ using namespace std;
 
 Entity::Entity(Dungeon* dungeon, Type type, Color color, bool halls) {
 	const string ENT[] = {
-		"?", //Mob has it's own definition.
-		"\u25b2", //Up pointing triangle.
-		"\u25bc", //Down pointing triangle.
+		u8"?", //Mob has it's own definition.
+		u8"\u25b2", //Up pointing triangle.
+		u8"\u25bc", //Down pointing triangle.
 	};
 
 	const string ENT_BORING[] = {

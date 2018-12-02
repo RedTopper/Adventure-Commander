@@ -15,8 +15,8 @@ public:
 	Dice() : Dice(0,0, 1) {};
 	Dice(int base, int count, int sides);
 	int roll() const;
-	int min() const;
-	int max() const;
+	int low() const;
+	int high() const;
 
 private:
 	std::ostream& dump(std::ostream& out) const override;

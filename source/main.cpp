@@ -3,6 +3,7 @@
 #include <stack>
 #include <fstream>
 
+#include "driver.hpp"
 #include "twist.hpp"
 #include "main.hpp"
 #include "dungeon.hpp"
@@ -40,12 +41,11 @@ vector<string> getOptions() {
 }
 
 static void help(const string& message, const string& command, Error error) {
-	endwin();
 	cout << command << ": " << message << endl;
 	cout << "Remember, please see the readme if anything looks weird!" << endl;
 	cout << "Adventure Commander Help:" << endl;
 	for(const auto& str : getOptions()) cout << str << endl;
-	exit(error);
+	exit(error); 
 }
 
 static bool require(int& on, int count, const string& command) {
@@ -118,6 +118,13 @@ Mob::Color getRandomColor(int colors) {
 	return static_cast<Mob::Color>(color >> 1);
 }
 
+uint32_t swap(uint32_t num) {
+	return ((num >> 24) & 0xff)
+		| ((num << 8) & 0xff0000)
+		| ((num >> 8) & 0xff00)
+		| ((num << 24) & 0xff000000);
+}
+
 template <class T>
 vector<T> loadFactory(const string &filename, const string &header, bool home) {
 	string line;
@@ -136,7 +143,7 @@ vector<T> loadFactory(const string &filename, const string &header, bool home) {
 }
 
 int main(int argc, char** argv) {
-	setlocale(LC_ALL, "en_US.UTF-8");
+	setlocale(LC_ALL, "");
 
 	int mobs = 10;
 	bool save = false;
@@ -148,8 +155,8 @@ int main(int argc, char** argv) {
 	string seed;
 
 	//Parse arguments
-	for (int argi = 1; argi < argc; argi++) {
-		string arg = argv[argi];
+	for (int i = 1; i < argc; i++) {
+		string arg = argv[i];
 		if (arg.length() < 3 || arg[0] != '-' || arg[1] != '-') {
 			help("Bad argument", arg, ARGUMENT_NO_DASH);
 		} else if (HELP == arg) {
@@ -166,10 +173,10 @@ int main(int argc, char** argv) {
 			home = true;
 		} else if (arg == PARSE) {
 			parse = true;
-		} else if (arg == SEED && require(argi, argc, arg)) {
-			seed = argv[argi];
-		} else if (arg == MOBS && require(argi, argc, arg)) {
-			mobs = atoi(argv[argi]); // NOLINT(cert-err34-c)
+		} else if (arg == SEED && require(i, argc, arg)) {
+			seed = argv[i];
+		} else if (arg == MOBS && require(i, argc, arg)) {
+			mobs = atoi(argv[i]); // NOLINT(cert-err34-c)
 			if (mobs < 1) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
 			if (mobs > 100) help("Must be between 1-100", MOBS, ARGUMENT_OOB);
 		} else {
@@ -200,40 +207,21 @@ int main(int argc, char** argv) {
 	stack<shared_ptr<Dungeon>> future;
 	int floor = 0;
 
-	//Business executed
-	WINDOW* base = initscr();
-	if (has_colors()) {
-		use_default_colors();
-		start_color();
-		init_pair(Entity::RED, COLOR_RED, -1);
-		init_pair(Entity::GREEN, COLOR_GREEN, -1);
-		init_pair(Entity::BLUE, COLOR_BLUE, -1);
-		init_pair(Entity::CYAN, COLOR_CYAN, -1);
-		init_pair(Entity::YELLOW, COLOR_YELLOW, -1);
-		init_pair(Entity::MAGENTA, COLOR_MAGENTA, -1);
-		init_pair(Entity::WHITE, COLOR_WHITE, -1);
-		init_pair(Entity::BLACK, 238, -1);
-	}
-
-	keypad(base, TRUE);
-	cbreak();
-	noecho();
-	wclear(base);
-	curs_set(0);
-
 	//Load dungeon from file
 	if (load) {
 		fstream file = get(fstream::in, "dungeon", home);
 		dungeon = make_shared<Dungeon>(file);
-		dungeon->finalize(base, factoryMobs, factoryObjects, player, 0, emoji, mobs);
 		file.close();
 	} else {
 		dungeon = make_shared<Dungeon>(DUNGEON_DIM);
-		dungeon->finalize(base, factoryMobs, factoryObjects, player, 0, emoji, mobs);
 	}
 
+	shared_ptr<Driver> base = make_shared<Driver>();
+
+	dungeon->finalize(base, factoryMobs, factoryObjects, player, 0, emoji, mobs);
+
 	//Economics established
-	while (dungeon->getPlayer()->isAlive() > 0 && dungeon->alive()) {
+	while (dungeon->getPlayer()->isAlive() && dungeon->alive()) {
 		shared_ptr<Mob> mob = dungeon->getCurrentTurn();
 
 		//Tick and end turn
@@ -272,7 +260,7 @@ int main(int argc, char** argv) {
 
 		if (all) {
 			dungeon->print(base);
-			getch();
+			base->wait();
 		}
 	}
 
@@ -286,13 +274,13 @@ int main(int argc, char** argv) {
 	}
 
 	//Show the dungeon once more before exiting.
-	redrawwin(base);
 	dungeon->setDisplay(Dungeon::NORMAL);
 	dungeon->print(base);
-	getch();
+	base->flip();
+	base->wait();
 
 	//shutdown ncurses
-	endwin();
+	base->end();
 
 	//Save dungeon to file.
 	if (save) {

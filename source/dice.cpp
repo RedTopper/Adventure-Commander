@@ -32,10 +32,10 @@ int Dice::roll() const {
 	return val;
 }
 
-int Dice::min() const {
+int Dice::low() const {
 	return base + count;
 }
 
-int Dice::max() const {
+int Dice::high() const {
 	return base + count * sides;
 }

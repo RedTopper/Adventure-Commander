@@ -1,6 +1,7 @@
 #include <iomanip>
 
 #include "player.hpp"
+#include "driver.hpp"
 #include "dungeon.hpp"
 #include "fobject.hpp"
 #include "twist.hpp"
@@ -8,11 +9,7 @@
 
 using namespace std;
 
-static int center(const string& str) {
-	return (COLS / 2) - ((int)str.size() / 2);
-}
-
-Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
+Player::Player(Dungeon *dungeon, shared_ptr<Driver>& window) : Mob(
 	dungeon,
 	nullptr,
 	DEF_COLOR,
@@ -22,13 +19,13 @@ Player::Player(Dungeon *dungeon, WINDOW *window) : Mob(
 	DEF_HP,
 	Dice(0, 1, 4),
 	"Player",
-	"\U0001F464",
+	u8"\U0001F464",
 	"@",
 	vector<string>()
 ) {
-	this->base = window;
 	this->action = AC_NONE;
 	this->turn = 0;
+	this->base = window;
 }
 
 string Player::displayMob(const Mob& other) {
@@ -57,6 +54,10 @@ string Player::displayObject(const Object& object) {
 	return str.str();
 }
 
+int Player::center(const string& str) {
+	return (base->cols() / 2) - ((int)str.size() / 2);
+}
+
 void Player::list(const deque<shared_ptr<Object>>& objects, const string& title, int start, void (Player::*action)(int)) {
 	int ch = 0;
 	char letter = (char)start;
@@ -69,7 +70,7 @@ void Player::list(const deque<shared_ptr<Object>>& objects, const string& title,
 
 	//List the items
 	while(tickScroll(ch, offset, title, lines)) {
-		ch = getch();
+		ch = base->ch();
 
 		//If the letter picked was between the start letter and the end letter
 		if (ch >= start && ch < start + (int)objects.size()) {
@@ -102,7 +103,7 @@ void Player::look(Point dest) {
 	desc.emplace_back("Speed:   " + to_string(mob->getSpeed()));
 	desc.emplace_back("Damage:  " + mob->getDamageString());
 	desc.insert(desc.end(), mob->getDescription().begin(), mob->getDescription().end());
-	while(tickScroll(ch, offset, displayMob(*mob), desc)) ch = getch();
+	while(tickScroll(ch, offset, displayMob(*mob), desc)) ch = base->ch();
 }
 
 void Player::inspect(int index) {
@@ -122,7 +123,7 @@ void Player::inspect(int index) {
 	desc.emplace_back("Speed:   " + to_string(item->getSpeed()));
 	desc.emplace_back("Value:   " + to_string(item->getValue()));
 	desc.insert(desc.end(), item->getDescription().begin(), item->getDescription().end());
-	while(tickScroll(ch, offset, displayObject(*item) + ".", desc)) ch = getch();
+	while(tickScroll(ch, offset, displayObject(*item) + ".", desc)) ch = base->ch();
 }
 
 void Player::expunge(int index) {
@@ -254,19 +255,19 @@ void Player::equip(int index) {
 }
 
 bool Player::choice(const vector<string>& text) {
-	werase(base);
+	base->clear();
 
 	int row = 2;
 	string question = "(Y / N)";
 
 	//Draw question
-	for (const auto& line : text) mvwprintw(base, row++, center(line), line.c_str());
-	mvwprintw(base, row + 1, center(question), question.c_str());
+	for (const auto& line : text) base->str(Point(center(line), row++), line);
+	base->str(Point(center(question), row + 1), question);
 
 	//Keep in loop until user presses Y/N
 	while (true) {
-		wrefresh(base);
-		int in = getch();
+		base->flip();
+		int in = base->ch();
 		if (in == 'y' || in == 'Y') return true;
 		if (in == 'n' || in == 'N') return false;
 	}
@@ -292,18 +293,18 @@ bool Player::tickScroll(int ch, uint32_t &offset, const string& title, const vec
 	if (lines.empty()) lines.emplace_back("We've come up empty!");
 
 	//Clear screen and figure out characters
-	int max = LINES - 2;
-	werase(base);
+	int max = base->rows() - 2;
+	base->clear();
 	switch (ch) {
-		case KEY_UP:
-			if (offset == 0) beep();
+		case Driver::DRV_UP:
+			if (offset == 0) base->err();
 			if (offset > 0) offset--;
 			break;
-		case KEY_DOWN:
+		case Driver::DRV_DOWN:
 			if (offset + max < lines.size()) {
 				offset++;
 			} else {
-				beep();
+				base->err();
 			}
 			break;
 		case 27: //ESC
@@ -315,23 +316,21 @@ bool Player::tickScroll(int ch, uint32_t &offset, const string& title, const vec
 	}
 
 	//Show screen
-	mvwaddstr(base, 0, 0, (title + " Press 'q' or 'ESC' to exit.").c_str());
+	base->str(Point(), title + " Press 'q' or 'ESC' to exit.");
 	for (int line = 0; line < max; line++) {
 		string text = line + offset < lines.size() ? lines[line + offset] : "~";
-		mvwaddstr(base, line + 1, 0, text.c_str());
+		base->str(Point(0, line + 1), text);
 	}
 
 	//Print end marker if needed
 	if (offset + max >= lines.size()) {
-		wattron(base, WA_STANDOUT);
-		mvwaddstr(base, LINES - 1, 0, "(END)");
-		wattroff(base, WA_STANDOUT);
+		base->bold(Point(0, base->rows() - 1), "(END)");
 	} else {
-		mvwaddstr(base, LINES - 1, 0, ":");
+		base->str(Point(0, base->rows() - 1), ":");
 	}
 
 	//Print and get new character
-	wrefresh(base);
+	base->flip();
 	return true;
 }
 
@@ -386,7 +385,7 @@ bool Player::tickTarget(int ch, Point &dest) {
 	dungeon->print(base);
 
 	//Move the destination down one because of the first status line
-	mvwaddstr(base, dest.y + 1, dest.x, "\u00D7");
+	base->str(dest + Point(0, 1), "\u00D7");
 	return true;
 }
 
@@ -394,58 +393,58 @@ void Player::tickInput() {
 	dungeon->updateFoggy();
 	dungeon->print(base);
 	action = AC_NONE;
+	Point dest = pos;
 	uint32_t offset = 0;
 	Movement res = MV_IDLE;
-	Point dest = pos;
 	vector<string> lines;
-	int ch = getch();
+	int ch = base->ch();
 
 	//is this AI?
 	switch (ch) {
 		default:
 			dungeon->status = to_string(ch) + " is invalid!";
 			break;
-		case KEY_HOME:
+		case Driver::DRV_HOME:
 		case '7':
 		case 'y':
 			res = move(Point(pos) += Point(-1,-1));
 			break;
-		case KEY_UP:
+		case Driver::DRV_UP:
 		case '8':
 		case 'k':
 			res = move(Point(pos) += Point(0,-1));
 			break;
-		case KEY_PPAGE:
+		case Driver::DRV_PPAGE:
 		case '9':
 		case 'u':
 			res = move(Point(pos) += Point(1,-1));
 			break;
-		case KEY_RIGHT:
+		case Driver::DRV_RIGHT:
 		case '6':
 		case 'l':
 			res = move(Point(pos) += Point(1,0));
 			break;
-		case KEY_NPAGE:
+		case Driver::DRV_NPAGE:
 		case '3':
 		case 'n':
 			res = move(Point(pos) += Point(1,1));
 			break;
-		case KEY_DOWN:
+		case Driver::DRV_DOWN:
 		case '2':
 		case 'j':
 			res = move(Point(pos) += Point(0,1));
 			break;
-		case KEY_END:
+		case Driver::DRV_END:
 		case '1':
 		case 'b':
 			res = move(Point(pos) += Point(-1,1));
 			break;
-		case KEY_LEFT:
+		case Driver::DRV_LEFT:
 		case '4':
 		case 'h':
 			res = move(Point(pos) += Point(-1,0));
 			break;
-		case KEY_B2:
+		case Driver::DRV_B2:
 		case '.':
 		case '5':
 		case ' ':
@@ -459,11 +458,11 @@ void Player::tickInput() {
 			break;
 		case 'm':
 			for (const auto& m : dungeon->getMobs()) lines.push_back(displayMob(*m));
-			while(tickScroll(ch, offset, "Monster list.", lines)) ch = getch();
+			while(tickScroll(ch, offset, "Monster list.", lines)) ch = base->ch();
 			break;
 		case '\t':
 		case '?':
-			while(tickScroll(ch, offset, "In game manual.", getHelp())) ch = getch();
+			while(tickScroll(ch, offset, "In game manual.", getHelp())) ch = base->ch();
 			break;
 		case 't':
 		case 'e':
@@ -516,7 +515,7 @@ void Player::tickInput() {
 
 		case 'g':
 			dungeon->status = "You cheater! You entered teleport mode! [ENTER / r]";
-			while(tickTarget(ch, dest) && ch != 'r') ch = getch();
+			while(tickTarget(ch, dest) && ch != 'r') ch = base->ch();
 
 			//option to go random
 			if (ch == 'r') dest = Twist::rand(Point(1), dungeon->getDim() - 2);
@@ -532,7 +531,7 @@ void Player::tickInput() {
 
 		case 'L':
 			dungeon->status = "What do you want to look at? [ENTER]";
-			while(tickTarget(ch, dest)) ch = getch();
+			while(tickTarget(ch, dest)) ch = base->ch();
 			if (dest == Point()) break;
 			if (dest == pos) {
 				dungeon->status = "*You see yourself in a mirror. It's quite a sight...*";
@@ -613,9 +612,9 @@ Mob::Movement Player::move(const Point &next) {
 	return MV_SUCCESS;
 }
 
-void Player::flip() const {
+void Player::flip() {
 	dungeon->print(base);
-	getch();
+	base->wait();
 }
 
 const vector<string> Player::getHelp() {
@@ -633,7 +632,7 @@ const vector<string> Player::getHelp() {
 		"\tMovement Controls:",
 		"\t7, y, KEY_HOME",
 		"\t\tMove/Attack up left",
-		"\t8, k, KEY_UP",
+		"\t8, k, DRV_UP",
 		"\t\tMove/Attack up",
 		"\t9, u, KEY_PPAGE",
 		"\t\tMove/Attack up right",

@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <bitset>
 #include <array>
 
@@ -199,26 +199,26 @@ unsigned int FObject::getRequired() const {
 
 const shared_ptr<Entity> FObject::make(Dungeon *dungeon, int) {
 	const array<string, 20> SYMBOL = {
-		"\U0001F531", //Trident
-		"\U0001F52A", //Knife
-		"\U0001F3F9", //Bow
-		"\U0001F530", //Shield
-		"\U0001F3A9", //Top Hat
-		"\U0001F455", //Shirt
-		"\U0001F9E4", //Gloves
-		"\U0001F45E", //Shoes
-		"\U0001F48D", //Ring
-		"\U0001F4FF", //Prayer Beads
-		"\U0001F526", //Flashlight
-		"\U0001F4DC", //Scroll
-		"\U0001F4D5", //Book
-		"\U0001F378", //Cocktail
-		"\U0001F4B0", //Money Bag
-		".",          //Ammo
-		"\U0001F372", //Food
-		"\U0001F31F", //Star
-		"\U0001F4E6", //Package
-		"*"
+		u8"\U0001F531", //Trident
+		u8"\U0001F52A", //Knife
+		u8"\U0001F3F9", //Bow
+		u8"\U0001F530", //Shield
+		u8"\U0001F3A9", //Top Hat
+		u8"\U0001F455", //Shirt
+		u8"\U0001F9E4", //Gloves
+		u8"\U0001F45E", //Shoes
+		u8"\U0001F48D", //Ring
+		u8"\U0001F4FF", //Prayer Beads
+		u8"\U0001F526", //Flashlight
+		u8"\U0001F4DC", //Scroll
+		u8"\U0001F4D5", //Book
+		u8"\U0001F378", //Cocktail
+		u8"\U0001F4B0", //Money Bag
+		u8".",          //Ammo
+		u8"\U0001F372", //Food
+		u8"\U0001F31F", //Star
+		u8"\U0001F4E6", //Package
+		u8"*"
 	};
 
 	const array<string, 20> SYMBOL_BORING = {

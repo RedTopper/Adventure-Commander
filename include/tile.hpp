@@ -48,46 +48,46 @@ public:
 		switch(sym) {
 			case EDGE_E:
 			case EDGE_W:
-				return "\u2588";
+				return u8"\u2588";
 			case EDGE_N:
-				return "\u2584";
+				return u8"\u2584";
 			case EDGE_S:
-				return "\u2580";
+				return u8"\u2580";
 			case ROCK_SOFT:
-				return "\u2591";
+				return u8"\u2591";
 			case ROCK_MED:
-				return "\u2592";
+				return u8"\u2592";
 			case ROCK_HARD:
-				return "\u2593";
+				return u8"\u2593";
 			case HALL_SYM:
-				return "\u2022";
+				return u8"\u2022";
 
 			case HALL_NES:
-				return "\u2560";
+				return u8"\u2560";
 			case HALL_ESW:
-				return "\u2566";
+				return u8"\u2566";
 			case HALL_SWN:
-				return "\u2563";
+				return u8"\u2563";
 			case HALL_WNE:
-				return "\u2569";
+				return u8"\u2569";
 			case HALL_NE:
-				return "\u255A";
+				return u8"\u255A";
 			case HALL_ES:
-				return "\u2554";
+				return u8"\u2554";
 			case HALL_SW:
-				return "\u2557";
+				return u8"\u2557";
 			case HALL_WN:
-				return "\u255D";
+				return u8"\u255D";
 			case HALL_NS:
-				return "\u2551";
+				return u8"\u2551";
 			case HALL_EW:
-				return "\u2550";
+				return u8"\u2550";
 			case ROOM_SYM:
 			case VOID_SYM:
 			case HALL_NESW:
-				return " ";
+				return u8" ";
 			default:
-				return "X";
+				return u8"X";
 		}
 	};
 

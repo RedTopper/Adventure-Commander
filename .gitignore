@@ -1,6 +1,8 @@
 build/
 test/
 game
+game.exe
 .idea
+.vs
 cmake-build-debug
 CHANGELOG
