@@ -13,6 +13,7 @@
 		MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
 		return wstrTo;
 	}
+
 #elif __linux__
 	#include <ncursesw/curses.h>
 #else

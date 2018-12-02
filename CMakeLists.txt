@@ -4,7 +4,9 @@ project(Adventure_Commander)
 set(CMAKE_CXX_STANDARD 11)
 
 if(WIN32)
+	SET(OPTIONS WIN32) #Hide the console window
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w14244")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 endif()
@@ -12,7 +14,7 @@ endif()
 include_directories(include)
 include_directories(library)
 
-add_executable(Adventure_Commander
+add_executable(Adventure_Commander ${OPTIONS}
 	source/dungeon.cpp
 	source/entity.cpp
 	source/main.cpp
