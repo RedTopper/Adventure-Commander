@@ -52,7 +52,7 @@ Aaron Walter - ajwalter - 792829065
 
 #### CMake Common
 1. Press the build button
-2. Navigate to the build directory `cmake-build-debug`/`cmake-build-windows-64`
+2. Navigate to the build directory `cmake-build-*`
 3. Copy the `resource` folder into this folder
 4. Run the executable `./Adventure_Commander` if in CLion, or press Play in Visual Studio
 5. Press `TAB` for in game help!
