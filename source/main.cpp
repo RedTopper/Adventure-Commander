@@ -143,7 +143,7 @@ vector<T> loadFactory(const string &filename, const string &header, bool home) {
 }
 
 int main(int argc, char** argv) {
-	setlocale(LC_ALL, "");
+	setlocale(LC_ALL, "en_US.UTF-8");
 
 	int mobs = 10;
 	bool save = false;
