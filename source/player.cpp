@@ -373,6 +373,8 @@ bool Player::tickTarget(int ch, Point &dest) {
 			dest = Point();
 			return false;
 		case '\n':
+		case '\r':
+		case Driver::DRV_ENTER:
 			return false;
 		default:
 			break;
@@ -385,7 +387,7 @@ bool Player::tickTarget(int ch, Point &dest) {
 	dungeon->print(base);
 
 	//Move the destination down one because of the first status line
-	base->str(dest + Point(0, 1), "\u00D7");
+	base->str(dest + Point(0, 1), u8"\u00D7");
 	return true;
 }
 
@@ -403,6 +405,8 @@ void Player::tickInput() {
 	switch (ch) {
 		default:
 			dungeon->status = to_string(ch) + " is invalid!";
+			break;
+		case 0:
 			break;
 		case Driver::DRV_HOME:
 		case '7':

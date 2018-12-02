@@ -26,7 +26,7 @@ Driver::Driver() {
 	base = initscr();
 
 	#ifdef _WIN32
-	PDC_set_resize_limits(20, 50, 70, 200);
+	PDC_set_resize_limits(24, 100, 80, 200);
 	#endif
 
 	if (has_colors()) {
@@ -55,7 +55,7 @@ Driver::~Driver() {
 }
 
 void Driver::wait() {
-	wgetch(base);
+	ch();
 }
 
 void Driver::end() {
@@ -123,7 +123,7 @@ int Driver::ch() {
 			return DRV_LEFT;
 		case KEY_RIGHT:
 			return DRV_RIGHT;
-		case KEY_ENTER:
+		case KEY_END:
 			return DRV_END;
 		case KEY_HOME:
 			return DRV_HOME;
@@ -133,6 +133,11 @@ int Driver::ch() {
 			return DRV_PPAGE;
 		case KEY_B2:
 			return DRV_B2;
+		case KEY_ENTER:
+			return DRV_ENTER;
+		case KEY_RESIZE:
+			resize_term(0, 0);
+			return 0;
 		default:
 			break;
 	}

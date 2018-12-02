@@ -11,10 +11,6 @@ Aaron Walter - ajwalter - 792829065
 - No usages of `new` and `delete`, automatic memory management with `std::shared_ptr<>`
 
 ## Build using the Makefile
-
-There are many ways to build Adventure Commander on many different systems.
-Choose from the list of available options below:
-
 #### Ubuntu
 1. Install ncurses on Ubuntu: `sudo apt install libncursesw5-dev`
 2. Go to Makefile Common

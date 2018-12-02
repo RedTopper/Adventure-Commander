@@ -27,7 +27,8 @@ public:
 		DRV_HOME,
 		DRV_PPAGE,
 		DRV_NPAGE,
-		DRV_B2
+		DRV_B2,
+		DRV_ENTER,
 	};
 
 private:
