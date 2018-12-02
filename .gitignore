@@ -5,6 +5,8 @@ game.exe
 .idea
 .vs
 cmake-build-debug
-cmake-build-windows-64
-cmake-build-windows-32
+cmake-build-debug-win86
+cmake-build-debug-win64
+cmake-build-release-win64
+cmake-build-release-win86
 CHANGELOG

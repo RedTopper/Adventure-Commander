@@ -7,7 +7,19 @@
             "inheritEnvironments": [
                 "msvc_x64"
             ],
-            "buildRoot": "${workspaceRoot}\\cmake-build-windows-64",
+            "buildRoot": "${workspaceRoot}\\cmake-build-debug-win64",
+            "cmakeCommandArgs": "",
+            "buildCommandArgs": "-v",
+            "ctestCommandArgs": ""
+        },
+        {
+            "name": "x64-Release",
+            "generator": "Ninja",
+            "configurationType": "Release",
+            "inheritEnvironments": [
+                "msvc_x64"
+            ],
+            "buildRoot": "${workspaceRoot}\\cmake-build-release-win64",
             "cmakeCommandArgs": "",
             "buildCommandArgs": "-v",
             "ctestCommandArgs": ""
@@ -19,7 +31,7 @@
             "inheritEnvironments": [
                 "msvc_x86"
             ],
-            "buildRoot": "${workspaceRoot}\\cmake-build-windows-86",
+            "buildRoot": "${workspaceRoot}\\cmake-build-debug-win86",
             "cmakeCommandArgs": "",
             "buildCommandArgs": "-v",
             "ctestCommandArgs": ""
