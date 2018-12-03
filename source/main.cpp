@@ -50,7 +50,7 @@ static bool require(int& on, int count, const string& command) {
 	return true;
 }
 
-static fstream get(ios_base::openmode mode, const string& name, bool home) {
+static void get(fstream& fs, ios_base::openmode mode, const string& name, bool home) {
 	string path;
 	if (home) {
 		path = getenv("HOME");
@@ -61,15 +61,12 @@ static fstream get(ios_base::openmode mode, const string& name, bool home) {
 
 	//Add filename and load from file
 	path += name;
-	fstream fs;
 	fs.open (path, fstream::binary | mode);
 	if (!fs.is_open() || !fs) {
 		string message = "Failed to open file";
 		if (!home) message += "\nUse --home to load from home directory instead.";
 		help(message, path, FILE_READ_GONE);
 	}
-
-	return fs;
 }
 
 string &ltrim(string &str, const string &chars) {
@@ -121,7 +118,8 @@ template <class T>
 vector<T> loadFactory(const string &filename, const string &header, bool home) {
 	string line;
 	vector<T> factory;
-	fstream desc = get(fstream::in, filename, home);
+	fstream desc;
+	get(desc, fstream::in, filename, home);
 	getline(desc, line);
 	if (line.find(header) == string::npos) exit(FILE_READ_BAD_HEAD);
 	while (!!desc) {
@@ -201,7 +199,8 @@ int main(int argc, char** argv) {
 
 	//Load dungeon from file
 	if (load) {
-		fstream file = get(fstream::in, "dungeon", home);
+		fstream file;
+		get(file, fstream::in, "dungeon", home);
 		dungeon = make_shared<Dungeon>(file);
 		file.close();
 	} else {
@@ -276,7 +275,8 @@ int main(int argc, char** argv) {
 
 	//Save dungeon to file.
 	if (save) {
-		fstream file = get(fstream::out, "dungeon", home);
+		fstream file;
+		get(file, fstream::out, "dungeon", home);
 		dungeon->save(file);
 		file.close();
 	}

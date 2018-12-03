@@ -42,6 +42,8 @@ protected:
 
 public:
 	Entity(Dungeon* dungeon, Type type, Color color, bool halls);
+	virtual ~Entity() = default;
+
 	void setRemembered(bool r);
 	const std::string getSymbol() const;
 

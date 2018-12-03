@@ -292,7 +292,7 @@ void Mob::tick() {
 
 bool Mob::isOnEntity(Entity::Type type) const {
 	for (auto& e : dungeon->getEntities()) {
-		if (pos == e.getPos() && e.getEntityType() == type) return true;
+		if (pos == e->getPos() && e->getEntityType() == type) return true;
 	}
 
 	return false;

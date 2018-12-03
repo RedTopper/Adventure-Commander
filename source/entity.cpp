@@ -9,8 +9,8 @@ using namespace std;
 Entity::Entity(Dungeon* dungeon, Type type, Color color, bool halls) {
 	const string ENT[] = {
 		u8"?", //Mob has it's own definition.
-		u8"\u25b2", //Up pointing triangle.
-		u8"\u25bc", //Down pointing triangle.
+		u8"\U0001F53A", //Up pointing triangle.
+		u8"\U0001F53B", //Down pointing triangle.
 	};
 
 	const string ENT_BORING[] = {
@@ -45,7 +45,7 @@ Point Entity::getSpawn(const bool halls) const {
 		//Not on another entity
 		onEntity = false;
 		for (const auto& e : dungeon->getEntities()) {
-			if (point == e.pos) {
+			if (point == e->pos) {
 				onEntity = true;
 				break;
 			}

@@ -128,7 +128,7 @@ void Dungeon::placeHall(const Point &point) {
 }
 
 void Dungeon::placeTile(const Point &pos, uint8_t hardness, const float *seed) {
-	Tile tile{};
+	Tile tile;
 	
 	//Defaults
 	tile.symbol = Tile::VOID_SYM;
@@ -198,13 +198,13 @@ vector<shared_ptr<T>> Dungeon::generateFactory(vector<F>& factories, int total) 
 
 void Dungeon::generateEntities(int floor) {
 	//Create up stairs always
-	Entity up(this, Entity::STAIRS_UP, Entity::Color::WHITE, false);
+	shared_ptr<Entity> up = make_shared<Entity>(this, Entity::STAIRS_UP, Entity::Color::WHITE, false);
 	entities.push_back(up);
 
 	if (floor) {
 		//Above the 0th floor, allow player to go down.
-		Entity down(this, Entity::STAIRS_DOWN, Entity::Color::WHITE, false);
-		down.setPos(player->getPos());
+		shared_ptr<Entity> down = make_shared<Entity>(this, Entity::STAIRS_DOWN, Entity::Color::WHITE, false);
+		down->setPos(player->getPos());
 		entities.push_back(down);
 	}
 }
@@ -368,7 +368,7 @@ Dungeon::Dungeon(const Point& dim)
 	
 	//Get seed for noise
 	vector<float> seed;
-	seed.resize(dim.y * dim.x);
+	seed.resize((unsigned  long)(dim.y) * (unsigned  long)(dim.x));
 	for (int i = 0; i < dim.y * dim.x; i++) {
 		seed[i] = (float)Twist::rand();
 	}
@@ -555,7 +555,7 @@ void Dungeon::updateFoggy() {
 }
 
 int Dungeon::isFull() {
-	float total = (float)(dim.x * dim.y);
+	auto total = (float)(dim.x * dim.y);
 	float room = 0.0;
 	for(int row = 0; row < dim.y; row++) {
 		for(int col = 0; col < dim.x; col++) {
@@ -574,33 +574,40 @@ bool Dungeon::isInRange(const Entity &e) {
 		&& e.getPos().y - player->getPos().y <= FOG_Y);
 }
 
+template <class T>
+bool Dungeon::isLeft(const shared_ptr<Entity> &original, vector<shared_ptr<T>> list) {
+	for (const auto& obj : list) {
+		//For type hinting information
+		const shared_ptr<Entity>& other = obj;
+
+		//Skip dead monsters
+		auto mob = dynamic_pointer_cast<Mob>(other);
+		if (mob != nullptr && !mob->isAlive()) continue;
+
+		//Check against the list
+		if (original->getPos().x == other->getPos().x - 1 && original->getPos().y == other->getPos().y) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 
 void Dungeon::printEntity(shared_ptr<Driver>& base, const shared_ptr<Entity> &e) {
 	//check if the mob is directly to the left of another mob.
 	//An emoji takes two characters on some terminals, so they can't overlap
-	bool isLeft = false;
-	for (const auto& mo : mobs) {
-		if (mo->isAlive() && e->getPos().x == mo->getPos().x - 1 && e->getPos().y == mo->getPos().y) {
-			isLeft = true;
-			break;
-		}
-	}
 
-	//Also check for objects since they can use emoji too.
-	for (const auto& ob : objects) {
-		if (e->getPos().x == ob->getPos().x - 1 && e->getPos().y == ob->getPos().y) {
-			isLeft = true;
-			break;
-		}
-	}
+	bool left = false;
+	if (isLeft<Mob>(e, mobs) || isLeft<Object>(e, objects) || isLeft<Entity>(e, entities)) left = true;
 
 	//Also check the player
-	if (!isLeft) {
-		isLeft = e->getPos().x == player->getPos().x - 1 && e->getPos().y == player->getPos().y;
+	if (!left) {
+		left = e->getPos().x == player->getPos().x - 1 && e->getPos().y == player->getPos().y;
 	}
 
 	//Render only if the player is near
-	base->color(e->getPos() + Point(0, 1), e->getColor(), isLeft ? e->getSymbolAlt() : e->getSymbol());
+	base->color(e->getPos() + Point(0, 1), e->getColor(), left ? e->getSymbolAlt() : e->getSymbol());
 }
 
 void Dungeon::print(shared_ptr<Driver>& base) {
@@ -646,9 +653,9 @@ void Dungeon::print(shared_ptr<Driver>& base) {
 
 	//Write entities
 	for (auto& e : entities) {
-		if (!isInRange(e)) continue;
-		e.setRemembered(true);
-		base->str(e.getPos() + Point(0, 1), e.getSymbol());
+		if (!isInRange(*e)) continue;
+		e->setRemembered(true);
+		printEntity(base, e);
 	}
 
 	//Write players

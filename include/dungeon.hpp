@@ -42,7 +42,7 @@ private:
 
 	Point dim;
 	std::vector<Room> rooms;
-	std::vector<Entity> entities;
+	std::vector<std::shared_ptr<Entity>> entities;
 	std::vector<std::shared_ptr<Mob>> mobs;
 	std::vector<std::shared_ptr<Object>> objects;
 	std::vector<std::vector<Tile>> tiles;
@@ -60,6 +60,8 @@ private:
 
 	template <class F, class T>
 	std::vector<std::shared_ptr<T>> generateFactory(std::vector<F>& factories, int total);
+	template <class T>
+	bool isLeft(const std::shared_ptr<Entity> &original, std::vector<std::shared_ptr<T>> list);
 	void connectRoomRasterize(const Point &from, const Point &to);
 	void connectRoom(const Room &first, const Room &second);
 	bool placeRoomAttempt(const Room &room);
@@ -91,7 +93,7 @@ public:
 	bool isInRange(const Entity& e);
 
 	//Getters and setters
-	const std::vector<Entity>& getEntities() const {
+	const std::vector<std::shared_ptr<Entity>>& getEntities() const {
 		return entities;
 	}
 
