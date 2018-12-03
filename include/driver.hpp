@@ -5,6 +5,7 @@
 
 #include "point.hpp"
 #include "entity.hpp"
+#include "main.hpp"
 
 #ifdef _WIN32
 	struct _win;
@@ -52,5 +53,7 @@ public:
 	int rows();
 	int ch();
 };
+
+void help(const std::string& message, const std::string& command, Error error);
 
 #endif

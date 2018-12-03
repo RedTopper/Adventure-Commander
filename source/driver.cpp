@@ -1,11 +1,15 @@
+#include <string>
+#include <iostream>
+
 #include "driver.hpp"
 
 #ifdef _WIN32
 	#define PDC_WIDE
 	#include "PDCurses/curses.h"
 	#include "windows.h"
+	#include <sstream>
 
-	std::wstring utf8_decode(const std::string &str)
+	static std::wstring utf8_decode(const std::string &str)
 	{
 		if (str.empty()) return std::wstring();
 		int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
@@ -14,8 +18,27 @@
 		return wstrTo;
 	}
 
+	void help(const std::string& message, const std::string& command, Error error) {
+		std::stringstream out;
+		out << command << ": " << message << std::endl;
+		out << "Remember, please see the readme if anything looks weird!" << std::endl;
+		out << "Adventure Commander Help:" << std::endl;
+		for (const auto& str : getOptions()) out << str << std::endl;
+		MessageBox(NULL, out.str().c_str(), "Help", MB_OK | MB_SYSTEMMODAL);
+		exit(error);
+	}
+
 #elif __linux__
 	#include <ncursesw/curses.h>
+
+	void help(const std::string& message, const std::string& command, Error error) {
+		std::cout << command << ": " << message << std::endl;
+		std::cout << "Remember, please see the readme if anything looks weird!" << std::endl;
+		std::cout << "Adventure Commander Help:" << std::endl;
+		for (const auto& str : getOptions()) std::cout << str << std::endl;
+		exit(error);
+	}
+
 #else
 	#error "driver.cpp found no sutable OS"
 #endif

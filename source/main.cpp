@@ -40,14 +40,6 @@ vector<string> getOptions() {
 	return options;
 }
 
-static void help(const string& message, const string& command, Error error) {
-	cout << command << ": " << message << endl;
-	cout << "Remember, please see the readme if anything looks weird!" << endl;
-	cout << "Adventure Commander Help:" << endl;
-	for(const auto& str : getOptions()) cout << str << endl;
-	exit(error); 
-}
-
 static bool require(int& on, int count, const string& command) {
 	if (on < count - 1) {
 		on++;
