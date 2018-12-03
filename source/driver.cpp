@@ -86,21 +86,14 @@ void Driver::end() {
 	running = false;
 }
 
-#ifdef _WIN32
-
-//Windows is a baby and has to use wide characters
+//Windows cannot use regular UTF8, it has to use wide characters
 void Driver::str(const Point& pos, const std::string& str) {
+	#ifdef _WIN32
 	mvwaddwstr(base, pos.y, pos.x, utf8_decode(str).c_str());
-}
-
-#elif __linux__
-
-//Manly linux can use utf8 by default like a champ
-void Driver::str(const Point& pos, const std::string& str) {
+	#elif __linux__
 	mvwaddstr(base, pos.y, pos.x, str.c_str());
+	#endif
 }
-
-#endif
 
 void Driver::bold(const Point &pos, const std::string &str) {
 	attron(WA_STANDOUT);

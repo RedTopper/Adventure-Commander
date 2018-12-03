@@ -54,8 +54,8 @@ void Path::recalculate() {
 	}
 }
 
-const vector<Point> Path::getAdjacent() {
-	vector<Point> adj = {
+const vector<Point>& Path::getAdjacent() {
+	static vector<Point> adj = {
 		{0, -1},
 		{1, -1},
 		{1,  0},

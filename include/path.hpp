@@ -37,7 +37,7 @@ public:
 		return path[p.y][p.x];
 	}
 
-	static const std::vector<Point> getAdjacent();
+	static const std::vector<Point>& getAdjacent();
 };
 
 #endif
