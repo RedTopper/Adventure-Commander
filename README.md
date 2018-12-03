@@ -113,3 +113,5 @@ to put these in your `~/.profile` if you are using SSH and see question marks:
 ![ubuntu.png](pictures/ubuntu.png "Ubuntu Console")
 
 ![low.png](pictures/low.png "Low Graphics Mode")
+
+![path.png](pictures/path.png "Debugging Information")
